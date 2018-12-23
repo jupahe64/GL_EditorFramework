@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{29647BA5-2859-46F0-A99E-C3A387A9447A}</ProjectGuid>
+    <ProjectGuid>{D593A72D-554D-40FB-9967-503CB15A744F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GL_Core</RootNamespace>
-    <AssemblyName>GL_Core</AssemblyName>
+    <RootNamespace>OpenGl_EditorFramework</RootNamespace>
+    <AssemblyName>OpenGl_EditorFramework</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,10 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+    <Reference Include="OpenTK">
       <HintPath>..\packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTK.GLControl, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+    <Reference Include="OpenTK.GLControl">
       <HintPath>..\packages\OpenTK.GLControl.3.0.1\lib\net20\OpenTK.GLControl.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -48,29 +49,46 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cameras\Inspect.cs" />
-    <Compile Include="Cameras\Walkaround.cs" />
-    <Compile Include="GL_ControlLegacy.cs">
+    <Compile Include="GL_Core\Cameras\Inspect.cs" />
+    <Compile Include="GL_Core\Cameras\Walkaround.cs" />
+    <Compile Include="EditorDrawables\EditableObject.cs" />
+    <Compile Include="EditorDrawables\EditorScene.cs" />
+    <Compile Include="EditorDrawables\Path.cs" />
+    <Compile Include="Framework.cs" />
+    <Compile Include="GL_Core\GL_ControlBase.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="GL_ControlLegacy.Designer.cs">
-      <DependentUpon>GL_ControlLegacy.cs</DependentUpon>
-    </Compile>
-    <Compile Include="GL_ControlModern.cs">
+    <Compile Include="GL_Core\GL_ControlLegacy.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="GL_ControlModern.Designer.cs">
-      <DependentUpon>GL_ControlModern.cs</DependentUpon>
+    <Compile Include="GL_Core\GL_ControlModern.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Public Interfaces\AbstractCamera.cs" />
-    <Compile Include="Public Interfaces\AbstractGlDrawable.cs" />
-    <Compile Include="OldGlEmulator.cs" />
+    <Compile Include="GL_Core\OldGlEmulator.cs" />
+    <Compile Include="Interfaces\AbstractCamera.cs" />
+    <Compile Include="Interfaces\AbstractEventHandlingObj.cs" />
+    <Compile Include="Interfaces\AbstractGlDrawable.cs" />
+    <Compile Include="Interfaces\I3DControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ShaderClass.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SceneListView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="GL_Core\ShaderClass.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="OpenTK.dll.config" />
-    <None Include="packages.config" />
+    <Content Include="GL_Core\Resources\TextureSheet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

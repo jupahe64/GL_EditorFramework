@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace GL_Core
+namespace GL_EditorFramework.GL_Core
 {
 	public class ShaderProgram
 	{
-		private int fragSh, vertSh, program, mtxMdlLoc, mtxCamLoc;
+		private int fragSh, vertSh, program;
 		private Matrix4 modelMatrix;
 		private Matrix4 computedCamMtx;
 
@@ -25,14 +25,13 @@ namespace GL_Core
 			Console.WriteLine("fragment:");
 			Console.WriteLine(GL.GetShaderInfoLog(fragSh));
 			Console.WriteLine("vertex:");
-			Console.WriteLine(GL.GetShaderInfoLog(fragSh));
-
-			mtxMdlLoc = GL.GetUniformLocation(program, "mtxMdl");
-			mtxCamLoc = GL.GetUniformLocation(program, "mtxCam");
+			Console.WriteLine(GL.GetShaderInfoLog(vertSh));
 		}
 
 		public void AttachShader(Shader shader)
 		{
+			Console.WriteLine("shader:");
+			Console.WriteLine(GL.GetShaderInfoLog(shader.shader));
 			GL.AttachShader(program, shader.shader);
 		}
 
@@ -61,11 +60,8 @@ namespace GL_Core
 			vertSh = shader.shader;
 			GL.LinkProgram(program);
 
-			mtxMdlLoc = GL.GetUniformLocation(program, "mtxMdl");
-			mtxCamLoc = GL.GetUniformLocation(program, "mtxCam");
-
-			GL.UniformMatrix4(mtxMdlLoc, false, ref modelMatrix);
-			GL.UniformMatrix4(mtxCamLoc, false, ref computedCamMtx);
+			GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxMdl"), false, ref modelMatrix);
+			GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxCam"), false, ref computedCamMtx);
 		}
 
 
@@ -73,15 +69,23 @@ namespace GL_Core
 		{
 			GL.UseProgram(program);
 			modelMatrix = mtxMdl;
-			GL.UniformMatrix4(mtxMdlLoc, false, ref modelMatrix);
+			int mtxMdl_loc = GL.GetUniformLocation(program, "mtxMdl");
+			if(mtxMdl_loc!=-1)
+				GL.UniformMatrix4(mtxMdl_loc, false, ref modelMatrix);
+
 			computedCamMtx = mtxCam * mtxProj;
-			GL.UniformMatrix4(mtxCamLoc, false, ref computedCamMtx);
+
+			int mtxCam_loc = GL.GetUniformLocation(program, "mtxCam");
+			if (mtxCam_loc != -1)
+				GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxCam"), false, ref computedCamMtx);
 		}
 
 		public void UpdateModelMatrix(Matrix4 matrix)
 		{
 			modelMatrix = matrix;
-			GL.UniformMatrix4(mtxMdlLoc, false, ref matrix);
+			int mtxMdl_loc = GL.GetUniformLocation(program, "mtxMdl");
+			if (mtxMdl_loc != -1)
+				GL.UniformMatrix4(mtxMdl_loc, false, ref modelMatrix);
 		}
 
 		public void Activate()

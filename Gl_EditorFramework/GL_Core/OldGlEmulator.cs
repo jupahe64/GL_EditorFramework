@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL;
 
-namespace GL_Core
+namespace GL_EditorFramework.GL_Core
 {
 	public class OldGlEmulator : IDisposable
 	{

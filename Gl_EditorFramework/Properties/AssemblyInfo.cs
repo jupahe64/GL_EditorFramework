@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("GL_Core")]
+[assembly: AssemblyTitle("OpenGl_EditorFramework")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("GL_Core")]
+[assembly: AssemblyProduct("OpenGl_EditorFramework")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("29647ba5-2859-46f0-a99e-c3a387a9447a")]
+[assembly: Guid("d593a72d-554d-40fb-9967-503cb15a744f")]
 
 // Version information for an assembly consists of the following four values:
 //
