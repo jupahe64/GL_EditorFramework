@@ -30,53 +30,9 @@ namespace GL_EditorFramework
 			GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 			bmp.UnlockBits(bmpData);
 			
-			//orientation cube
-
-			orientationCubeShader = new ShaderProgram(
-				new FragmentShader(
-				  @"#version 330
-				uniform sampler2D tex;
-				layout(location = 1) in vec2 uv;
-				
-				void main(){
-					gl_FragColor = texture(tex, uv);
-				}"), 
-				new VertexShader(
-				  @"#version 330
-				layout(location = 0) in vec4 position;
-				
-				uniform mat4 mtx;
-				void main(){
-					gl_Position = mtx*position;
-				}"));
-
-			int buffer;
-			
-			GL.BindVertexArray(orientationCubeVao = GL.GenVertexArray());
-
-			GL.BindBuffer(BufferTarget.ArrayBuffer, buffer = GL.GenBuffer());
-
-			float[] data = new float[]
-			{
-				-1, 1, 0,    0,   0,
-				 1, 1, 0,0.25f,   0,
-				 1,-1, 0,0.25f,0.5f,
-				-1,-1, 0,    0,0.5f,
-			};
-			GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.StaticDraw);
-
-			GL.EnableVertexAttribArray(0);
-			GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 5, 0);
-			GL.EnableVertexAttribArray(1);
-			GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(float) * 5, sizeof(float) * 3);
-
 			initialized = true;
 		}
 		private static bool initialized = false;
 		public static int TextureSheet;
-
-		public static ShaderProgram orientationCubeShader;
-
-		public static int orientationCubeVao;
 	}
 }

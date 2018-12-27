@@ -107,6 +107,17 @@ namespace GL_EditorFramework.GL_Core
 
 				mainDrawable.Draw(this);
 
+				GL.MatrixMode(MatrixMode.Modelview);
+				orientationCubeMtx =
+					Matrix4.CreateRotationY(camRotX) *
+					Matrix4.CreateRotationX(camRotY) *
+					Matrix4.CreateScale(80f / Width, 40f / Height, 0.25f) *
+					Matrix4.CreateTranslation(1 - 160f / Width, 1 - 80f / Height, 0) *
+					Matrix4.CreateRotationY(0.03125f);
+				GL.LoadMatrix(ref orientationCubeMtx);
+
+				DrawOrientationCube();
+
 				if (showFakeCursor)
 				{
 					GL.Color3(1f, 1f, 1f);
@@ -141,7 +152,18 @@ namespace GL_EditorFramework.GL_Core
 				computedMatrix = mtxCam * mtxProj;
 				GL.LoadMatrix(ref computedMatrix);
 				mainDrawable.Draw(this);
-				
+
+				GL.MatrixMode(MatrixMode.Modelview);
+				orientationCubeMtx =
+					Matrix4.CreateRotationY(camRotX) *
+					Matrix4.CreateRotationX(camRotY) *
+					Matrix4.CreateScale(80f / Width, 40f / Height, 0.25f) *
+					Matrix4.CreateTranslation(1 - 160f / Width, 1 - 80f / Height, 0) *
+					Matrix4.CreateRotationY(-0.03125f);
+				GL.LoadMatrix(ref orientationCubeMtx);
+
+				DrawOrientationCube();
+
 				if (showFakeCursor)
 				{
 					GL.Color3(1f, 1f, 1f);
@@ -176,6 +198,16 @@ namespace GL_EditorFramework.GL_Core
 				Matrix4 computedMatrix = mtxCam * mtxProj;
 				GL.LoadMatrix(ref computedMatrix);
 				mainDrawable.Draw(this);
+
+				GL.MatrixMode(MatrixMode.Modelview);
+				orientationCubeMtx =
+					Matrix4.CreateRotationY(camRotX) *
+					Matrix4.CreateRotationX(camRotY) *
+					Matrix4.CreateScale(40f / Width, 40f / Height, 0.25f) *
+					Matrix4.CreateTranslation(1 - 80f / Width, 1 - 80f / Height, 0);
+				GL.LoadMatrix(ref orientationCubeMtx);
+
+				DrawOrientationCube();
 			}
 
 			SwapBuffers();
@@ -204,7 +236,56 @@ namespace GL_EditorFramework.GL_Core
 			GL.MatrixMode(MatrixMode.Projection);
 			Matrix4 computedMatrix = mtxCam * mtxProj;
 			GL.LoadMatrix(ref computedMatrix);
+
+			skipPickingColors(6);
 			mainDrawable.DrawPicking(this);
+
+			GL.Disable(EnableCap.Texture2D);
+			GL.MatrixMode(MatrixMode.Projection);
+			GL.LoadIdentity();
+			GL.MatrixMode(MatrixMode.Modelview);
+			orientationCubeMtx =
+				Matrix4.CreateRotationY(camRotX) *
+				Matrix4.CreateRotationX(camRotY) *
+				Matrix4.CreateScale((stereoscopy?80f:40f) / Width, 40f / Height, 0.25f) *
+				Matrix4.CreateTranslation(1 - (stereoscopy ? 160f : 80f) / Width, 1 - 80f / Height, 0);
+			GL.LoadMatrix(ref orientationCubeMtx);
+			GL.Disable(EnableCap.DepthTest);
+
+			GL.Begin(PrimitiveType.Quads);
+			GL.Color4(Color.FromArgb(1));
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.Vertex3(1f, 1f, -1f);
+			GL.Vertex3(1f, 1f, 1f);
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.Color4(Color.FromArgb(2));
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.Vertex3(1f, -1f, -1f);
+			GL.Vertex3(-1f, -1f, -1f);
+			GL.Color4(Color.FromArgb(3));
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.Vertex3(1f, 1f, 1f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.Color4(Color.FromArgb(4));
+			GL.Vertex3(1f, 1f, -1f);
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.Vertex3(-1f, -1f, -1f);
+			GL.Vertex3(1f, -1f, -1f);
+			GL.Color4(Color.FromArgb(5));
+			GL.Vertex3(1f, 1f, 1f);
+			GL.Vertex3(1f, 1f, -1f);
+			GL.Vertex3(1f, -1f, -1f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.Color4(Color.FromArgb(6));
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.Vertex3(-1f, -1f, -1f);
+			GL.End();
+			GL.Enable(EnableCap.DepthTest);
+			GL.Enable(EnableCap.Texture2D);
 		}
 	}
 }

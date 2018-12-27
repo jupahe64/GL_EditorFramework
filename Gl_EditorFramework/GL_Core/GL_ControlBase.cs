@@ -33,6 +33,8 @@ namespace GL_EditorFramework.GL_Core
 			
 		}
 
+		protected Matrix4 orientationCubeMtx;
+
 		protected bool showFakeCursor;
 
 		private Timer redrawer = new Timer();
@@ -94,7 +96,7 @@ namespace GL_EditorFramework.GL_Core
 		private bool shouldRedraw;
 		private bool shouldRepick;
 		private bool skipCameraAction;
-		private const int pickingIndexOffset = 1;
+		private const int pickingIndexOffset = 7;
 
 		public AbstractCamera ActiveCamera
 		{
@@ -277,11 +279,41 @@ namespace GL_EditorFramework.GL_Core
 			shouldRepick = false;
 			skipCameraAction = false;
 
-			handleDrawableEvtResult(
-				mainDrawable.MouseUp(e, this) | 
-				((e.Location.X == dragStartPos.X)&&(e.Location.Y == dragStartPos.Y)?
-					mainDrawable.MouseClick(e, this):0)
-				);
+			if((e.Location.X == dragStartPos.X) && (e.Location.Y == dragStartPos.Y))
+			{
+				shouldRedraw = true;
+				switch (pickingFrameBuffer[0])
+				{
+					case 1:
+						camRotX = 0;
+						camRotY = (float)Math.PI * 0.5f;
+						break;
+					case 2:
+						camRotX = 0;
+						camRotY = -(float)Math.PI * 0.5f;
+						break;
+					case 3:
+						camRotX = 0;
+						camRotY = 0;
+						break;
+					case 4:
+						camRotX = (float)Math.PI;
+						camRotY = 0;
+						break;
+					case 5:
+						camRotX = -(float)Math.PI * 0.5f;
+						camRotY = 0;
+						break;
+					case 6:
+						camRotX = (float)Math.PI * 0.5f;
+						camRotY = 0;
+						break;
+					default:
+						shouldRedraw = false;
+						break;
+				}
+				handleDrawableEvtResult(mainDrawable.MouseClick(e, this));
+			}
 
 			if (!skipCameraAction)
 				handleCameraEvtResult(activeCamera.MouseUp(e, this));
@@ -311,9 +343,7 @@ namespace GL_EditorFramework.GL_Core
 			GL.Flush();
 
 			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.Bgra, PixelType.UnsignedByte, pickingFrameBuffer);
-
-
-
+			
 			// depth math from http://www.opengl.org/resources/faq/technical/depthbuffer.htm
 
 			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref pickingDepth);
@@ -412,6 +442,72 @@ namespace GL_EditorFramework.GL_Core
 		}
 
 		public virtual void DrawPicking() { }
+
+		protected void DrawOrientationCube()
+		{
+			GL.UseProgram(0);
+			GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
+			GL.MatrixMode(MatrixMode.Projection);
+			GL.LoadIdentity();
+			GL.Disable(EnableCap.DepthTest);
+			GL.Begin(PrimitiveType.Quads);
+			GL.Color3(new Vector3(pickingFrameBuffer[0] == 1 ? 1f : 0.75f));
+			GL.TexCoord2(0f, 0.5f);
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.TexCoord2(0.25f, 0.5f);
+			GL.Vertex3(1f, 1f, -1f);
+			GL.TexCoord2(0.25f, 1f);
+			GL.Vertex3(1f, 1f, 1f);
+			GL.TexCoord2(0f, 1f);
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.Color3(new Vector3(pickingFrameBuffer[0] == 2 ? 1f : 0.75f));
+			GL.TexCoord2(0.25f, 0.5f);
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.TexCoord2(0.5f, 0.5f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.TexCoord2(0.5f, 1f);
+			GL.Vertex3(1f, -1f, -1f);
+			GL.TexCoord2(0.25f, 1f);
+			GL.Vertex3(-1f, -1f, -1f);
+			GL.Color3(new Vector3(pickingFrameBuffer[0] == 3 ? 1f : 0.75f));
+			GL.TexCoord2(0f, 0.0f);
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.TexCoord2(0.25f, 0.0f);
+			GL.Vertex3(1f, 1f, 1f);
+			GL.TexCoord2(0.25f, 0.5f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.TexCoord2(0f, 0.5f);
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.Color3(new Vector3(pickingFrameBuffer[0] == 4 ? 1f : 0.75f));
+			GL.TexCoord2(0.5f, 0f);
+			GL.Vertex3(1f, 1f, -1f);
+			GL.TexCoord2(0.75f, 0f);
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.TexCoord2(0.75f, 0.5f);
+			GL.Vertex3(-1f, -1f, -1f);
+			GL.TexCoord2(0.5f, 0.5f);
+			GL.Vertex3(1f, -1f, -1f);
+			GL.Color3(new Vector3(pickingFrameBuffer[0] == 5 ? 1f : 0.75f));
+			GL.TexCoord2(0.25f, 0f);
+			GL.Vertex3(1f, 1f, 1f);
+			GL.TexCoord2(0.5f, 0f);
+			GL.Vertex3(1f, 1f, -1f);
+			GL.TexCoord2(0.5f, 0.5f);
+			GL.Vertex3(1f, -1f, -1f);
+			GL.TexCoord2(0.25f, 0.5f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.Color3(new Vector3(pickingFrameBuffer[0] == 6 ? 1f : 0.75f));
+			GL.TexCoord2(0.75f, 0f);
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.TexCoord2(1f, 0f);
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.TexCoord2(1f, 0.5f);
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.TexCoord2(0.75f, 0.5f);
+			GL.Vertex3(-1f, -1f, -1f);
+			GL.End();
+			GL.Enable(EnableCap.DepthTest);
+		}
 
 		public override void Refresh()
 		{
