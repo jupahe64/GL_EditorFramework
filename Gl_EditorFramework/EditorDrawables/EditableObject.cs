@@ -89,11 +89,11 @@ namespace GL_EditorFramework.EditorDrawables
 
 		}
 
-		public bool isSelectable(int subObjectIndex) => true;
+		public virtual bool isSelectable(int subObjectIndex) => true;
 
-		public Vector3 getPosition(int subObjectIndex) => Position;
-		
-		public int[] getAllSelection()
+		public virtual Vector3 getPosition(int subObjectIndex) => Position;
+
+		public virtual int[] getAllSelection()
 		{
 			return new int[] { 0 };
 		}
@@ -382,9 +382,14 @@ namespace GL_EditorFramework.EditorDrawables
 			return 0;
 		}
 
-		public void Translate(Vector3 lastPos, Vector3 translate, int subObj)
+		public virtual void Translate(Vector3 lastPos, Vector3 translate, int subObj)
 		{
 			Position = lastPos + translate;
+		}
+
+		public virtual void UpdatePosition(int subObj)
+		{
+			
 		}
 
 		public override uint MouseUp(MouseEventArgs e, I3DControl control)

@@ -37,7 +37,7 @@ namespace Testing
 		private void button1_Click(object sender, EventArgs e)
 		{
 			Color rand = Color.FromArgb(rng.Next());
-			scene.AddObject(new EditableObject() { CubeColor = new Vector4(rand.R/255f,rand.G / 255f, rand.B / 255f, 1f) });
+			scene.Add(new EditableObject() { CubeColor = new Vector4(rand.R/255f,rand.G / 255f, rand.B / 255f, 1f) });
 		}
 	}
 }

@@ -310,9 +310,13 @@ namespace GL_EditorFramework.GL_Core
 						break;
 					default:
 						shouldRedraw = false;
+						handleDrawableEvtResult(mainDrawable.MouseClick(e, this));
 						break;
 				}
-				handleDrawableEvtResult(mainDrawable.MouseClick(e, this));
+			}
+			else
+			{
+				handleDrawableEvtResult(mainDrawable.MouseUp(e, this));
 			}
 
 			if (!skipCameraAction)

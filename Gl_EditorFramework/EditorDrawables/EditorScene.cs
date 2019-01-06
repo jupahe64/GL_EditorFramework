@@ -40,7 +40,7 @@ namespace GL_EditorFramework.EditorDrawables
 		public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 
 		public Dictionary<ObjID, SelectInfo> selectedObjects = new Dictionary<ObjID, SelectInfo>();
-
+		
 		public event EventHandler SelectionChanged;
 
 		public ObjID dragObj = ObjID.None;
@@ -53,28 +53,78 @@ namespace GL_EditorFramework.EditorDrawables
 			this.multiSelect = multiSelect;
 		}
 
-		public void AddObject(EditableObject obj)
+		public Dictionary<ObjID, SelectInfo> SelectedObjects
 		{
-			objects.Add(obj);
+			get => selectedObjects;
+			set
+			{
+				foreach (ObjID o in value.Keys)
+				{
+					if (!selectedObjects.ContainsKey(o)) //object wasn't selected before
+						objects[o.ObjectIndex].Select(o.SubObjectIndex, null); //select it
+
+					else //object stays selected 
+						selectedObjects.Remove(o); //filter out these to find all objects which are not selected anymore
+				}
+
+				foreach (ObjID o in selectedObjects.Keys) //now the selected objects are a list of objects to deselect
+														  //which is fine because in the end they get overwriten anyway
+				{
+					objects[o.ObjectIndex].Deselect(o.SubObjectIndex, null); //Deselect them all
+				}
+				selectedObjects = value;
+			}
+		}
+
+		public void ToogleSelected(ObjID obj, bool isSelected)
+		{
+			bool alreadySelected = selectedObjects.ContainsKey(obj);
+			if(alreadySelected && !isSelected)
+			{
+				objects[obj.ObjectIndex].Select(obj.SubObjectIndex, null);
+				selectedObjects.Remove(obj);
+			}
+			else if(!alreadySelected && isSelected)
+			{
+				objects[obj.ObjectIndex].Deselect(obj.SubObjectIndex, null);
+				selectedObjects.Add(obj,generateSelectInfo(obj));
+			}
+		}
+
+		public SelectInfo generateSelectInfo(ObjID obj) => new SelectInfo(objects[obj.ObjectIndex].getPosition(obj.SubObjectIndex));
+
+		public void Add(params EditableObject[] objs)
+		{
+			int index = objects.Count;
+
 			foreach (ObjID selected in selectedObjects.Keys.ToArray())
 			{
 				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, (I3DControl)control);
 			}
 			selectedObjects.Clear();
 
-			foreach (int subObj in obj.getAllSelection())
+			foreach (EditableObject obj in objs)
 			{
-				selectedObjects.Add(new ObjID(objects.Count-1, subObj), new SelectInfo(obj.getPosition(subObj)));
-				obj.Select(subObj, (I3DControl)control);
+				objects.Add(obj);
+
+				foreach (int subObj in obj.getAllSelection())
+				{
+					selectedObjects.Add(new ObjID(index, subObj), new SelectInfo(obj.getPosition(subObj)));
+					obj.Select(subObj, (I3DControl)control);
+				}
+				index++;
 			}
 			SelectionChanged?.Invoke(this, new EventArgs());
 
 			control.Refresh();
 		}
 
-		public void DeleteObject(EditableObject obj)
+		public void Delete(params EditableObject[] objs)
 		{
-			objects.Remove(obj);
+			foreach (EditableObject obj in objs)
+			{
+				objects.Remove(obj);
+			}
 			foreach (ObjID selected in selectedObjects.Keys.ToArray())
 			{
 				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, (I3DControl)control);
@@ -85,20 +135,24 @@ namespace GL_EditorFramework.EditorDrawables
 			control.Refresh();
 		}
 
-		public void InsertAfter(int index, EditableObject obj)
+		public void InsertAfter(int index, params EditableObject[] objs)
 		{
-			objects.Insert(index, obj);
-
 			foreach (ObjID selected in selectedObjects.Keys.ToArray())
 			{
 				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, (I3DControl)control);
 			}
 			selectedObjects.Clear();
 
-			foreach (int subObj in obj.getAllSelection())
+			foreach (EditableObject obj in objs)
 			{
-				selectedObjects.Add(new ObjID(index, subObj), new SelectInfo(obj.getPosition(subObj)));
-				obj.Select(subObj, (I3DControl)control);
+				objects.Insert(index, obj);
+
+				foreach (int subObj in obj.getAllSelection())
+				{
+					selectedObjects.Add(new ObjID(index, subObj), new SelectInfo(obj.getPosition(subObj)));
+					obj.Select(subObj, (I3DControl)control);
+				}
+				index++;
 			}
 			SelectionChanged?.Invoke(this, new EventArgs());
 
@@ -267,6 +321,7 @@ namespace GL_EditorFramework.EditorDrawables
 				foreach (ObjID o in selectedObjects.Keys.ToList())
 				{
 					selectedObjects[o] = new SelectInfo(objects[o.ObjectIndex].getPosition(o.SubObjectIndex));
+					objects[o.ObjectIndex].UpdatePosition(o.SubObjectIndex);
 				}
 			}
 
@@ -319,7 +374,7 @@ namespace GL_EditorFramework.EditorDrawables
 					if (hoveringOverEditable && !selectedObjects.ContainsKey(hovered))
 					{
 						selectedObjects.Clear();
-						selectedObjects.Add(hovered, new SelectInfo(objects[hovered.ObjectIndex].getPosition(hovered.SubObjectIndex)));
+						selectedObjects.Add(hovered, generateSelectInfo(hovered));
 						objects[hovered.ObjectIndex].Select(hovered.SubObjectIndex, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
@@ -339,7 +394,7 @@ namespace GL_EditorFramework.EditorDrawables
 					if (hoveringOverEditable && !selectedObjects.ContainsKey(hovered))
 					{
 						selectedObjects.Clear();
-						selectedObjects.Add(hovered, new SelectInfo(objects[hovered.ObjectIndex].getPosition(hovered.SubObjectIndex)));
+						selectedObjects.Add(hovered, generateSelectInfo(hovered));
 						objects[hovered.ObjectIndex].Select(hovered.SubObjectIndex, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
@@ -360,7 +415,7 @@ namespace GL_EditorFramework.EditorDrawables
 				}
 				else if(!hovered.IsNone() && hovered.ObjectIndex < objects.Count)
 				{
-					selectedObjects.Add(hovered, new SelectInfo(objects[hovered.ObjectIndex].getPosition(hovered.SubObjectIndex)));
+					selectedObjects.Add(hovered, generateSelectInfo(hovered));
 					objects[hovered.ObjectIndex].Select(hovered.SubObjectIndex, control);
 					SelectionChanged?.Invoke(this, new EventArgs());
 				}
