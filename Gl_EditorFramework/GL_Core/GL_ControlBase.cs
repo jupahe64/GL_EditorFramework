@@ -33,6 +33,8 @@ namespace GL_EditorFramework.GL_Core
 			
 		}
 
+		public Color ViewportColor = Color.FromArgb(20,20,20);
+
 		protected Matrix4 orientationCubeMtx;
 
 		protected bool showFakeCursor;

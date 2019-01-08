@@ -16,9 +16,7 @@ namespace GL_EditorFramework.GL_Core
 {
 	public class GL_ControlLegacy : GL_ControlBase
 	{
-		
-
-		public GL_ControlLegacy(int redrawerInterval) : base(1,redrawerInterval)
+        public GL_ControlLegacy(int redrawerInterval) : base(1,redrawerInterval)
 		{
 
 		}
@@ -85,7 +83,11 @@ namespace GL_EditorFramework.GL_Core
 
 			MakeCurrent();
 
-			GL.ClearColor(0.125f, 0.125f, 0.125f, 1.0f);
+			GL.ClearColor(ViewportColor.R / 255.0f,
+                          ViewportColor.G / 255.0f,
+                          ViewportColor.B / 255.0f,
+                          ViewportColor.A / 255.0f);
+
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			if (stereoscopy)

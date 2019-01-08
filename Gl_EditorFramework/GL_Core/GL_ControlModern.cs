@@ -119,7 +119,11 @@ namespace GL_EditorFramework.GL_Core
 
 			base.OnPaint(e);
 
-			GL.ClearColor(0.125f, 0.125f, 0.125f, 1.0f);
+			GL.ClearColor(ViewportColor.R / 255.0f,
+                          ViewportColor.G / 255.0f,
+                          ViewportColor.B / 255.0f,
+                          ViewportColor.A / 255.0f);
+						  
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 			if (stereoscopy)
 			{
