@@ -10,24 +10,24 @@ namespace GL_EditorFramework.GL_Core
 {
 	public class ShaderProgram
 	{
-		private int fragSh, vertSh, program;
-		private Matrix4 modelMatrix;
-		private Matrix4 computedCamMtx;
+        private int fragSh, vertSh, program;
+        private Matrix4 modelMatrix;
+        private Matrix4 computedCamMtx;
         private Dictionary<string, int> attributes = new Dictionary<string, int>();
         private int activeAttributeCount;
 
         public ShaderProgram(FragmentShader frag, VertexShader vert)
-		{
-			fragSh = frag.shader;
-			vertSh = vert.shader;
-			program = GL.CreateProgram();
-			GL.AttachShader(program, vertSh);
-			GL.AttachShader(program, fragSh);
-			GL.LinkProgram(program);
-			Console.WriteLine("fragment:");
-			Console.WriteLine(GL.GetShaderInfoLog(fragSh));
-			Console.WriteLine("vertex:");
-			Console.WriteLine(GL.GetShaderInfoLog(vertSh));
+        {
+            fragSh = frag.shader;
+            vertSh = vert.shader;
+            program = GL.CreateProgram();
+            GL.AttachShader(program, vertSh);
+            GL.AttachShader(program, fragSh);
+            GL.LinkProgram(program);
+            Console.WriteLine("fragment:");
+            Console.WriteLine(GL.GetShaderInfoLog(fragSh));
+            Console.WriteLine("vertex:");
+            Console.WriteLine(GL.GetShaderInfoLog(vertSh));
 
             LoadAttributes();
         }
