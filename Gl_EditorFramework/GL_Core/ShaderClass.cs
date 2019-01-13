@@ -10,32 +10,56 @@ namespace GL_EditorFramework.GL_Core
 {
     public class ShaderProgram
     {
-        private int fragSh, vertSh, program;
+        private int fragSh, vertSh, geomSh;
         private Matrix4 modelMatrix;
         private Matrix4 computedCamMtx;
         private Dictionary<string, int> attributes = new Dictionary<string, int>();
         private int activeAttributeCount;
+        public int program;
 
         public ShaderProgram(FragmentShader frag, VertexShader vert)
         {
-            fragSh = frag.shader;
-            vertSh = vert.shader;
-            program = GL.CreateProgram();
-            GL.AttachShader(program, vertSh);
-            GL.AttachShader(program, fragSh);
-            GL.LinkProgram(program);
-            Console.WriteLine("fragment:");
-            Console.WriteLine(GL.GetShaderInfoLog(fragSh));
-            Console.WriteLine("vertex:");
-            Console.WriteLine(GL.GetShaderInfoLog(vertSh));
+            LoadShaders(new Shader[] { vert, frag });
+        }
 
+        public ShaderProgram(FragmentShader frag, VertexShader vert, GeomertyShader geom)
+        {
+            LoadShaders(new Shader[] { vert, frag, geom });
+        }
+
+        public ShaderProgram(Shader[] shaders)
+        {
+            LoadShaders(shaders);
+        }
+
+        private void LoadShaders(Shader[] shaders)
+        {
+            program = GL.CreateProgram();
+
+            foreach (Shader shader in shaders)
+            {
+                AttachShader(shader);
+            }
+
+            GL.LinkProgram(program);
+            foreach (Shader shader in shaders)
+            {
+                if (shader.type == ShaderType.VertexShader)
+                    Console.WriteLine("vertex:");
+                if (shader.type == ShaderType.FragmentShader)
+                    Console.WriteLine("fragment:");
+                if (shader.type == ShaderType.GeometryShader)
+                    Console.WriteLine("geometry:");
+
+                Console.WriteLine(GL.GetShaderInfoLog(shader.shader));
+            }
             LoadAttributes();
         }
 
         public void AttachShader(Shader shader)
         {
-            Console.WriteLine("shader:");
-            Console.WriteLine(GL.GetShaderInfoLog(shader.shader));
+            //Console.WriteLine("shader:");
+            //Console.WriteLine(GL.GetShaderInfoLog(shader.shader));
             GL.AttachShader(program, shader.shader);
         }
 
@@ -143,12 +167,42 @@ namespace GL_EditorFramework.GL_Core
             }
         }
 
-        public void UniformBoolToInt(string name, bool value)
+        public void SetBoolToInt(string name, bool value)
         {
             if (value)
                 GL.Uniform1(this[name], 1);
             else
                 GL.Uniform1(this[name], 0);
+        }
+
+        public void SetMatrix4x4(string name, ref Matrix4 value, bool Transpose = false)
+        {
+            GL.UniformMatrix4(this["mvpMatrix"], false, ref value);
+        }
+
+        public void SetVector4(string name, Vector4 value)
+        {
+            GL.Uniform4(this[name], value);
+        }
+
+        public void SetVector3(string name, Vector3 value)
+        {
+            GL.Uniform3(this[name], value);
+        }
+
+        public void SetVector2(string name, Vector2 value)
+        {
+            GL.Uniform2(this[name], value);
+        }
+
+        public void SetFloat(string name, float value)
+        {
+            GL.Uniform1(this[name], value);
+        }
+
+        public void SetInt(string name, int value)
+        {
+            GL.Uniform1(this[name], value);
         }
     }
 
@@ -180,6 +234,15 @@ namespace GL_EditorFramework.GL_Core
     {
         public VertexShader(string src)
             : base(src, ShaderType.VertexShader)
+        {
+
+        }
+    }
+
+    public class GeomertyShader : Shader
+    {
+        public GeomertyShader(string src)
+            : base(src, ShaderType.GeometryShader)
         {
 
         }

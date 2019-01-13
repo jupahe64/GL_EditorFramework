@@ -208,8 +208,6 @@ namespace GL_EditorFramework.GL_Core
                     GL.Enable(EnableCap.Texture2D);
                 }
                 #endregion
-
-
             }
             else
             {
