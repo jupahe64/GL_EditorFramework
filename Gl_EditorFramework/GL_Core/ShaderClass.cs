@@ -50,22 +50,22 @@ namespace GL_EditorFramework.GL_Core
                     Console.WriteLine("fragment:");
                 if (shader.type == ShaderType.GeometryShader)
                     Console.WriteLine("geometry:");
-
-                Console.WriteLine(GL.GetShaderInfoLog(shader.shader));
+                    
+                Console.WriteLine(GL.GetShaderInfoLog(shader.id));
             }
             LoadAttributes();
         }
 
         public void AttachShader(Shader shader)
         {
-            //Console.WriteLine("shader:");
-            //Console.WriteLine(GL.GetShaderInfoLog(shader.shader));
-            GL.AttachShader(program, shader.shader);
+            Console.WriteLine("shader:");
+            Console.WriteLine(GL.GetShaderInfoLog(shader.id));
+            GL.AttachShader(program, shader.id);
         }
 
         public void DetachShader(Shader shader)
         {
-            GL.DetachShader(program, shader.shader);
+            GL.DetachShader(program, shader.id);
         }
 
         public void LinkShaders()
@@ -76,16 +76,16 @@ namespace GL_EditorFramework.GL_Core
         public void SetFragmentShader(FragmentShader shader)
         {
             GL.DetachShader(program, fragSh);
-            GL.AttachShader(program, shader.shader);
-            fragSh = shader.shader;
+            GL.AttachShader(program, shader.id);
+            fragSh = shader.id;
             GL.LinkProgram(program);
         }
 
         public void SetVertexShader(VertexShader shader)
         {
             GL.DetachShader(program, vertSh);
-            GL.AttachShader(program, shader.shader);
-            vertSh = shader.shader;
+            GL.AttachShader(program, shader.id);
+            vertSh = shader.id;
             GL.LinkProgram(program);
 
             GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxMdl"), false, ref modelMatrix);
@@ -210,15 +210,15 @@ namespace GL_EditorFramework.GL_Core
     {
         public Shader(string src, ShaderType type)
         {
-            shader = GL.CreateShader(type);
-            GL.ShaderSource(shader, src);
-            GL.CompileShader(shader);
+            id = GL.CreateShader(type);
+            GL.ShaderSource(id, src);
+            GL.CompileShader(id);
             this.type = type;
         }
 
         public ShaderType type;
 
-        public int shader;
+        public int id;
     }
 
     public class FragmentShader : Shader
