@@ -98,7 +98,9 @@ namespace GL_EditorFramework.GL_Core
 		private bool skipCameraAction;
 		private const int pickingIndexOffset = 7;
 
-		public AbstractCamera ActiveCamera
+        public Color ViewportColor = Color.FromArgb(20, 20, 20);
+
+        public AbstractCamera ActiveCamera
 		{
 			get => activeCamera;
 			set
