@@ -420,6 +420,9 @@ namespace GL_EditorFramework.EditorDrawables
 					SelectionChanged?.Invoke(this, new EventArgs());
 				}
 			}
+
+			dragObj = ObjID.None; //because MouseClick implies that the Mouse Button is not pressed anymore
+
 			var |= REDRAW;
 
 			return var;

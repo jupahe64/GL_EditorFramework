@@ -12,9 +12,11 @@ namespace GL_EditorFramework.StandardCameras
 {
 	public class WalkaroundCamera : AbstractCamera
 	{
-		public WalkaroundCamera()
-		{
+		private float maxCamMoveSpeed;
 
+		public WalkaroundCamera(float maxCamMoveSpeed = 0.1f)
+		{
+			this.maxCamMoveSpeed = maxCamMoveSpeed;
 		}
 
 		public override uint MouseDown(MouseEventArgs e, I3DControl control)
@@ -70,8 +72,8 @@ namespace GL_EditorFramework.StandardCameras
 
 					//code from Whitehole
 
-					deltaX *= Math.Min(0.1f, depth * control.FactorX);
-					deltaY *= Math.Min(0.1f, depth * control.FactorY);
+					deltaX *= Math.Min(maxCamMoveSpeed, depth * control.FactorX);
+					deltaY *= Math.Min(maxCamMoveSpeed, depth * control.FactorY);
 
 					control.CameraTarget += Vector3.UnitX * deltaX * (float)Math.Cos(control.CamRotX);
 					control.CameraTarget -= Vector3.UnitX * deltaY * (float)Math.Sin(control.CamRotX) * (float)Math.Sin(control.CamRotY);
