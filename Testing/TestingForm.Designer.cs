@@ -30,19 +30,29 @@
 		{
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TestingForm));
 			this.button1 = new System.Windows.Forms.Button();
+			this.listBox1 = new System.Windows.Forms.ListBox();
 			this.gL_ControlLegacy1 = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
 			this.gL_ControlModern1 = new GL_EditorFramework.GL_Core.GL_ControlModern();
 			this.SuspendLayout();
 			// 
 			// button1
 			// 
-			this.button1.Location = new System.Drawing.Point(12, 576);
+			this.button1.Location = new System.Drawing.Point(12, 208);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(75, 23);
 			this.button1.TabIndex = 3;
 			this.button1.Text = "Add Object";
 			this.button1.UseVisualStyleBackColor = true;
 			this.button1.Click += new System.EventHandler(this.button1_Click);
+			// 
+			// listBox1
+			// 
+			this.listBox1.FormattingEnabled = true;
+			this.listBox1.Location = new System.Drawing.Point(13, 238);
+			this.listBox1.Name = "listBox1";
+			this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+			this.listBox1.Size = new System.Drawing.Size(278, 498);
+			this.listBox1.TabIndex = 4;
 			// 
 			// gL_ControlLegacy1
 			// 
@@ -54,10 +64,10 @@
 			this.gL_ControlLegacy1.CamRotY = 0F;
 			this.gL_ControlLegacy1.DragStartPos = new System.Drawing.Point(0, 0);
 			this.gL_ControlLegacy1.Fov = 0.7853982F;
-			this.gL_ControlLegacy1.Location = new System.Drawing.Point(612, 12);
+			this.gL_ControlLegacy1.Location = new System.Drawing.Point(12, 12);
 			this.gL_ControlLegacy1.MainDrawable = null;
 			this.gL_ControlLegacy1.Name = "gL_ControlLegacy1";
-			this.gL_ControlLegacy1.Size = new System.Drawing.Size(658, 426);
+			this.gL_ControlLegacy1.Size = new System.Drawing.Size(279, 190);
 			this.gL_ControlLegacy1.Stereoscopy = true;
 			this.gL_ControlLegacy1.TabIndex = 2;
 			this.gL_ControlLegacy1.VSync = false;
@@ -75,10 +85,10 @@
 			this.gL_ControlModern1.CurrentShader = null;
 			this.gL_ControlModern1.DragStartPos = new System.Drawing.Point(0, 0);
 			this.gL_ControlModern1.Fov = 0.7853982F;
-			this.gL_ControlModern1.Location = new System.Drawing.Point(12, 12);
+			this.gL_ControlModern1.Location = new System.Drawing.Point(297, 12);
 			this.gL_ControlModern1.MainDrawable = null;
 			this.gL_ControlModern1.Name = "gL_ControlModern1";
-			this.gL_ControlModern1.Size = new System.Drawing.Size(594, 558);
+			this.gL_ControlModern1.Size = new System.Drawing.Size(694, 723);
 			this.gL_ControlModern1.Stereoscopy = false;
 			this.gL_ControlModern1.TabIndex = 1;
 			this.gL_ControlModern1.VSync = false;
@@ -89,7 +99,8 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1309, 747);
+			this.ClientSize = new System.Drawing.Size(998, 747);
+			this.Controls.Add(this.listBox1);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.gL_ControlLegacy1);
 			this.Controls.Add(this.gL_ControlModern1);
@@ -103,6 +114,7 @@
 		private GL_EditorFramework.GL_Core.GL_ControlModern gL_ControlModern1;
 		private GL_EditorFramework.GL_Core.GL_ControlLegacy gL_ControlLegacy1;
 		private System.Windows.Forms.Button button1;
+		private System.Windows.Forms.ListBox listBox1;
 	}
 }
 

@@ -39,14 +39,14 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 
-		public Dictionary<ObjID, SelectInfo> selectedObjects = new Dictionary<ObjID, SelectInfo>();
+		protected Dictionary<ObjID, SelectInfo> selectedObjects = new Dictionary<ObjID, SelectInfo>();
 		
 		public event EventHandler SelectionChanged;
 
 		public ObjID dragObj = ObjID.None;
 		private float draggingDepth;
 
-		private Control control;
+		private GL_ControlBase control;
 
 		public EditorScene(bool multiSelect = true)
 		{
@@ -61,7 +61,7 @@ namespace GL_EditorFramework.EditorDrawables
 				foreach (ObjID o in value.Keys)
 				{
 					if (!selectedObjects.ContainsKey(o)) //object wasn't selected before
-						objects[o.ObjectIndex].Select(o.SubObjectIndex, null); //select it
+						objects[o.ObjectIndex].Select(o.SubObjectIndex, control); //select it
 
 					else //object stays selected 
 						selectedObjects.Remove(o); //filter out these to find all objects which are not selected anymore
@@ -70,9 +70,10 @@ namespace GL_EditorFramework.EditorDrawables
 				foreach (ObjID o in selectedObjects.Keys) //now the selected objects are a list of objects to deselect
 														  //which is fine because in the end they get overwriten anyway
 				{
-					objects[o.ObjectIndex].Deselect(o.SubObjectIndex, null); //Deselect them all
+					objects[o.ObjectIndex].Deselect(o.SubObjectIndex, control); //Deselect them all
 				}
 				selectedObjects = value;
+				control.Refresh();
 			}
 		}
 
@@ -99,7 +100,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 			foreach (ObjID selected in selectedObjects.Keys.ToArray())
 			{
-				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, (I3DControl)control);
+				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
 			}
 			selectedObjects.Clear();
 
@@ -110,7 +111,7 @@ namespace GL_EditorFramework.EditorDrawables
 				foreach (int subObj in obj.getAllSelection())
 				{
 					selectedObjects.Add(new ObjID(index, subObj), new SelectInfo(obj.getPosition(subObj)));
-					obj.Select(subObj, (I3DControl)control);
+					obj.Select(subObj, control);
 				}
 				index++;
 			}
@@ -127,7 +128,7 @@ namespace GL_EditorFramework.EditorDrawables
 			}
 			foreach (ObjID selected in selectedObjects.Keys.ToArray())
 			{
-				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, (I3DControl)control);
+				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
 			}
 			selectedObjects.Clear();
 			SelectionChanged?.Invoke(this, new EventArgs());
@@ -139,7 +140,7 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			foreach (ObjID selected in selectedObjects.Keys.ToArray())
 			{
-				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, (I3DControl)control);
+				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
 			}
 			selectedObjects.Clear();
 
@@ -150,7 +151,7 @@ namespace GL_EditorFramework.EditorDrawables
 				foreach (int subObj in obj.getAllSelection())
 				{
 					selectedObjects.Add(new ObjID(index, subObj), new SelectInfo(obj.getPosition(subObj)));
-					obj.Select(subObj, (I3DControl)control);
+					obj.Select(subObj, control);
 				}
 				index++;
 			}
@@ -478,7 +479,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 			foreach (AbstractGlDrawable o in staticObjects)
 			{
-				int span = (int)o.GetPickableSpan();
+				int span = o.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
 					hovered = new ObjID(currentObjectIndex, inObjectIndex);
@@ -507,7 +508,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 			foreach (AbstractGlDrawable o in staticObjects)
 			{
-				int span = (int)o.GetPickableSpan();
+				int span = o.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
 					return o.MouseLeave(inObjectIndex, control);
