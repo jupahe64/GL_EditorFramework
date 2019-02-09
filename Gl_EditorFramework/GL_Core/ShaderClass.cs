@@ -104,7 +104,7 @@ namespace GL_EditorFramework.GL_Core
 
             int mtxCam_loc = GL.GetUniformLocation(program, "mtxCam");
             if (mtxCam_loc != -1)
-                GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxCam"), false, ref computedCamMtx);
+                GL.UniformMatrix4(mtxCam_loc, false, ref computedCamMtx);
         }
 
         public void UpdateModelMatrix(Matrix4 matrix)

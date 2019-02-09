@@ -33,6 +33,8 @@ namespace GL_EditorFramework.GL_Core
 			
 		}
 
+
+
 		protected Matrix4 orientationCubeMtx;
 
 		protected bool showFakeCursor;
@@ -44,30 +46,40 @@ namespace GL_EditorFramework.GL_Core
 		private uint repickerOwners = 0;
 
 		protected Point lastMouseLoc;
-		protected Point dragStartPos;
+		protected Point dragStartPos = new Point(-1, -1);
 		protected float camRotX = 0;
 		protected float camRotY = 0;
 		protected float camDistance = -10f;
 		protected Vector3 camTarget;
 
+
 		protected float zfar = 1000f;
 		protected float znear = 0.01f;
 		protected float fov = MathHelper.PiOver4;
 
-		protected uint[] pickingFrameBuffer = new uint[9];
+		public float PickedObjectPart => pickingFrameBuffer;
+
+		protected uint pickingFrameBuffer;
 		protected int pickingIndex;
 		private int lastPicked = -1;
-		protected float pickingModelDepth = 0f;
+		protected float normPickingDepth = 0f;
 		protected float pickingDepth = 0f;
 
 		protected Matrix4 mtxMdl, mtxCam, mtxProj;
 		protected float factorX, factorY;
 
 		protected bool stereoscopy;
+		protected bool showOrientationCube = true;
 
 		protected int viewPortX(int x) => stereoscopy ? x % (Width / 2) : x;
 		protected int viewPortDX(int dx) => stereoscopy ? dx * 2 : dx;
 		protected int viewPortXOff(int x) => stereoscopy ? (x - Width / 4) * 2 : x - Width / 2;
+
+		public Color BackgroundColor1 = Color.FromArgb(20, 20, 20);
+
+		public Color BackgroundColor2 = Color.FromArgb(70, 70, 70);
+
+		public bool GradientBackground;
 
 		public Point DragStartPos
 		{
@@ -89,6 +101,73 @@ namespace GL_EditorFramework.GL_Core
 			}
 		}
 
+		public bool ShowOrientationCube
+		{
+			get => showOrientationCube;
+			set
+			{
+				showOrientationCube = value;
+				pickingIndexOffset = value?7:1;
+				Refresh();
+			}
+		}
+
+		public Vector3 coordFor(int x, int y, float depth)
+		{
+			Vector3 vec = camTarget;
+			float delta = depth + camDistance;
+			vec -= Vector3.UnitX * (float)Math.Sin(camRotX) * (float)Math.Cos(camRotY) * delta;
+			vec += Vector3.UnitY * (float)Math.Sin(camRotY) * delta;
+			vec += Vector3.UnitZ * (float)Math.Cos(camRotX) * (float)Math.Cos(camRotY) * delta;
+
+			Vector2 normCoords = NormMouseCoords(x, y);
+
+			float factoffX = (float)(-normCoords.X * depth) * factorX;
+			float factoffY = (float)(-normCoords.Y * depth) * factorY;
+
+			vec += Vector3.UnitX * (float)Math.Cos(camRotX) * factoffX;
+			vec -= Vector3.UnitX * (float)Math.Sin(camRotX) * (float)Math.Sin(camRotY) * factoffY;
+			vec -= Vector3.UnitY * (float)Math.Cos(camRotY) * factoffY;
+			vec += Vector3.UnitZ * (float)Math.Sin(camRotX) * factoffX;
+			vec += Vector3.UnitZ * (float)Math.Cos(camRotX) * (float)Math.Sin(camRotY) * factoffY;
+
+			return vec;
+
+			//TODO: Get this working, to get rid of sin and cos functions
+			/*
+			Vector4 vec;
+
+			vec.X = 2.0f * x / (float)Width - 1;
+			vec.Y = -(2.0f * y / (float)Height) + 1;
+			vec.Z = normDepth;
+			vec.W = 1.0f;
+
+			Matrix4 viewInv = Matrix4.Invert(mtxCam);
+			Matrix4 projInv = Matrix4.Invert(mtxProj);
+
+			Vector4.Transform(ref vec, ref projInv, out vec);
+			Vector4.Transform(ref vec, ref viewInv, out vec);
+
+			if (vec.W > 0.000001f || vec.W < -0.000001f)
+			{
+				vec.X /= vec.W;
+				vec.Y /= vec.W;
+				vec.Z /= vec.W;
+			}
+
+			vec.X *= -1;
+			vec.Y *= -1;
+			vec.Z *= -1;
+
+			return vec.Xyz;
+			*/
+		}
+
+		public Vector3 screenCoordFor(Vector3 coord)
+		{
+			return new Vector3();
+		}
+
 		protected AbstractGlDrawable mainDrawable;
 		public virtual AbstractGlDrawable MainDrawable { get; set; }
 
@@ -96,9 +175,7 @@ namespace GL_EditorFramework.GL_Core
 		private bool shouldRedraw;
 		private bool shouldRepick;
 		private bool skipCameraAction;
-		private const int pickingIndexOffset = 7;
-
-        public Color ViewportColor = Color.FromArgb(20, 20, 20);
+		private int pickingIndexOffset = 7;
 
         public AbstractCamera ActiveCamera
 		{
@@ -134,6 +211,9 @@ namespace GL_EditorFramework.GL_Core
 		public float CamRotY { get => camRotY; set { camRotY = value; } }
 
 		public float PickingDepth => pickingDepth;
+
+		public float NormPickingDepth => normPickingDepth;
+
 		public ulong RedrawerFrame { get; private set; } = 0;
 
 		void handleDrawableEvtResult(uint result)
@@ -174,7 +254,7 @@ namespace GL_EditorFramework.GL_Core
 			
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.CullFace);
-			GL.CullFace(CullFaceMode.Front); GL.DepthFunc(DepthFunction.Lequal);
+			GL.CullFace(CullFaceMode.Back);
 			GL.Enable(EnableCap.Texture2D);
 
 			GL.Enable(EnableCap.AlphaTest);
@@ -210,6 +290,7 @@ namespace GL_EditorFramework.GL_Core
 			Focus();
 
 			lastMouseLoc = e.Location;
+			if(dragStartPos == new Point(-1,-1))
 			dragStartPos = e.Location;
 
 			shouldRedraw = false;
@@ -276,7 +357,7 @@ namespace GL_EditorFramework.GL_Core
 		protected override void OnMouseUp(MouseEventArgs e)
 		{
 			if (DesignMode || mainDrawable == null) return;
-
+			
 			shouldRedraw = false;
 			shouldRepick = false;
 			skipCameraAction = false;
@@ -284,7 +365,7 @@ namespace GL_EditorFramework.GL_Core
 			if((e.Location.X == dragStartPos.X) && (e.Location.Y == dragStartPos.Y))
 			{
 				shouldRedraw = true;
-				switch (pickingFrameBuffer[0])
+				switch (showOrientationCube ? pickingFrameBuffer : 0)
 				{
 					case 1:
 						camRotX = 0;
@@ -321,6 +402,8 @@ namespace GL_EditorFramework.GL_Core
 				handleDrawableEvtResult(mainDrawable.MouseUp(e, this));
 			}
 
+			dragStartPos = new Point(-1, -1);
+
 			if (!skipCameraAction)
 				handleCameraEvtResult(activeCamera.MouseUp(e, this));
 
@@ -338,26 +421,20 @@ namespace GL_EditorFramework.GL_Core
 			pickingIndex = 1;
 
 			DrawPicking();
-			GL.Flush();
-
-			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref pickingModelDepth);
-
-			pickingModelDepth = -(zfar * znear / (pickingModelDepth * (zfar - znear) - zfar));
-
-
 
 			GL.Flush();
 
-			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.Bgra, PixelType.UnsignedByte, pickingFrameBuffer);
-			
+			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.Bgra, PixelType.UnsignedByte, ref pickingFrameBuffer);
+
 			// depth math from http://www.opengl.org/resources/faq/technical/depthbuffer.htm
 
-			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref pickingDepth);
+			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref normPickingDepth);
+			
+			pickingDepth = -(zfar * znear / (normPickingDepth * (zfar - znear) - zfar));
 
-			pickingDepth = -(zfar * znear / (pickingDepth * (zfar - znear) - zfar));
+			Console.WriteLine(normPickingDepth);
 
-
-			int picked = (int)pickingFrameBuffer[0] - pickingIndexOffset;
+			int picked = (int)pickingFrameBuffer - pickingIndexOffset;
 			if (lastPicked != picked)
 			{
 				if (picked >= 0)
@@ -449,70 +526,101 @@ namespace GL_EditorFramework.GL_Core
 
 		public virtual void DrawPicking() { }
 
+		protected void DrawFakeCursor()
+		{
+			GL.Color3(1f, 1f, 1f);
+			GL.Disable(EnableCap.Texture2D);
+			GL.MatrixMode(MatrixMode.Modelview);
+			GL.LoadIdentity();
+			GL.Translate(lastMouseLoc.X * 2 / (float)Width - 1, -(lastMouseLoc.Y * 2 / (float)Height - 1), 0);
+			GL.Scale(80f / Width, 40f / Height, 1);
+			GL.Begin(PrimitiveType.Polygon);
+			GL.Vertex2(0, 0);
+			GL.Vertex2(0, -1);
+			GL.Vertex2(0.25, -0.75);
+			GL.Vertex2(0.625, -0.75);
+			GL.End();
+			GL.Enable(EnableCap.Texture2D);
+		}
+
 		protected void DrawOrientationCube()
 		{
-			GL.UseProgram(0);
 			GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
-			GL.MatrixMode(MatrixMode.Projection);
-			GL.LoadIdentity();
 			GL.Disable(EnableCap.DepthTest);
+
 			GL.Begin(PrimitiveType.Quads);
-			GL.Color3(new Vector3(pickingFrameBuffer[0] == 1 ? 1f : 0.75f));
-			GL.TexCoord2(0f, 0.5f);
-			GL.Vertex3(-1f, 1f, -1f);
-			GL.TexCoord2(0.25f, 0.5f);
-			GL.Vertex3(1f, 1f, -1f);
-			GL.TexCoord2(0.25f, 1f);
-			GL.Vertex3(1f, 1f, 1f);
+			GL.Color3(new Vector3(pickingFrameBuffer == 1 ? 1f : 0.75f)); //UP
 			GL.TexCoord2(0f, 1f);
 			GL.Vertex3(-1f, 1f, 1f);
-			GL.Color3(new Vector3(pickingFrameBuffer[0] == 2 ? 1f : 0.75f));
+			GL.TexCoord2(0.25f, 1f);
+			GL.Vertex3(1f, 1f, 1f);
 			GL.TexCoord2(0.25f, 0.5f);
-			GL.Vertex3(-1f, -1f, 1f);
-			GL.TexCoord2(0.5f, 0.5f);
-			GL.Vertex3(1f, -1f, 1f);
-			GL.TexCoord2(0.5f, 1f);
-			GL.Vertex3(1f, -1f, -1f);
+			GL.Vertex3(1f, 1f, -1f);
+			GL.TexCoord2(0f, 0.5f);
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.Color3(new Vector3(pickingFrameBuffer == 2 ? 1f : 0.75f)); //DOWN
 			GL.TexCoord2(0.25f, 1f);
 			GL.Vertex3(-1f, -1f, -1f);
-			GL.Color3(new Vector3(pickingFrameBuffer[0] == 3 ? 1f : 0.75f));
-			GL.TexCoord2(0f, 0.0f);
-			GL.Vertex3(-1f, 1f, 1f);
-			GL.TexCoord2(0.25f, 0.0f);
-			GL.Vertex3(1f, 1f, 1f);
-			GL.TexCoord2(0.25f, 0.5f);
-			GL.Vertex3(1f, -1f, 1f);
-			GL.TexCoord2(0f, 0.5f);
-			GL.Vertex3(-1f, -1f, 1f);
-			GL.Color3(new Vector3(pickingFrameBuffer[0] == 4 ? 1f : 0.75f));
-			GL.TexCoord2(0.5f, 0f);
-			GL.Vertex3(1f, 1f, -1f);
-			GL.TexCoord2(0.75f, 0f);
-			GL.Vertex3(-1f, 1f, -1f);
-			GL.TexCoord2(0.75f, 0.5f);
-			GL.Vertex3(-1f, -1f, -1f);
-			GL.TexCoord2(0.5f, 0.5f);
+			GL.TexCoord2(0.5f, 1f);
 			GL.Vertex3(1f, -1f, -1f);
-			GL.Color3(new Vector3(pickingFrameBuffer[0] == 5 ? 1f : 0.75f));
+			GL.TexCoord2(0.5f, 0.5f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.TexCoord2(0.25f, 0.5f);
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.Color3(new Vector3(pickingFrameBuffer == 3 ? 1f : 0.75f)); //FRONT
 			GL.TexCoord2(0.25f, 0f);
 			GL.Vertex3(1f, 1f, 1f);
-			GL.TexCoord2(0.5f, 0f);
+			GL.TexCoord2(0f, 0f);
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.TexCoord2(0f, 0.5f);
+			GL.Vertex3(-1f, -1f, 1f);
+			GL.TexCoord2(0.25f, 0.5f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.Color3(new Vector3(pickingFrameBuffer == 4 ? 1f : 0.75f)); //BACK	
+			GL.TexCoord2(0.75f, 0.0f);
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.TexCoord2(0.5f, 0.0f);
 			GL.Vertex3(1f, 1f, -1f);
 			GL.TexCoord2(0.5f, 0.5f);
 			GL.Vertex3(1f, -1f, -1f);
-			GL.TexCoord2(0.25f, 0.5f);
-			GL.Vertex3(1f, -1f, 1f);
-			GL.Color3(new Vector3(pickingFrameBuffer[0] == 6 ? 1f : 0.75f));
-			GL.TexCoord2(0.75f, 0f);
-			GL.Vertex3(-1f, 1f, -1f);
-			GL.TexCoord2(1f, 0f);
-			GL.Vertex3(-1f, 1f, 1f);
-			GL.TexCoord2(1f, 0.5f);
-			GL.Vertex3(-1f, -1f, 1f);
 			GL.TexCoord2(0.75f, 0.5f);
 			GL.Vertex3(-1f, -1f, -1f);
+			GL.Color3(new Vector3(pickingFrameBuffer == 5 ? 1f : 0.75f)); //LEFT
+			GL.TexCoord2(0.5f, 0f);
+			GL.Vertex3(1f, 1f, -1f);
+			GL.TexCoord2(0.25f, 0f);
+			GL.Vertex3(1f, 1f, 1f);
+			GL.TexCoord2(0.25f, 0.5f);
+			GL.Vertex3(1f, -1f, 1f);
+			GL.TexCoord2(0.5f, 0.5f);
+			GL.Vertex3(1f, -1f, -1f);
+			GL.Color3(new Vector3(pickingFrameBuffer == 6 ? 1f : 0.75f)); //RIGHT
+			GL.TexCoord2(1f, 0f);
+			GL.Vertex3(-1f, 1f, 1f);
+			GL.TexCoord2(0.75f, 0f);
+			GL.Vertex3(-1f, 1f, -1f);
+			GL.TexCoord2(0.75f, 0.5f);
+			GL.Vertex3(-1f, -1f, -1f);
+			GL.TexCoord2(1f, 0.5f);
+			GL.Vertex3(-1f, -1f, 1f);
 			GL.End();
 			GL.Enable(EnableCap.DepthTest);
+		}
+
+		protected void DrawGradientBG()
+		{
+			GL.Disable(EnableCap.Texture2D);
+			GL.MatrixMode(MatrixMode.Modelview);
+			GL.LoadIdentity();
+			GL.Begin(PrimitiveType.TriangleStrip);
+			GL.Color3(BackgroundColor2);
+			GL.Vertex3(1, 1, 0.99998);
+			GL.Vertex3(-1, 1,  0.99998);
+			GL.Color3(BackgroundColor1);
+			GL.Vertex3(1, -1, 0.99998);
+			GL.Vertex3(-1, -1, 0.99998);
+			GL.End();
+			GL.Enable(EnableCap.Texture2D);
 		}
 
 		public override void Refresh()

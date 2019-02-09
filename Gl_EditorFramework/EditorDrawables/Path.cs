@@ -12,6 +12,9 @@ using OpenTK.Graphics.OpenGL;
 
 namespace GL_EditorFramework.EditorDrawables
 {
+	//this class is under developemnt and won't work right now
+
+	/*
 	public class Path : EditableObject
 	{
 		private static bool Initialized = false;
@@ -445,4 +448,5 @@ namespace GL_EditorFramework.EditorDrawables
 			public Vector3d controlPoint2;
 		}
 	}
+	*/
 }

@@ -34,6 +34,12 @@ namespace GL_EditorFramework.Interfaces
 		float CamRotX { get; set; }
 		float CamRotY { get; set; }
 
+		Vector3 coordFor(int x, int y, float depth);
+
+		Vector3 screenCoordFor(Vector3 coord);
+
 		float PickingDepth { get; }
+
+		float NormPickingDepth { get; }
 	}
 }

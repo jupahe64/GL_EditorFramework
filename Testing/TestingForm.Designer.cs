@@ -47,6 +47,8 @@
 			// 
 			// listBox1
 			// 
+			this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
 			this.listBox1.FormattingEnabled = true;
 			this.listBox1.Location = new System.Drawing.Point(13, 238);
 			this.listBox1.Name = "listBox1";
@@ -64,10 +66,11 @@
 			this.gL_ControlLegacy1.CamRotY = 0F;
 			this.gL_ControlLegacy1.DragStartPos = new System.Drawing.Point(0, 0);
 			this.gL_ControlLegacy1.Fov = 0.7853982F;
-			this.gL_ControlLegacy1.Location = new System.Drawing.Point(12, 12);
+			this.gL_ControlLegacy1.Location = new System.Drawing.Point(13, 20);
 			this.gL_ControlLegacy1.MainDrawable = null;
 			this.gL_ControlLegacy1.Name = "gL_ControlLegacy1";
-			this.gL_ControlLegacy1.Size = new System.Drawing.Size(279, 190);
+			this.gL_ControlLegacy1.ShowOrientationCube = false;
+			this.gL_ControlLegacy1.Size = new System.Drawing.Size(278, 182);
 			this.gL_ControlLegacy1.Stereoscopy = true;
 			this.gL_ControlLegacy1.TabIndex = 2;
 			this.gL_ControlLegacy1.VSync = false;
@@ -77,6 +80,9 @@
 			// gL_ControlModern1
 			// 
 			this.gL_ControlModern1.ActiveCamera = null;
+			this.gL_ControlModern1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.gL_ControlModern1.BackColor = System.Drawing.Color.Black;
 			this.gL_ControlModern1.CameraDistance = -10F;
 			this.gL_ControlModern1.CameraTarget = ((OpenTK.Vector3)(resources.GetObject("gL_ControlModern1.CameraTarget")));
@@ -85,10 +91,12 @@
 			this.gL_ControlModern1.CurrentShader = null;
 			this.gL_ControlModern1.DragStartPos = new System.Drawing.Point(0, 0);
 			this.gL_ControlModern1.Fov = 0.7853982F;
-			this.gL_ControlModern1.Location = new System.Drawing.Point(297, 12);
+			this.gL_ControlModern1.GradientBackground = true;
+			this.gL_ControlModern1.Location = new System.Drawing.Point(297, 20);
 			this.gL_ControlModern1.MainDrawable = null;
 			this.gL_ControlModern1.Name = "gL_ControlModern1";
-			this.gL_ControlModern1.Size = new System.Drawing.Size(694, 723);
+			this.gL_ControlModern1.ShowOrientationCube = true;
+			this.gL_ControlModern1.Size = new System.Drawing.Size(689, 715);
 			this.gL_ControlModern1.Stereoscopy = false;
 			this.gL_ControlModern1.TabIndex = 1;
 			this.gL_ControlModern1.VSync = false;

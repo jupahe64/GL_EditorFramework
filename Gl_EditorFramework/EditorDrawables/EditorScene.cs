@@ -13,94 +13,91 @@ namespace GL_EditorFramework.EditorDrawables
 {
 	public class EditorScene : AbstractGlDrawable
 	{
-		public static EditorScene currentScene;
-
 		protected bool multiSelect;
 
-		public ObjID hovered = ObjID.None;
+		public EditableObject hovered = null;
 
-		public static int currentObjectIndex;
-
-		public static bool IsHovered(int subObjectIndex = 0)
-		{
-			if (currentScene == null)
-				return false;
-			return currentScene.hovered.Equals(new ObjID(currentObjectIndex, subObjectIndex));
-		}
-
-		public static bool IsSelected(int subObjectIndex = 0)
-		{
-			if (currentScene == null)
-				return false;
-			return currentScene.selectedObjects.ContainsKey(new ObjID(currentObjectIndex, subObjectIndex));
-		}
+		public int hoveredPart = 0;
 
 		public List<EditableObject> objects = new List<EditableObject>();
 
-		public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
+		protected List<EditableObject> selectedObjects = new List<EditableObject>();
 
-		protected Dictionary<ObjID, SelectInfo> selectedObjects = new Dictionary<ObjID, SelectInfo>();
+		public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 		
 		public event EventHandler SelectionChanged;
 
-		public ObjID dragObj = ObjID.None;
 		private float draggingDepth;
 
 		private GL_ControlBase control;
+
+		public EditableObject.DeltaTransform deltaTransform = new EditableObject.DeltaTransform(new Vector3(), new Quaternion(), new Vector3(1,1,1));
 
 		public EditorScene(bool multiSelect = true)
 		{
 			this.multiSelect = multiSelect;
 		}
 
-		public Dictionary<ObjID, SelectInfo> SelectedObjects
+		public List<EditableObject> SelectedObjects
 		{
 			get => selectedObjects;
 			set
 			{
-				foreach (ObjID o in value.Keys)
+				uint var = 0;
+				foreach (EditableObject obj in value)
 				{
-					if (!selectedObjects.ContainsKey(o)) //object wasn't selected before
-						objects[o.ObjectIndex].Select(o.SubObjectIndex, control); //select it
+					if (!selectedObjects.Contains(obj)) //object wasn't selected before
+						var |= obj.SelectDefault(control); //select it
 
 					else //object stays selected 
-						selectedObjects.Remove(o); //filter out these to find all objects which are not selected anymore
+						selectedObjects.Remove(obj); //filter out these to find all objects which are not selected anymore
+
+					Console.WriteLine(obj);
 				}
 
-				foreach (ObjID o in selectedObjects.Keys) //now the selected objects are a list of objects to deselect
+				foreach (EditableObject obj in selectedObjects) //now the selected objects are a list of objects to deselect
 														  //which is fine because in the end they get overwriten anyway
 				{
-					objects[o.ObjectIndex].Deselect(o.SubObjectIndex, control); //Deselect them all
+					var |= obj.DeselectAll(control); //Deselect them all
 				}
 				selectedObjects = value;
-				control.Refresh();
+
+				if ((var & AbstractGlDrawable.REDRAW)>0)
+					control.Refresh();
+				if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+					control.DrawPicking();
 			}
 		}
-
-		public void ToogleSelected(ObjID obj, bool isSelected)
+		
+		public void ToogleSelected(EditableObject obj, bool isSelected)
 		{
-			bool alreadySelected = selectedObjects.ContainsKey(obj);
+			uint var = 0;
+
+			bool alreadySelected = selectedObjects.Contains(obj);
 			if(alreadySelected && !isSelected)
 			{
-				objects[obj.ObjectIndex].Select(obj.SubObjectIndex, null);
+				var |= obj.DeselectAll(control);
 				selectedObjects.Remove(obj);
 			}
 			else if(!alreadySelected && isSelected)
 			{
-				objects[obj.ObjectIndex].Deselect(obj.SubObjectIndex, null);
-				selectedObjects.Add(obj,generateSelectInfo(obj));
+				var |= obj.SelectDefault(control);
+				selectedObjects.Add(obj);
 			}
+			
+			if ((var & AbstractGlDrawable.REDRAW)>0)
+				control.Refresh();
+			if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+				control.DrawPicking();
 		}
-
-		public SelectInfo generateSelectInfo(ObjID obj) => new SelectInfo(objects[obj.ObjectIndex].getPosition(obj.SubObjectIndex));
 
 		public void Add(params EditableObject[] objs)
 		{
-			int index = objects.Count;
+			uint var = 0;
 
-			foreach (ObjID selected in selectedObjects.Keys.ToArray())
+			foreach (EditableObject selected in selectedObjects)
 			{
-				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
+				var |= selected.DeselectAll(control);
 			}
 			selectedObjects.Clear();
 
@@ -108,39 +105,48 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 				objects.Add(obj);
 
-				foreach (int subObj in obj.getAllSelection())
-				{
-					selectedObjects.Add(new ObjID(index, subObj), new SelectInfo(obj.getPosition(subObj)));
-					obj.Select(subObj, control);
-				}
-				index++;
+				selectedObjects.Add(obj);
+				var |= obj.SelectDefault(control);
 			}
 			SelectionChanged?.Invoke(this, new EventArgs());
 
-			control.Refresh();
+			if ((var & AbstractGlDrawable.REDRAW) > 0)
+				control.Refresh();
+			if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+				control.DrawPicking();
 		}
 
 		public void Delete(params EditableObject[] objs)
 		{
+			uint var = 0;
+
+			bool selectionHasChanged = false;
+
 			foreach (EditableObject obj in objs)
 			{
 				objects.Remove(obj);
+				if (selectedObjects.Contains(obj))
+				{
+					var |= obj.DeselectAll(control);
+					selectedObjects.Remove(obj);
+				}
 			}
-			foreach (ObjID selected in selectedObjects.Keys.ToArray())
-			{
-				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
-			}
-			selectedObjects.Clear();
-			SelectionChanged?.Invoke(this, new EventArgs());
+			if(selectionHasChanged)
+				SelectionChanged?.Invoke(this, new EventArgs());
 
-			control.Refresh();
+			if ((var & AbstractGlDrawable.REDRAW) > 0)
+				control.Refresh();
+			if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+				control.DrawPicking();
 		}
 
 		public void InsertAfter(int index, params EditableObject[] objs)
 		{
-			foreach (ObjID selected in selectedObjects.Keys.ToArray())
+			uint var = 0;
+
+			foreach (EditableObject selected in selectedObjects)
 			{
-				objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
+				var |= selected.DeselectAll(control);
 			}
 			selectedObjects.Clear();
 
@@ -148,139 +154,97 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 				objects.Insert(index, obj);
 
-				foreach (int subObj in obj.getAllSelection())
-				{
-					selectedObjects.Add(new ObjID(index, subObj), new SelectInfo(obj.getPosition(subObj)));
-					obj.Select(subObj, control);
-				}
+				selectedObjects.Add(obj);
+				var |= obj.SelectDefault(control);
 				index++;
 			}
 			SelectionChanged?.Invoke(this, new EventArgs());
 
-			control.Refresh();
+			if ((var & AbstractGlDrawable.REDRAW) > 0)
+				control.Refresh();
+			if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+				control.DrawPicking();
 		}
 
-		public override void Draw(GL_ControlModern control)
+		public override void Draw(GL_ControlModern control, Pass pass)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				if(o.Visible)
-					o.Draw(control);
-				currentObjectIndex++;
+				if(obj.Visible)
+					obj.Draw(control, pass, this);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				o.Draw(control);
-				currentObjectIndex++;
+				obj.Draw(control, pass);
 			}
 		}
 
-		public override void Draw(GL_ControlLegacy control)
+		public override void Draw(GL_ControlLegacy control, Pass pass)
 		{
-			currentScene = this;
-			currentObjectIndex = 1;
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				if (o.Visible)
-					o.Draw(control);
-				currentObjectIndex++;
+				if (obj.Visible)
+					obj.Draw(control, pass, this);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				o.Draw(control);
-				currentObjectIndex++;
+				obj.Draw(control, pass);
 			}
 		}
 
 		public override void Prepare(GL_ControlModern control)
 		{
 			this.control = control;
-			foreach (EditableObject o in objects)
-				o.Prepare(control);
-			foreach (AbstractGlDrawable o in staticObjects)
-				o.Prepare(control);
+			foreach (EditableObject obj in objects)
+				obj.Prepare(control);
+			foreach (AbstractGlDrawable obj in staticObjects)
+				obj.Prepare(control);
 		}
 
 		public override void Prepare(GL_ControlLegacy control)
 		{
 			this.control = control;
-			foreach (EditableObject o in objects)
-				o.Prepare(control);
-			foreach (AbstractGlDrawable o in staticObjects)
-				o.Prepare(control);
-		}
-
-		public override void DrawPicking(GL_ControlModern control)
-		{
-			foreach (EditableObject o in objects)
-			{
-				if (o.Visible)
-					o.DrawPicking(control);
-				else
-					control.skipPickingColors((uint)o.GetPickableSpan());
-			}
-			foreach (AbstractGlDrawable o in staticObjects)
-				o.DrawPicking(control);
-		}
-
-		public override void DrawPicking(GL_ControlLegacy control)
-		{
-			foreach (EditableObject o in objects)
-			{
-				if (o.Visible)
-					o.DrawPicking(control);
-				else
-					control.skipPickingColors((uint)o.GetPickableSpan());
-			}
-			foreach (AbstractGlDrawable o in staticObjects)
-				o.DrawPicking(control);
+			foreach (EditableObject obj in objects)
+				obj.Prepare(control);
+			foreach (AbstractGlDrawable obj in staticObjects)
+				obj.Prepare(control);
 		}
 
 		public override uint MouseDown(MouseEventArgs e, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
 			uint var = 0;
-			if (dragObj.IsNone() && e.Button == MouseButtons.Left && selectedObjects.ContainsKey(hovered))
+			if (draggingDepth == -1 && e.Button == MouseButtons.Left && selectedObjects.Contains(hovered))
 			{
-				dragObj = hovered;
-				draggingDepth = control.PickingDepth;
+				if(hovered.CanStartDragging())
+					draggingDepth = control.PickingDepth;
 			}
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				var |= o.MouseDown(e, control);
-				currentObjectIndex++;
+				var |= obj.MouseDown(e, control);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				var |= o.MouseDown(e, control);
-				currentObjectIndex++;
+				var |= obj.MouseDown(e, control);
 			}
 			return var;
 		}
 
 		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
 			uint var = 0;
 
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				var |= o.MouseMove(e, lastMousePos, control);
-				currentObjectIndex++;
+				var |= obj.MouseMove(e, lastMousePos, control);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				var |= o.MouseMove(e, lastMousePos, control);
-				currentObjectIndex++;
+				var |= obj.MouseMove(e, lastMousePos, control);
 			}
 
-			if (!dragObj.IsNone())
+			if (draggingDepth != -1)
 			{
-				Vector3 Translate = new Vector3();
+				Vector3 translation = new Vector3();
 
 				//code from Whitehole
 
@@ -290,16 +254,14 @@ namespace GL_EditorFramework.EditorDrawables
 				deltaX *= draggingDepth * control.FactorX;
 				deltaY *= draggingDepth * control.FactorY;
 
-				Translate += Vector3.UnitX * deltaX * (float)Math.Cos(control.CamRotX);
-				Translate -= Vector3.UnitX * deltaY * (float)Math.Sin(control.CamRotX) * (float)Math.Sin(control.CamRotY);
-				Translate -= Vector3.UnitY * deltaY * (float)Math.Cos(control.CamRotY);
-				Translate += Vector3.UnitZ * deltaX * (float)Math.Sin(control.CamRotX);
-				Translate += Vector3.UnitZ * deltaY * (float)Math.Cos(control.CamRotX) * (float)Math.Sin(control.CamRotY);
-				
-				foreach(KeyValuePair< ObjID, SelectInfo> o in selectedObjects)
-				{
-					objects[o.Key.ObjectIndex].Translate(o.Value.LastPos, Translate, o.Key.SubObjectIndex);
-				}
+				translation += Vector3.UnitX * deltaX * (float)Math.Cos(control.CamRotX);
+				translation -= Vector3.UnitX * deltaY * (float)Math.Sin(control.CamRotX) * (float)Math.Sin(control.CamRotY);
+				translation -= Vector3.UnitY * deltaY * (float)Math.Cos(control.CamRotY);
+				translation += Vector3.UnitZ * deltaX * (float)Math.Sin(control.CamRotX);
+				translation += Vector3.UnitZ * deltaY * (float)Math.Cos(control.CamRotX) * (float)Math.Sin(control.CamRotY);
+
+				deltaTransform.Translation = translation;
+
 				var |= REDRAW | NO_CAMERA_ACTION;
 
 				var &= ~REPICK;
@@ -313,47 +275,41 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override uint MouseUp(MouseEventArgs e, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
 			uint var = 0;
 
-			if (!dragObj.IsNone())
+			if (!(draggingDepth == -1)&&e.Button == MouseButtons.Left)
 			{
-				foreach (ObjID o in selectedObjects.Keys.ToList())
+				foreach (EditableObject obj in selectedObjects)
 				{
-					selectedObjects[o] = new SelectInfo(objects[o.ObjectIndex].getPosition(o.SubObjectIndex));
-					objects[o.ObjectIndex].UpdatePosition(o.SubObjectIndex);
+					obj.ApplyTransformationToSelection(deltaTransform);
 				}
+
+				deltaTransform = new EditableObject.DeltaTransform(new Vector3(), new Quaternion(), new Vector3(1, 1, 1));
 			}
 
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				var |= o.MouseUp(e, control);
-				currentObjectIndex++;
+				var |= obj.MouseUp(e, control);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				var |= o.MouseUp(e, control);
-				currentObjectIndex++;
+				var |= obj.MouseUp(e, control);
 			}
-			dragObj = ObjID.None;
+
+			draggingDepth = -1;
 			return var;
 		}
 
 		public override uint MouseClick(MouseEventArgs e, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
 			uint var = 0;
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				var |= o.MouseClick(e, control);
-				currentObjectIndex++;
+				var |= obj.MouseClick(e, control);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				var |= o.MouseClick(e, control);
-				currentObjectIndex++;
+				var |= obj.MouseClick(e, control);
 			}
 
 			if (!(e.Button == MouseButtons.Left))
@@ -361,25 +317,24 @@ namespace GL_EditorFramework.EditorDrawables
 
 			if (!(multiSelect && OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ShiftLeft)))
 			{
-				bool hoveringOverEditable = (!hovered.IsNone() && hovered.ObjectIndex < objects.Count);
 				if (multiSelect)
 				{
-					if (!selectedObjects.ContainsKey(hovered))
+					if (!selectedObjects.Contains(hovered))
 					{
-						foreach (ObjID selected in selectedObjects.Keys.ToArray())
+						foreach (EditableObject selected in selectedObjects)
 						{
-							objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
+							selected.DeselectAll(control);
 						}
 					}
 
-					if (hoveringOverEditable && !selectedObjects.ContainsKey(hovered))
+					if (hovered != null && !selectedObjects.Contains(hovered))
 					{
 						selectedObjects.Clear();
-						selectedObjects.Add(hovered, generateSelectInfo(hovered));
-						objects[hovered.ObjectIndex].Select(hovered.SubObjectIndex, control);
+						selectedObjects.Add(hovered);
+						hovered.Select(hoveredPart,control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
-					else if(!selectedObjects.ContainsKey(hovered))
+					else if(hovered == null)
 					{
 						selectedObjects.Clear();
 						SelectionChanged?.Invoke(this, new EventArgs());
@@ -387,16 +342,16 @@ namespace GL_EditorFramework.EditorDrawables
 				}
 				else
 				{
-					foreach (ObjID selected in selectedObjects.Keys.ToArray())
+					foreach (EditableObject selected in selectedObjects)
 					{
-						objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
+						selected.DeselectAll(control);
 					}
 
-					if (hoveringOverEditable && !selectedObjects.ContainsKey(hovered))
+					if (hovered != null && !selectedObjects.Contains(hovered))
 					{
 						selectedObjects.Clear();
-						selectedObjects.Add(hovered, generateSelectInfo(hovered));
-						objects[hovered.ObjectIndex].Select(hovered.SubObjectIndex, control);
+						selectedObjects.Add(hovered);
+						hovered.Select(hoveredPart, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
 					else
@@ -408,21 +363,21 @@ namespace GL_EditorFramework.EditorDrawables
 			}
 			else
 			{
-				if (selectedObjects.ContainsKey(hovered))
+				if (selectedObjects.Contains(hovered))
 				{
 					selectedObjects.Remove(hovered);
-					objects[hovered.ObjectIndex].Deselect(hovered.SubObjectIndex, control);
+					hovered.Deselect(hoveredPart, control);
 					SelectionChanged?.Invoke(this, new EventArgs());
 				}
-				else if(!hovered.IsNone() && hovered.ObjectIndex < objects.Count)
+				else if(hovered != null)
 				{
-					selectedObjects.Add(hovered, generateSelectInfo(hovered));
-					objects[hovered.ObjectIndex].Select(hovered.SubObjectIndex, control);
+					selectedObjects.Add(hovered);
+					hovered.Select(hoveredPart, control);
 					SelectionChanged?.Invoke(this, new EventArgs());
 				}
 			}
 
-			dragObj = ObjID.None; //because MouseClick implies that the Mouse Button is not pressed anymore
+			draggingDepth = -1; //because MouseClick implies that the Mouse Button is not pressed anymore
 
 			var |= REDRAW;
 
@@ -431,17 +386,13 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override uint MouseWheel(MouseEventArgs e, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
 			uint var = 0;
-			foreach (EditableObject o in objects) {
-				var |= o.MouseWheel(e, control);
-				currentObjectIndex++;
+			foreach (EditableObject obj in objects) {
+				var |= obj.MouseWheel(e, control);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				var |= o.MouseWheel(e, control);
-				currentObjectIndex++;
+				var |= obj.MouseWheel(e, control);
 			}
 			return var;
 		}
@@ -449,94 +400,83 @@ namespace GL_EditorFramework.EditorDrawables
 		public override int GetPickableSpan()
 		{
 			int var = 0;
-			foreach (EditableObject o in objects)
-				var += o.GetPickableSpan();
-			foreach (AbstractGlDrawable o in staticObjects)
-				var += o.GetPickableSpan();
+			foreach (EditableObject obj in objects)
+				var += obj.GetPickableSpan();
+			foreach (AbstractGlDrawable obj in staticObjects)
+				var += obj.GetPickableSpan();
 			return var;
 		}
 
 		public override uint MouseEnter(int index, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
-
 			int inObjectIndex = index;
-			if(!dragObj.IsNone())
+			if(!(draggingDepth == -1))
 				return 0;
 			
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				int span = o.GetPickableSpan();
+				int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
-					hovered = new ObjID(currentObjectIndex,inObjectIndex);
-					return o.MouseEnter(inObjectIndex, control) | REDRAW;
+					hovered = obj;
+					return obj.MouseEnter(inObjectIndex, control) | REDRAW;
 				}
 				inObjectIndex -= span;
-				currentObjectIndex++;
 			}
 
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				int span = o.GetPickableSpan();
+				int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
-					hovered = new ObjID(currentObjectIndex, inObjectIndex);
-					return o.MouseEnter(inObjectIndex, control);
+					return obj.MouseEnter(inObjectIndex, control);
 				}
 				inObjectIndex -= span;
-				currentObjectIndex++;
 			}
 			return 0;
 		}
 
 		public override uint MouseLeave(int index, I3DControl control)
 		{
-			currentObjectIndex = 0;
 			int inObjectIndex = index;
-			foreach (EditableObject o in objects)
+			foreach (EditableObject obj in objects)
 			{
-				int span = o.GetPickableSpan();
+				int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
-					return o.MouseLeave(inObjectIndex, control);
+					return obj.MouseLeave(inObjectIndex, control);
 				}
 				inObjectIndex -= span;
-				currentObjectIndex++;
 			}
 
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				int span = o.GetPickableSpan();
+				int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
-					return o.MouseLeave(inObjectIndex, control);
+					return obj.MouseLeave(inObjectIndex, control);
 				}
 				inObjectIndex -= span;
-				currentObjectIndex++;
 			}
 			return 0;
 		}
 
 		public override uint MouseLeaveEntirely(I3DControl control)
 		{
-			hovered = ObjID.None;
+			hovered = null;
 			return REDRAW;
 		}
 
 		public override uint KeyDown(KeyEventArgs e, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
 			uint var = 0;
 			if(e.KeyCode == Keys.Z && selectedObjects.Count>0)
 			{
-				OpenTK.Vector3 sum = new OpenTK.Vector3();
+				Vector3 sum = new Vector3();
 				int index = 0;
-				foreach (ObjID objID in selectedObjects.Keys)
+				foreach (EditableObject selected in selectedObjects)
 				{
-					sum -= objects[objID.ObjectIndex].getPosition(objID.SubObjectIndex);
+					sum -= selected.GetSelectionCenter();
 					index++;
 				}
 				sum /= index;
@@ -545,9 +485,9 @@ namespace GL_EditorFramework.EditorDrawables
 				var = REDRAW_PICKING;
 			}else if (e.KeyCode == Keys.H && selectedObjects.Count > 0)
 			{
-				foreach (ObjID objID in selectedObjects.Keys)
+				foreach (EditableObject selected in selectedObjects)
 				{
-					objects[objID.ObjectIndex].Visible = e.Shift;
+					selected.Visible = e.Shift;
 				}
 				var = REDRAW_PICKING;
 			}
@@ -555,9 +495,9 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 				if (e.Shift)
 				{
-					foreach (ObjID selected in selectedObjects.Keys.ToArray())
+					foreach (EditableObject selected in selectedObjects)
 					{
-						objects[selected.ObjectIndex].Deselect(selected.SubObjectIndex, control);
+						selected.DeselectAll(control);
 					}
 					selectedObjects.Clear();
 					SelectionChanged?.Invoke(this, new EventArgs());
@@ -565,51 +505,35 @@ namespace GL_EditorFramework.EditorDrawables
 
 				if (!e.Shift && multiSelect)
 				{
-					foreach (EditableObject o in objects)
+					foreach (EditableObject obj in objects)
 					{
-						foreach (int subObj in o.getAllSelection())
-						{
-							ObjID obj = new ObjID(currentObjectIndex, subObj);
-							if (!selectedObjects.ContainsKey(obj))
-							{
-								selectedObjects.Add(obj, new SelectInfo(objects[currentObjectIndex].getPosition(subObj)));
-								objects[obj.ObjectIndex].Select(obj.SubObjectIndex, control);
-							}
-						}
-						currentObjectIndex++;
+						obj.SelectAll(control);
+						selectedObjects.Add(obj);
 					}
 					SelectionChanged?.Invoke(this, new EventArgs());
 				}
 				var = REDRAW;
 			}
 
-				currentObjectIndex = 0;
-
-			foreach (EditableObject o in objects) {
-				var |= o.KeyDown(e, control);
-				currentObjectIndex++;
+			foreach (EditableObject obj in objects) {
+				var |= obj.KeyDown(e, control);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				var |= o.KeyDown(e, control);
-				currentObjectIndex++;
+				var |= obj.KeyDown(e, control);
 			}
 			return var;
 		}
 
 		public override uint KeyUp(KeyEventArgs e, I3DControl control)
 		{
-			currentScene = this;
-			currentObjectIndex = 0;
 			uint var = 0;
-			foreach (EditableObject o in objects) {
-				var |= o.KeyUp(e, control);
-				currentObjectIndex++;
+			foreach (EditableObject obj in objects) {
+				var |= obj.KeyUp(e, control);
 			}
-			foreach (AbstractGlDrawable o in staticObjects)
+			foreach (AbstractGlDrawable obj in staticObjects)
 			{
-				var |= o.KeyUp(e, control);
-				currentObjectIndex++;
+				var |= obj.KeyUp(e, control);
 			}
 			return var;
 		}
@@ -650,6 +574,27 @@ namespace GL_EditorFramework.EditorDrawables
 			public override int GetHashCode()
 			{
 				return (ObjectIndex << 32) + SubObjectIndex;
+			}
+		}
+
+		public abstract class AbstractTransformAction
+		{
+			public abstract Vector3 newPos(Vector3 pos);
+
+			public Quaternion deltaRotation;
+
+			public Vector3 scale;
+
+			public void SetDragDist(Point point) { }
+			public void SetScrollDragDist(Point point, Point projX, Point projY, Point projZ) { }
+		}
+
+		public class TranslateAction : AbstractTransformAction
+		{
+			Vector3 translation = new Vector3();
+			public override Vector3 newPos(Vector3 pos)
+			{
+				return pos + translation;
 			}
 		}
 	}

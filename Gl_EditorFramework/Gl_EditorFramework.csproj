@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EditorDrawables\SingleObject.cs" />
     <Compile Include="GL_Core\Cameras\Inspect.cs" />
     <Compile Include="GL_Core\Cameras\Walkaround.cs" />
     <Compile Include="EditorDrawables\EditableObject.cs" />
@@ -75,6 +76,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Renderers.cs" />
     <Compile Include="SceneListView.cs">
       <SubType>UserControl</SubType>
     </Compile>

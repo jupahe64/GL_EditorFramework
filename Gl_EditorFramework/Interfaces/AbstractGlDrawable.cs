@@ -9,6 +9,13 @@ using System.Windows.Forms;
 
 namespace GL_EditorFramework.Interfaces
 {
+	public enum Pass
+	{
+		OPAQUE,
+		TRANSPARENT,
+		PICKING
+	}
+
 	public abstract class AbstractGlDrawable : AbstractEventHandling3DObj
 	{
 		public const uint REDRAW =				0x80000000;
@@ -18,10 +25,8 @@ namespace GL_EditorFramework.Interfaces
 
 		public abstract void Prepare(GL_ControlModern control);
 		public abstract void Prepare(GL_ControlLegacy control);
-		public abstract void Draw(GL_ControlModern control);
-		public abstract void Draw(GL_ControlLegacy control);
-		public virtual void DrawPicking(GL_ControlModern control) { }
-		public virtual void DrawPicking(GL_ControlLegacy control) { }
+		public abstract void Draw(GL_ControlModern control, Pass pass);
+		public abstract void Draw(GL_ControlLegacy control, Pass pass);
 		public virtual int GetPickableSpan() => 1;
 		public virtual uint MouseEnter(int index, I3DControl control) { return 0; }
 		public virtual uint MouseLeave(int index, I3DControl control) { return 0; }

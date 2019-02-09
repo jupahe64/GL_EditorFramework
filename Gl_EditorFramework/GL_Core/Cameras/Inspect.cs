@@ -25,21 +25,9 @@ namespace GL_EditorFramework.StandardCameras
 				e.Button == MouseButtons.Right &&
 				control.PickingDepth != control.ZFar)
 			{
-				float delta = control.PickingDepth + control.CameraDistance;
-				control.CameraTarget -= Vector3.UnitX * (float)Math.Sin(control.CamRotX) * (float)Math.Cos(control.CamRotY) * delta;
-				control.CameraTarget += Vector3.UnitY * (float)Math.Sin(control.CamRotY) * delta;
-				control.CameraTarget += Vector3.UnitZ * (float)Math.Cos(control.CamRotX) * (float)Math.Cos(control.CamRotY) * delta;
+				control.CameraTarget = control.coordFor(e.X, e.Y, control.PickingDepth);
 
-				Vector2 normCoords = control.NormMouseCoords(e.Location.X, e.Location.Y);
-
-				float factoffX = (float)(-normCoords.X * control.PickingDepth) * control.FactorX;
-				float factoffY = (float)(-normCoords.Y * control.PickingDepth) * control.FactorY;
-
-				control.CameraTarget += Vector3.UnitX * (float)Math.Cos(control.CamRotX) * factoffX;
-				control.CameraTarget -= Vector3.UnitX * (float)Math.Sin(control.CamRotX) * (float)Math.Sin(control.CamRotY) * factoffY;
-				control.CameraTarget -= Vector3.UnitY * (float)Math.Cos(control.CamRotY) * factoffY;
-				control.CameraTarget += Vector3.UnitZ * (float)Math.Sin(control.CamRotX) * factoffX;
-				control.CameraTarget += Vector3.UnitZ * (float)Math.Cos(control.CamRotX) * (float)Math.Sin(control.CamRotY) * factoffY;
+				return UPDATE_CAMERA;
 			}
 			return base.MouseDown(e, control);
 		}
