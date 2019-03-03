@@ -66,6 +66,11 @@ namespace GL_EditorFramework.GL_Core
 		protected float pickingDepth = 0f;
 
 		protected Matrix4 mtxMdl, mtxCam, mtxProj;
+
+		public Matrix4 ModelMatrix => mtxMdl;
+		public Matrix4 CameraMatrix => mtxCam;
+		public Matrix4 ProjectionMatrix => mtxProj;
+
 		protected float factorX, factorY;
 
 		protected bool stereoscopy;
