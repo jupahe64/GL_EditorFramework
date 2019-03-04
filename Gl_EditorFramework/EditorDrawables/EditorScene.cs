@@ -289,8 +289,8 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 				var |= obj.KeyDown(e, control);
 			}
-
-			UpdateSelection(var);
+			if(selectionHasChanged)
+				UpdateSelection(var);
 
 			return var;
 		}

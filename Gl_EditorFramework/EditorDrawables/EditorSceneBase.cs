@@ -31,6 +31,8 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public EditableObject.DeltaTransform deltaTransform = new EditableObject.DeltaTransform(new Vector3(), new Quaternion(), new Vector3(1, 1, 1));
 
+		AbstractTransformAction currentAction;
+
 		protected void UpdateSelection(uint var)
 		{
 			SelectionChanged?.Invoke(this, new EventArgs());
