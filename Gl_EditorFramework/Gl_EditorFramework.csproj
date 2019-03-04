@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EditorDrawables\EditorSceneBase.cs" />
     <Compile Include="EditorDrawables\SingleObject.cs" />
     <Compile Include="GL_Core\Cameras\Inspect.cs" />
     <Compile Include="GL_Core\Cameras\Walkaround.cs" />
