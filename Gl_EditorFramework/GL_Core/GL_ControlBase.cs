@@ -52,6 +52,7 @@ namespace GL_EditorFramework.GL_Core
 		protected float camDistance = -10f;
 		protected Vector3 camTarget;
 
+		protected Matrix3 mtxRotInv;
 
 		protected float zfar = 1000f;
 		protected float znear = 0.01f;
@@ -70,6 +71,7 @@ namespace GL_EditorFramework.GL_Core
 		public Matrix4 ModelMatrix => mtxMdl;
 		public Matrix4 CameraMatrix => mtxCam;
 		public Matrix4 ProjectionMatrix => mtxProj;
+		public Matrix3 InvertedRotationMatrix => mtxRotInv;
 
 		protected float factorX, factorY;
 
@@ -119,53 +121,16 @@ namespace GL_EditorFramework.GL_Core
 
 		public Vector3 coordFor(int x, int y, float depth)
 		{
-			Vector3 vec = camTarget;
-			float delta = depth + camDistance;
-			vec -= Vector3.UnitX * (float)Math.Sin(camRotX) * (float)Math.Cos(camRotY) * delta;
-			vec += Vector3.UnitY * (float)Math.Sin(camRotY) * delta;
-			vec += Vector3.UnitZ * (float)Math.Cos(camRotX) * (float)Math.Cos(camRotY) * delta;
-
+			Vector3 vec;
+			
 			Vector2 normCoords = NormMouseCoords(x, y);
 
-			float factoffX = (float)(-normCoords.X * depth) * factorX;
-			float factoffY = (float)(-normCoords.Y * depth) * factorY;
+			vec.X = (float)(-normCoords.X * depth) * factorX;
+			vec.Y = (float)( normCoords.Y * depth) * factorY;
 
-			vec += Vector3.UnitX * (float)Math.Cos(camRotX) * factoffX;
-			vec -= Vector3.UnitX * (float)Math.Sin(camRotX) * (float)Math.Sin(camRotY) * factoffY;
-			vec -= Vector3.UnitY * (float)Math.Cos(camRotY) * factoffY;
-			vec += Vector3.UnitZ * (float)Math.Sin(camRotX) * factoffX;
-			vec += Vector3.UnitZ * (float)Math.Cos(camRotX) * (float)Math.Sin(camRotY) * factoffY;
+			vec.Z = depth + camDistance;
 
-			return vec;
-
-			//TODO: Get this working, to get rid of sin and cos functions
-			/*
-			Vector4 vec;
-
-			vec.X = 2.0f * x / (float)Width - 1;
-			vec.Y = -(2.0f * y / (float)Height) + 1;
-			vec.Z = normDepth;
-			vec.W = 1.0f;
-
-			Matrix4 viewInv = Matrix4.Invert(mtxCam);
-			Matrix4 projInv = Matrix4.Invert(mtxProj);
-
-			Vector4.Transform(ref vec, ref projInv, out vec);
-			Vector4.Transform(ref vec, ref viewInv, out vec);
-
-			if (vec.W > 0.000001f || vec.W < -0.000001f)
-			{
-				vec.X /= vec.W;
-				vec.Y /= vec.W;
-				vec.Z /= vec.W;
-			}
-
-			vec.X *= -1;
-			vec.Y *= -1;
-			vec.Z *= -1;
-
-			return vec.Xyz;
-			*/
+			return camTarget + Vector3.Transform(mtxRotInv, vec);
 		}
 
 		public Vector3 screenCoordFor(Vector3 coord)
@@ -232,6 +197,13 @@ namespace GL_EditorFramework.GL_Core
 		{
 			shouldRedraw |= result > 0;
 			shouldRepick |= result > 0;
+			if (shouldRepick)
+			{
+				mtxRotInv =
+					Matrix3.CreateRotationX(-camRotY) * 
+					Matrix3.CreateRotationY(-camRotX);
+
+			}
 		}
 
 		public Color nextPickingColor()

@@ -34,6 +34,11 @@ namespace GL_EditorFramework.Interfaces
 		float CamRotX { get; set; }
 		float CamRotY { get; set; }
 
+		Matrix4 ModelMatrix { get; }
+		Matrix4 CameraMatrix { get; }
+		Matrix4 ProjectionMatrix { get; }
+		Matrix3 InvertedRotationMatrix { get; }
+
 		Vector3 coordFor(int x, int y, float depth);
 
 		Vector3 screenCoordFor(Vector3 coord);

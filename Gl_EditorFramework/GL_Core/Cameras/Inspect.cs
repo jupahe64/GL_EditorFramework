@@ -25,7 +25,7 @@ namespace GL_EditorFramework.StandardCameras
 				e.Button == MouseButtons.Right &&
 				control.PickingDepth != control.ZFar)
 			{
-				control.CameraTarget = control.coordFor(e.X, e.Y, control.PickingDepth);
+				control.CameraTarget = control.coordFor(e.Location.X, e.Location.Y, control.PickingDepth);
 
 				return UPDATE_CAMERA;
 			}
