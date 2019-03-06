@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace GL_EditorFramework.EditorDrawables
 {
@@ -33,7 +34,7 @@ namespace GL_EditorFramework.EditorDrawables
 			Position = pos;
 		}
 
-		public override void Draw(GL_ControlModern control, Pass pass, EditorScene editorScene)
+		public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
 		{
 			if (pass == Pass.TRANSPARENT)
 				return;
@@ -41,7 +42,7 @@ namespace GL_EditorFramework.EditorDrawables
 			bool hovered = editorScene.hovered == this;
 
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-				Matrix4.CreateTranslation(Position + (Selected ? editorScene.deltaTransform.Translation : new Vector3())));
+				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(Position) : Position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -76,16 +77,16 @@ namespace GL_EditorFramework.EditorDrawables
 
 		}
 
-		public override void Draw(GL_ControlLegacy control, Pass pass, EditorScene editorScene)
+		public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
 		{
 			if (pass == Pass.TRANSPARENT)
 				return;
 
 			bool hovered = editorScene.hovered == this;
 
-			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * 
-				Matrix4.CreateTranslation(Position + (Selected ? editorScene.deltaTransform.Translation : new Vector3())));
-			
+			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
+				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(Position) : Position));
+
 			Vector4 blockColor;
 			Vector4 lineColor;
 
@@ -175,9 +176,9 @@ namespace GL_EditorFramework.EditorDrawables
 			return REDRAW;
 		}
 
-		public override void ApplyTransformationToSelection(DeltaTransform deltaTransform)
+		public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
 		{
-			Position += deltaTransform.Translation;
+			Position = transformAction.newPos(Position);
 		}
 	}
 }

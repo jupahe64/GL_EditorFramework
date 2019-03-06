@@ -409,8 +409,6 @@ namespace GL_EditorFramework.GL_Core
 			
 			pickingDepth = -(zfar * znear / (normPickingDepth * (zfar - znear) - zfar));
 
-			Console.WriteLine(normPickingDepth);
-
 			int picked = (int)pickingFrameBuffer - pickingIndexOffset;
 			if (lastPicked != picked)
 			{

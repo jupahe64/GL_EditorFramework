@@ -53,14 +53,11 @@ namespace GL_EditorFramework.StandardCameras
 				{
 					//code from Whitehole
 
-					deltaX *= Math.Min(maxCamMoveSpeed, depth * control.FactorX);
-					deltaY *= Math.Min(maxCamMoveSpeed, depth * control.FactorY);
-
-					control.CameraTarget += Vector3.UnitX * deltaX * (float)Math.Cos(control.CamRotX);
-					control.CameraTarget -= Vector3.UnitX * deltaY * (float)Math.Sin(control.CamRotX) * (float)Math.Sin(control.CamRotY);
-					control.CameraTarget -= Vector3.UnitY * deltaY * (float)Math.Cos(control.CamRotY);
-					control.CameraTarget += Vector3.UnitZ * deltaX * (float)Math.Sin(control.CamRotX);
-					control.CameraTarget += Vector3.UnitZ * deltaY * (float)Math.Cos(control.CamRotX) * (float)Math.Sin(control.CamRotY);
+					Vector3 vec;
+					vec.X =  deltaX * Math.Min(maxCamMoveSpeed, depth * control.FactorX);
+					vec.Y = -deltaY * Math.Min(maxCamMoveSpeed, depth * control.FactorY);
+					vec.Z = 0;
+					control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
 				}
 
 				return UPDATE_CAMERA;
@@ -71,7 +68,22 @@ namespace GL_EditorFramework.StandardCameras
 
 		public override uint MouseWheel(MouseEventArgs e, I3DControl control)
 		{
-			control.CameraDistance *= 1f - e.Delta * 0.001f;
+			if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft))
+			{
+				depth = control.PickingDepth;
+				float delta = ((float)e.Delta * Math.Min(0.01f, depth / 500f));
+				Vector3 vec;
+
+				Vector2 normCoords = control.NormMouseCoords(e.Location.X, e.Location.Y);
+
+				vec.X = (float)(-normCoords.X * delta) * control.FactorX;
+				vec.Y = (float)(normCoords.Y * delta) * control.FactorY;
+				vec.Z = delta;
+
+				control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
+			}else
+				control.CameraDistance *= 1f - e.Delta * 0.001f;
+
 			return UPDATE_CAMERA;
 		}
 	}

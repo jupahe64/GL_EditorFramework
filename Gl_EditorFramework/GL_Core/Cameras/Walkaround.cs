@@ -49,24 +49,23 @@ namespace GL_EditorFramework.StandardCameras
 				if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft))
 				{
 					float delta = ((float)deltaY*-5 * Math.Min(0.01f, depth / 500f));
-					control.CameraTarget -= Vector3.UnitX * (float)Math.Sin(control.CamRotX) * (float)Math.Cos(control.CamRotY) * delta;
-					control.CameraTarget += Vector3.UnitY * (float)Math.Sin(control.CamRotY) * delta;
-					control.CameraTarget += Vector3.UnitZ * (float)Math.Cos(control.CamRotX) * (float)Math.Cos(control.CamRotY) * delta;
+					Vector3 vec;
+					vec.X = 0;
+					vec.Y = 0;
+					vec.Z = delta;
+
+					control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
 				}
 				else
 				{
 
 					//code from Whitehole
 
-					deltaX *= Math.Min(maxCamMoveSpeed, depth * control.FactorX);
-					deltaY *= Math.Min(maxCamMoveSpeed, depth * control.FactorY);
-
-					control.CameraTarget += Vector3.UnitX * deltaX * (float)Math.Cos(control.CamRotX);
-					control.CameraTarget -= Vector3.UnitX * deltaY * (float)Math.Sin(control.CamRotX) * (float)Math.Sin(control.CamRotY);
-					control.CameraTarget -= Vector3.UnitY * deltaY * (float)Math.Cos(control.CamRotY);
-					control.CameraTarget += Vector3.UnitZ * deltaX * (float)Math.Sin(control.CamRotX);
-					control.CameraTarget += Vector3.UnitZ * deltaY * (float)Math.Cos(control.CamRotX) * (float)Math.Sin(control.CamRotY);
-
+					Vector3 vec;
+					vec.X = deltaX * Math.Min(maxCamMoveSpeed, depth * control.FactorX);
+					vec.Y = -deltaY * Math.Min(maxCamMoveSpeed, depth * control.FactorY);
+					vec.Z = 0;
+					control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
 				}
 
 				return UPDATE_CAMERA;

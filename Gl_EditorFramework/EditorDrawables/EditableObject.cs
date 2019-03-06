@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace GL_EditorFramework.EditorDrawables
 {
@@ -37,12 +38,12 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public abstract uint SelectDefault(I3DControl control);
 		
-		public virtual void Draw(GL_ControlModern control, Pass pass, EditorScene editorScene)
+		public virtual void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
 		{
 			
 		}
 
-		public virtual void Draw(GL_ControlLegacy control, Pass pass, EditorScene editorScene)
+		public virtual void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
 		{
 
 		}
@@ -52,20 +53,6 @@ namespace GL_EditorFramework.EditorDrawables
 		public abstract uint Deselect(int partIndex, I3DControl control);
 		public abstract uint DeselectAll(I3DControl control);
 
-		public abstract void ApplyTransformationToSelection(DeltaTransform deltaTransform);
-
-		public struct DeltaTransform
-		{
-			public Vector3 Translation;
-			public Quaternion Rotation;
-			public Vector3 Scaling;
-
-			public DeltaTransform(Vector3 Translation, Quaternion Rotation, Vector3 Scaling)
-			{
-				this.Translation = Translation;
-				this.Rotation = Rotation;
-				this.Scaling = Scaling;
-			}
-		}
+		public abstract void ApplyTransformActionToSelection(AbstractTransformAction transformAction);
 	}
 }

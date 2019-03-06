@@ -25,7 +25,7 @@ namespace Testing
 
 		static new Vector4 Color = new Vector4(1f, 0f, 0f, 1f);
 
-		public override void Draw(GL_ControlModern control, Pass pass, EditorScene editorScene)
+		public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
 		{
 			if (pass == Pass.TRANSPARENT)
 				return;
@@ -34,7 +34,7 @@ namespace Testing
 
 			Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
 			mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
-			mtx *= Matrix4.CreateTranslation(Position + (Selected ? editorScene.deltaTransform.Translation : new Vector3()));
+			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(Position) : Position);
 			control.UpdateModelMatrix(mtx);
 
 			Color pickingColor = control.nextPickingColor();
@@ -84,7 +84,7 @@ namespace Testing
 			Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
 		}
 
-		public override void Draw(GL_ControlLegacy control, Pass pass, EditorScene editorScene)
+		public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
 		{
 			if (pass == Pass.TRANSPARENT)
 				return;
@@ -93,7 +93,7 @@ namespace Testing
 
 			Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
 			mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, (float)Math.PI / 2f);
-			mtx *= Matrix4.CreateTranslation(Position + (Selected ? editorScene.deltaTransform.Translation : new Vector3()));
+			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(Position) : Position);
 			control.UpdateModelMatrix(mtx);
 
 			Color pickingColor = control.nextPickingColor();

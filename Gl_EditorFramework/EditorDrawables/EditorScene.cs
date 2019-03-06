@@ -181,10 +181,9 @@ namespace GL_EditorFramework.EditorDrawables
 			foreach (EditableObject obj in objects) {
 				var |= obj.MouseWheel(e, control);
 			}
-			foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				var |= obj.MouseWheel(e, control);
-			}
+
+			var |= base.MouseWheel(e, control);
+
 			return var;
 		}
 

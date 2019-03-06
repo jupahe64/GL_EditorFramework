@@ -29,9 +29,9 @@ namespace GL_EditorFramework.EditorDrawables
 
 		protected GL_ControlBase control;
 
-		public EditableObject.DeltaTransform deltaTransform = new EditableObject.DeltaTransform(new Vector3(), new Quaternion(), new Vector3(1, 1, 1));
+		public AbstractTransformAction currentAction = noAction;
 
-		AbstractTransformAction currentAction;
+		private static NoAction noAction = new NoAction();
 
 		protected void UpdateSelection(uint var)
 		{
@@ -64,8 +64,6 @@ namespace GL_EditorFramework.EditorDrawables
 						selectedObjects.Remove(obj); //filter out these to find all objects which are not selected anymore
 						selectionHasChanged = true;
 					}
-
-					Console.WriteLine(obj);
 				}
 
 				foreach (EditableObject obj in selectedObjects) //now the selected objects are a list of objects to deselect
@@ -127,7 +125,10 @@ namespace GL_EditorFramework.EditorDrawables
 			if (draggingDepth == -1 && e.Button == MouseButtons.Left && selectedObjects.Contains(hovered))
 			{
 				if (hovered.CanStartDragging())
+				{
 					draggingDepth = control.PickingDepth;
+					currentAction = new TranslateAction(control, e.Location, draggingDepth);
+				}
 			}
 			foreach (AbstractGlDrawable obj in staticObjects)
 			{
@@ -147,23 +148,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 			if (draggingDepth != -1)
 			{
-				Vector3 translation = new Vector3();
-
-				//code from Whitehole
-
-				float deltaX = e.X - control.DragStartPos.X;
-				float deltaY = e.Y - control.DragStartPos.Y;
-
-				deltaX *= draggingDepth * control.FactorX;
-				deltaY *= draggingDepth * control.FactorY;
-
-				translation += Vector3.UnitX * deltaX * (float)Math.Cos(control.CamRotX);
-				translation -= Vector3.UnitX * deltaY * (float)Math.Sin(control.CamRotX) * (float)Math.Sin(control.CamRotY);
-				translation -= Vector3.UnitY * deltaY * (float)Math.Cos(control.CamRotY);
-				translation += Vector3.UnitZ * deltaX * (float)Math.Sin(control.CamRotX);
-				translation += Vector3.UnitZ * deltaY * (float)Math.Cos(control.CamRotX) * (float)Math.Sin(control.CamRotY);
-
-				deltaTransform.Translation = translation;
+				currentAction.UpdateMousePos(e.Location, ref draggingDepth);
 
 				var |= REDRAW | NO_CAMERA_ACTION;
 
@@ -176,6 +161,27 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
+		public override uint MouseWheel(MouseEventArgs e, I3DControl control)
+		{
+			uint var = 0;
+
+			foreach (AbstractGlDrawable obj in staticObjects)
+			{
+				var |= obj.MouseWheel(e, control);
+			}
+
+			if (draggingDepth != -1)
+			{
+				currentAction.ApplyScrolling(e.Location, e.Delta, ref draggingDepth);
+
+				var |= REDRAW | NO_CAMERA_ACTION;
+
+				var &= ~REPICK;
+			}
+
+			return var;
+		}
+
 		public override uint MouseUp(MouseEventArgs e, I3DControl control)
 		{
 			uint var = 0;
@@ -184,10 +190,10 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 				foreach (EditableObject obj in selectedObjects)
 				{
-					obj.ApplyTransformationToSelection(deltaTransform);
+					obj.ApplyTransformActionToSelection(currentAction);
 				}
 
-				deltaTransform = new EditableObject.DeltaTransform(new Vector3(), new Quaternion(), new Vector3(1, 1, 1));
+				currentAction = noAction;
 			}
 
 			draggingDepth = -1;
@@ -321,20 +327,78 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			public abstract Vector3 newPos(Vector3 pos);
 
+			protected I3DControl control;
+
 			public Quaternion deltaRotation;
 
 			public Vector3 scale;
 
-			public void SetDragDist(Point point) { }
-			public void SetScrollDragDist(Point point, Point projX, Point projY, Point projZ) { }
+			public virtual void UpdateMousePos(Point mousePos, ref float draggingDepth) { }
+
+			public virtual void ApplyScrolling(Point mousePos, float deltaScroll, ref float draggingDepth) { }
+
+
 		}
 
 		public class TranslateAction : AbstractTransformAction
 		{
+			Point startMousePos;
+			float scrolling = 0;
+			float startDepth;
+			public TranslateAction(I3DControl control, Point mousePos, float draggingDepth)
+			{
+				this.control = control;
+				startMousePos = mousePos;
+				startDepth = draggingDepth;
+			}
+
+			public override void UpdateMousePos(Point mousePos, ref float draggingDepth) {
+				Vector3 vec;
+
+				vec.X = (mousePos.X - startMousePos.X) * startDepth * control.FactorX;
+				vec.Y = -(mousePos.Y - startMousePos.Y) * startDepth * control.FactorY;
+
+				Vector2 normCoords = control.NormMouseCoords(mousePos.X, mousePos.Y);
+
+				vec.X += (float)(-normCoords.X * scrolling) * control.FactorX;
+				vec.Y += (float)(normCoords.Y * scrolling) * control.FactorY;
+				vec.Z = scrolling;
+
+				translation = Vector3.Transform(control.InvertedRotationMatrix, vec);
+			}
+
+			public override void ApplyScrolling(Point mousePos, float deltaScroll, ref float draggingDepth)
+			{
+				deltaScroll *= Math.Min(0.01f, draggingDepth / 500f);
+				scrolling -= deltaScroll;
+				Vector3 vec;
+
+				vec.X = (mousePos.X - startMousePos.X) * startDepth * control.FactorX;
+				vec.Y = -(mousePos.Y - startMousePos.Y) * startDepth * control.FactorY;
+
+				Vector2 normCoords = control.NormMouseCoords(mousePos.X, mousePos.Y);
+
+				vec.X += (float)(-normCoords.X * scrolling) * control.FactorX;
+				vec.Y += (float)(normCoords.Y * scrolling) * control.FactorY;
+				vec.Z = scrolling;
+
+				draggingDepth = startDepth - scrolling;
+
+				translation = Vector3.Transform(control.InvertedRotationMatrix, vec);
+			}
+
 			Vector3 translation = new Vector3();
 			public override Vector3 newPos(Vector3 pos)
 			{
 				return pos + translation;
+			}
+		}
+
+		public class NoAction : AbstractTransformAction
+		{
+			public override Vector3 newPos(Vector3 pos)
+			{
+				return pos;
 			}
 		}
 	}
