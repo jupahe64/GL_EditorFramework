@@ -256,6 +256,17 @@ namespace GL_EditorFramework.EditorDrawables
 					selected.Visible = e.Shift;
 				}
 				var = REDRAW_PICKING;
+			}else if(e.KeyCode == Keys.S && selectedObjects.Count > 0 && e.Shift)
+			{
+				foreach (EditableObject selected in selectedObjects)
+				{
+					Vector3 pos = selected.Position;
+					pos.X = (float)Math.Round(pos.X);
+					pos.Y = (float)Math.Round(pos.Y);
+					pos.Z = (float)Math.Round(pos.Z);
+					selected.Position = pos;
+				}
+				var = REDRAW_PICKING;
 			}
 			else if (e.Control && e.KeyCode == Keys.A)
 			{

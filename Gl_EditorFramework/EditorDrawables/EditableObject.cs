@@ -53,6 +53,45 @@ namespace GL_EditorFramework.EditorDrawables
 		public abstract uint Deselect(int partIndex, I3DControl control);
 		public abstract uint DeselectAll(I3DControl control);
 
-		public abstract void ApplyTransformActionToSelection(AbstractTransformAction transformAction);
+		public virtual void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
+		{
+			
+		}
+
+		public virtual Vector3 Position
+		{
+			get
+			{
+				return Vector3.Zero;
+			}
+			set
+			{
+
+			}
+		}
+
+		public virtual Quaternion Rotation
+		{
+			get
+			{
+				return Quaternion.Identity;
+			}
+			set
+			{
+
+			}
+		}
+
+		public virtual Vector3 Scale
+		{
+			get
+			{
+				return Vector3.One;
+			}
+			set
+			{
+
+			}
+		}
 	}
 }

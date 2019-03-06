@@ -19,7 +19,7 @@ namespace GL_EditorFramework.EditorDrawables
 	//     An EditableObject that has only one selectable Part. It's represented by a blue block
 	public class SingleObject : EditableObject
 	{
-		public Vector3 Position = new Vector3(0, 0, 0);
+		protected Vector3 position = new Vector3(0, 0, 0);
 
 		protected bool Selected = false;
 
@@ -31,7 +31,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public SingleObject(Vector3 pos)
 		{
-			Position = pos;
+			position = pos;
 		}
 
 		public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
@@ -42,7 +42,7 @@ namespace GL_EditorFramework.EditorDrawables
 			bool hovered = editorScene.hovered == this;
 
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(Position) : Position));
+				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -71,7 +71,7 @@ namespace GL_EditorFramework.EditorDrawables
 				return;
 
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-				Matrix4.CreateTranslation(Position));
+				Matrix4.CreateTranslation(position));
 
 			Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.nextPickingColor());
 
@@ -85,7 +85,7 @@ namespace GL_EditorFramework.EditorDrawables
 			bool hovered = editorScene.hovered == this;
 
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(Position) : Position));
+				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -113,7 +113,7 @@ namespace GL_EditorFramework.EditorDrawables
 				return;
 
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-				Matrix4.CreateTranslation(Position));
+				Matrix4.CreateTranslation(position));
 
 			Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.nextPickingColor());
 
@@ -131,7 +131,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public virtual void Translate(Vector3 lastPos, Vector3 translate, int subObj)
 		{
-			Position = lastPos + translate;
+			position = lastPos + translate;
 		}
 
 		public virtual void UpdatePosition(int subObj)
@@ -143,7 +143,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override Vector3 GetSelectionCenter()
 		{
-			return Position;
+			return position;
 		}
 
 		public override uint SelectAll(I3DControl control)
@@ -178,7 +178,19 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
 		{
-			Position = transformAction.newPos(Position);
+			position = transformAction.newPos(position);
+		}
+
+		public override Vector3 Position
+		{
+			get
+			{
+				return position;
+			}
+			set
+			{
+				position = value;
+			}
 		}
 	}
 }

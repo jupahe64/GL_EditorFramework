@@ -365,6 +365,17 @@ namespace GL_EditorFramework.EditorDrawables
 				vec.Z = scrolling;
 
 				translation = Vector3.Transform(control.InvertedRotationMatrix, vec);
+
+				if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft)){
+					translation.X = (float)Math.Round(translation.X);
+					translation.Y = (float)Math.Round(translation.Y);
+					translation.Z = (float)Math.Round(translation.Z);
+				}else if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ShiftLeft))
+				{
+					translation.X = (float)Math.Round(translation.X*2) * 0.5f;
+					translation.Y = (float)Math.Round(translation.Y*2) * 0.5f;
+					translation.Z = (float)Math.Round(translation.Z*2) * 0.5f;
+				}
 			}
 
 			public override void ApplyScrolling(Point mousePos, float deltaScroll, ref float draggingDepth)
