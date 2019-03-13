@@ -1,6 +1,6 @@
-﻿using GL_EditorFramework.GL_Core;
+﻿using Gl_EditorFramework;
+using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
-using OpenGl_EditorFramework;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
@@ -146,31 +146,31 @@ namespace GL_EditorFramework.EditorDrawables
 			return position;
 		}
 
-		public override uint SelectAll(I3DControl control)
+		public override uint SelectAll(GL_ControlBase control)
 		{
 			Selected = true;
 			return REDRAW;
 		}
 
-		public override uint SelectDefault(I3DControl control)
+		public override uint SelectDefault(GL_ControlBase control)
 		{
 			Selected = true;
 			return REDRAW;
 		}
 
-		public override uint Select(int partIndex, I3DControl control)
+		public override uint Select(int partIndex, GL_ControlBase control)
 		{
 			Selected = true;
 			return REDRAW;
 		}
 
-		public override uint Deselect(int partIndex, I3DControl control)
+		public override uint Deselect(int partIndex, GL_ControlBase control)
 		{
 			Selected = false;
 			return REDRAW;
 		}
 
-		public override uint DeselectAll(I3DControl control)
+		public override uint DeselectAll(GL_ControlBase control)
 		{
 			Selected = false;
 			return REDRAW;

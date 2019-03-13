@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using GL_EditorFramework.GL_Core;
+using OpenTK;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -16,13 +17,13 @@ namespace GL_EditorFramework.Interfaces
 
 		protected float depth, desiredDepth;
 
-		public override uint MouseDown(MouseEventArgs e, I3DControl control)
+		public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
 		{
 			desiredDepth = control.PickingDepth;
 			return 0;
 		}
 
-		public override uint MouseMove(MouseEventArgs e, Point lastMouseLoc, I3DControl control)
+		public override uint MouseMove(MouseEventArgs e, Point lastMouseLoc, GL_ControlBase control)
 		{
 			if (e.Button == MouseButtons.Left)
 			{

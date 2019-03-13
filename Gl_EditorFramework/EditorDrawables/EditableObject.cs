@@ -34,9 +34,9 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public abstract Vector3 GetSelectionCenter();
 
-		public abstract uint SelectAll(I3DControl control);
+		public abstract uint SelectAll(GL_ControlBase control);
 
-		public abstract uint SelectDefault(I3DControl control);
+		public abstract uint SelectDefault(GL_ControlBase control);
 		
 		public virtual void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
 		{
@@ -48,10 +48,10 @@ namespace GL_EditorFramework.EditorDrawables
 
 		}
 
-		public abstract uint Select(int partIndex, I3DControl control);
+		public abstract uint Select(int partIndex, GL_ControlBase control);
 
-		public abstract uint Deselect(int partIndex, I3DControl control);
-		public abstract uint DeselectAll(I3DControl control);
+		public abstract uint Deselect(int partIndex, GL_ControlBase control);
+		public abstract uint DeselectAll(GL_ControlBase control);
 
 		public virtual void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
 		{

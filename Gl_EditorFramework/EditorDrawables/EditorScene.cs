@@ -92,6 +92,8 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 				obj.Draw(control, pass);
 			}
+			if(pass == Pass.OPAQUE)
+				currentAction.Draw(control);
 		}
 
 		public override void Draw(GL_ControlLegacy control, Pass pass)
@@ -105,6 +107,8 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 				obj.Draw(control, pass);
 			}
+			if (pass == Pass.OPAQUE)
+				currentAction.Draw(control);
 		}
 
 		public override void Prepare(GL_ControlModern control)
@@ -125,7 +129,7 @@ namespace GL_EditorFramework.EditorDrawables
 				obj.Prepare(control);
 		}
 
-		public override uint MouseDown(MouseEventArgs e, I3DControl control)
+		public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 			var |= base.MouseDown(e, control);
@@ -136,7 +140,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, I3DControl control)
+		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control)
 		{
 			uint var = 0;
 
@@ -148,7 +152,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseUp(MouseEventArgs e, I3DControl control)
+		public override uint MouseUp(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 
@@ -160,7 +164,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseClick(MouseEventArgs e, I3DControl control)
+		public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 			foreach (EditableObject obj in objects)
@@ -175,7 +179,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseWheel(MouseEventArgs e, I3DControl control)
+		public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 			foreach (EditableObject obj in objects) {
@@ -197,7 +201,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseEnter(int inObjectIndex, I3DControl control)
+		public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
 		{
 			foreach (EditableObject obj in objects)
 			{
@@ -214,7 +218,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return 0;
 		}
 
-		public override uint MouseLeave(int inObjectIndex, I3DControl control)
+		public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
 		{
 			foreach (EditableObject obj in objects)
 			{
@@ -230,13 +234,18 @@ namespace GL_EditorFramework.EditorDrawables
 			return 0;
 		}
 
-		public override uint KeyDown(KeyEventArgs e, I3DControl control)
+		public override uint KeyDown(KeyEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 
 			bool selectionHasChanged = false;
 
-			if (e.KeyCode == Keys.Z && selectedObjects.Count>0)
+			if (currentAction != noAction)
+			{
+				currentAction.KeyDown(e);
+				var = NO_CAMERA_ACTION | REDRAW;
+			}
+			else if (e.KeyCode == Keys.Z && selectedObjects.Count>0) //focus camera on the selection
 			{
 				Vector3 sum = new Vector3();
 				int index = 0;
@@ -249,14 +258,16 @@ namespace GL_EditorFramework.EditorDrawables
 				control.CameraTarget = sum;
 
 				var = REDRAW_PICKING;
-			}else if (e.KeyCode == Keys.H && selectedObjects.Count > 0)
+			}
+			else if (e.KeyCode == Keys.H && selectedObjects.Count > 0) //hide/show selected objects
 			{
 				foreach (EditableObject selected in selectedObjects)
 				{
 					selected.Visible = e.Shift;
 				}
 				var = REDRAW_PICKING;
-			}else if(e.KeyCode == Keys.S && selectedObjects.Count > 0 && e.Shift)
+			}
+			else if(e.KeyCode == Keys.S && selectedObjects.Count > 0 && e.Shift) //auto snap selected objects
 			{
 				foreach (EditableObject selected in selectedObjects)
 				{
@@ -268,7 +279,15 @@ namespace GL_EditorFramework.EditorDrawables
 				}
 				var = REDRAW_PICKING;
 			}
-			else if (e.Control && e.KeyCode == Keys.A)
+			else if (e.KeyCode == Keys.R && selectedObjects.Count > 0 && e.Shift) //reset rotation for selected objects
+			{
+				foreach (EditableObject selected in selectedObjects)
+				{
+					selected.Rotation = Quaternion.Identity;
+				}
+				var = REDRAW_PICKING;
+			}
+			else if (e.Control && e.KeyCode == Keys.A) //select/deselect all objects
 			{
 				if (e.Shift)
 				{
@@ -305,7 +324,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint KeyUp(KeyEventArgs e, I3DControl control)
+		public override uint KeyUp(KeyEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 			foreach (EditableObject obj in objects) {

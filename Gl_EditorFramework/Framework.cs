@@ -9,6 +9,10 @@ using OpenTK.Graphics.OpenGL;
 namespace GL_EditorFramework
 {
 	public sealed class Framework {
+		public static float TWO_PI = (float)Math.PI*2;
+		public static float PI = (float)Math.PI;
+		public static float HALF_PI = (float)Math.PI/2;
+
 		public static void Initialize()
 		{
 			if (initialized)
@@ -18,7 +22,7 @@ namespace GL_EditorFramework
 			TextureSheet = GL.GenTexture();
 			GL.BindTexture(TextureTarget.Texture2D, TextureSheet);
 
-			var bmp = OpenGl_EditorFramework.Properties.Resources.TextureSheet;
+			var bmp = Gl_EditorFramework.Properties.Resources.TextureSheet;
 			var bmpData = bmp.LockBits(
 				new System.Drawing.Rectangle(0, 0, 128*4, 128*2),
 				System.Drawing.Imaging.ImageLockMode.ReadOnly,

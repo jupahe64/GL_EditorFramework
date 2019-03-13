@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace GL_EditorFramework.GL_Core
 {
-	public class GL_ControlBase : GLControl, I3DControl
+	public partial class GL_ControlBase : GLControl
 	{
 		public GL_ControlBase(int maxGL_Version, int redrawerInterval) : base(OpenTK.Graphics.GraphicsMode.Default, maxGL_Version, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
 		{
@@ -125,17 +125,44 @@ namespace GL_EditorFramework.GL_Core
 			
 			Vector2 normCoords = NormMouseCoords(x, y);
 
-			vec.X = (float)(-normCoords.X * depth) * factorX;
-			vec.Y = (float)( normCoords.Y * depth) * factorY;
+			vec.X = (-normCoords.X * depth) * factorX;
+			vec.Y = ( normCoords.Y * depth) * factorY;
 
 			vec.Z = depth + camDistance;
 
 			return camTarget + Vector3.Transform(mtxRotInv, vec);
 		}
 
-		public Vector3 screenCoordFor(Vector3 coord)
+		public static Vector3 IntersectPoint(Vector3 rayVector, Vector3 rayPoint, Vector3 planeNormal, Vector3 planePoint)
 		{
-			return new Vector3();
+			//code from: https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
+			var diff = rayPoint - planePoint;
+			var prod1 = Vector3.Dot(diff, planeNormal);
+			var prod2 = Vector3.Dot(rayVector, planeNormal);
+			var prod3 = prod1 / prod2;
+			return rayPoint - rayVector * prod3;
+		}
+
+		public Vector3 screenCoordPlaneIntersection(Point point, Vector3 planeNormal, Vector3 planeOrigin)
+		{
+			Vector3 ray;
+
+			Vector2 normCoords = NormMouseCoords(point.X, point.Y);
+
+			ray.X = (-normCoords.X * zfar) * factorX;
+			ray.Y = ( normCoords.Y * zfar) * factorY;
+			ray.Z = zfar;
+			return IntersectPoint(
+				Vector3.Transform(mtxRotInv,ray), 
+				camTarget + Vector3.Transform(mtxRotInv, new Vector3(0,0,camDistance)), 
+				planeNormal, planeOrigin);
+		}
+
+		public Point screenCoordFor(Vector3 coord)
+		{
+			Vector3 vec = Vector3.Project(coord, 0, 0, Width, Height, -1, 1,  mtxCam * mtxProj);
+
+			return new Point((int)vec.X, Height-(int)(vec.Y));
 		}
 
 		protected AbstractGlDrawable mainDrawable;
@@ -177,35 +204,27 @@ namespace GL_EditorFramework.GL_Core
 
 		public Vector3 CameraTarget { get => camTarget; set { camTarget = value; } }
 		public float CameraDistance { get => camDistance; set { camDistance = value; } }
-		public float CamRotX { get => camRotX; set { camRotX = value; } }
-		public float CamRotY { get => camRotY; set { camRotY = value; } }
+		public float CamRotX { get => camRotX; set { camRotX = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI; ; } }
+
+		public bool RotXIsReversed { get; private set; }
+
+		public void RotateCameraX(float amount)
+		{
+			if (RotXIsReversed)
+				camRotX -= amount;
+			else
+				camRotX += amount;
+
+			camRotX = ((camRotX % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
+		}
+		public float CamRotY { get => camRotY; set { camRotY = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI; } }
 
 		public float PickingDepth => pickingDepth;
 
 		public float NormPickingDepth => normPickingDepth;
 
 		public ulong RedrawerFrame { get; private set; } = 0;
-
-		void handleDrawableEvtResult(uint result)
-		{
-			shouldRedraw |= (result&AbstractGlDrawable.REDRAW)> 0;
-			shouldRepick |= (result & AbstractGlDrawable.REPICK) > 0;
-			skipCameraAction |= (result & AbstractGlDrawable.NO_CAMERA_ACTION) > 0;
-		}
-
-		void handleCameraEvtResult(uint result)
-		{
-			shouldRedraw |= result > 0;
-			shouldRepick |= result > 0;
-			if (shouldRepick)
-			{
-				mtxRotInv =
-					Matrix3.CreateRotationX(-camRotY) * 
-					Matrix3.CreateRotationY(-camRotX);
-
-			}
-		}
-
+		
 		public Color nextPickingColor()
 		{
 			return Color.FromArgb(pickingIndex++);
@@ -260,136 +279,7 @@ namespace GL_EditorFramework.GL_Core
 			Refresh();
 		}
 
-		protected override void OnMouseDown(MouseEventArgs e)
-		{
-			if (DesignMode || mainDrawable == null) return;
-
-			Focus();
-
-			lastMouseLoc = e.Location;
-			if(dragStartPos == new Point(-1,-1))
-			dragStartPos = e.Location;
-
-			shouldRedraw = false;
-			shouldRepick = false;
-			skipCameraAction = false;
-			handleDrawableEvtResult(mainDrawable.MouseDown(e, this));
-
-			if (!skipCameraAction)
-				handleCameraEvtResult(activeCamera.MouseDown(e, this));
-
-			if (shouldRepick)
-				Repick();
-
-			if (shouldRedraw)
-				Refresh();
-
-			base.OnMouseDown(e);
-		}
-
-		protected override void OnMouseMove(MouseEventArgs e)
-		{
-			if (DesignMode || mainDrawable == null) return;
-
-			shouldRedraw = false;
-			shouldRepick = false;
-			skipCameraAction = false;
-
-			handleDrawableEvtResult(mainDrawable.MouseMove(e, lastMouseLoc, this));
-
-			if (!skipCameraAction)
-			{
-				handleCameraEvtResult(activeCamera.MouseMove(e, lastMouseLoc, this));
-			}
-
-			if (shouldRepick)
-				Repick();
-
-			if (shouldRedraw||showFakeCursor)
-				Refresh();
-
-			lastMouseLoc = e.Location;
-		}
-
-		protected override void OnMouseWheel(MouseEventArgs e)
-		{
-			if (DesignMode || mainDrawable == null) return;
-
-			shouldRedraw = false;
-			shouldRepick = false;
-			skipCameraAction = false;
-
-			handleDrawableEvtResult(mainDrawable.MouseWheel(e, this));
-
-			if (!skipCameraAction)
-				handleCameraEvtResult(activeCamera.MouseWheel(e, this));
-
-			if (shouldRepick)
-				Repick();
-
-			if (shouldRedraw)
-				Refresh();
-		}
-
-		protected override void OnMouseUp(MouseEventArgs e)
-		{
-			if (DesignMode || mainDrawable == null) return;
-			
-			shouldRedraw = false;
-			shouldRepick = false;
-			skipCameraAction = false;
-
-			if((e.Location.X == dragStartPos.X) && (e.Location.Y == dragStartPos.Y))
-			{
-				shouldRedraw = true;
-				switch (showOrientationCube ? pickingFrameBuffer : 0)
-				{
-					case 1:
-						camRotX = 0;
-						camRotY = (float)Math.PI * 0.5f;
-						break;
-					case 2:
-						camRotX = 0;
-						camRotY = -(float)Math.PI * 0.5f;
-						break;
-					case 3:
-						camRotX = 0;
-						camRotY = 0;
-						break;
-					case 4:
-						camRotX = (float)Math.PI;
-						camRotY = 0;
-						break;
-					case 5:
-						camRotX = -(float)Math.PI * 0.5f;
-						camRotY = 0;
-						break;
-					case 6:
-						camRotX = (float)Math.PI * 0.5f;
-						camRotY = 0;
-						break;
-					default:
-						shouldRedraw = false;
-						handleDrawableEvtResult(mainDrawable.MouseClick(e, this));
-						break;
-				}
-			}
-			else
-			{
-				handleDrawableEvtResult(mainDrawable.MouseUp(e, this));
-			}
-
-			dragStartPos = new Point(-1, -1);
-
-			if (!skipCameraAction)
-				handleCameraEvtResult(activeCamera.MouseUp(e, this));
-
-			if (shouldRepick)
-				Repick();
-
-			if (shouldRedraw)
-				Refresh();
-		}
+		
 
 		protected void Repick()
 		{
@@ -427,78 +317,7 @@ namespace GL_EditorFramework.GL_Core
 				lastPicked = picked;
 			}
 		}
-
-		protected override void OnMouseEnter(EventArgs e)
-		{
-			if (DesignMode)
-			{
-				base.OnMouseEnter(e);
-				return;
-			}
-			if (stereoscopy)
-			{
-				showFakeCursor = true;
-				Cursor.Hide();
-			}
-			base.OnMouseEnter(e);
-		}
-
-		protected override void OnMouseLeave(EventArgs e)
-		{
-			if (DesignMode)
-			{
-				base.OnMouseLeave(e);
-				return;
-			}
-			if (stereoscopy)
-			{
-				showFakeCursor = false;
-				Cursor.Show();
-			}
-			base.OnMouseLeave(e);
-			Refresh();
-		}
-
-		protected override void OnKeyDown(KeyEventArgs e)
-		{
-			if (DesignMode || mainDrawable == null) return;
-
-			shouldRedraw = false;
-			shouldRepick = false;
-			skipCameraAction = false;
-
-			handleDrawableEvtResult(mainDrawable.KeyDown(e, this));
-
-			if (!skipCameraAction)
-				handleCameraEvtResult(activeCamera.KeyDown(e, this));
-
-			if (shouldRepick)
-				Repick();
-
-			if (shouldRedraw)
-				Refresh();
-		}
-
-		protected override void OnKeyUp(KeyEventArgs e)
-		{
-			if (DesignMode || mainDrawable == null) return;
-
-			shouldRedraw = false;
-			shouldRepick = false;
-			skipCameraAction = false;
-
-			handleDrawableEvtResult(mainDrawable.KeyUp(e, this));
-
-			if (skipCameraAction)
-				handleCameraEvtResult(activeCamera.KeyUp(e, this));
-
-			if (shouldRepick)
-				Repick();
-
-			if (shouldRedraw)
-				Refresh();
-		}
-
+		
 		public virtual void DrawPicking() { }
 
 		protected void DrawFakeCursor()

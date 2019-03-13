@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenGl_EditorFramework
+namespace GL_EditorFramework
 {
 	public static class Renderers
 	{
@@ -59,7 +59,7 @@ namespace OpenGl_EditorFramework
 		public static class ColorBlockRenderer {
 			private static bool Initialized = false;
 		
-			private static ShaderProgram defaultShaderProgram;
+			public static ShaderProgram DefaultShaderProgram { get; private set; }
 			private static ShaderProgram solidColorShaderProgram;
 
 			private static int linesVao;
@@ -126,7 +126,7 @@ namespace OpenGl_EditorFramework
 						void main(){
 							gl_Position = mtxCam*mtxMdl*position;
 						}");
-					defaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert);
+					DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert);
 					solidColorShaderProgram = new ShaderProgram(solidColorFrag, solidColorVert);
 
 					int buffer;
@@ -191,11 +191,11 @@ ref list, 3, 7);
 					GL.BindVertexArray(linesVao);
 					GL.DrawArrays(PrimitiveType.Lines, 0, 24);
 					#endregion
-					control.CurrentShader = defaultShaderProgram;
+					control.CurrentShader = DefaultShaderProgram;
 
-					GL.Uniform1(defaultShaderProgram["tex"], Framework.TextureSheet - 1);
+					GL.Uniform1(DefaultShaderProgram["tex"], Framework.TextureSheet - 1);
 
-					GL.Uniform4(defaultShaderProgram["color"], blockColor);
+					GL.Uniform4(DefaultShaderProgram["color"], blockColor);
 				}
 				else
 					GL.Uniform4(solidColorShaderProgram["color"], pickingColor);
@@ -333,8 +333,8 @@ ref list, 3, 7);
 		{
 
 			private static bool Initialized = false;
-			
-			private static ShaderProgram defaultShaderProgram;
+
+			public static ShaderProgram DefaultShaderProgram { get; private set; }
 
 			private static int linesVao;
 
@@ -369,7 +369,7 @@ ref list, 3, 7);
 						void main(){
 							gl_Position = mtxCam*mtxMdl*position;
 						}");
-					defaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert);
+					DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert);
 
 					int buffer;
 
@@ -400,17 +400,17 @@ ref list, 3, 7);
 
 			public static void Draw(GL_ControlModern control, Pass pass, Vector4 color, Color pickingColor)
 			{
-				control.CurrentShader = defaultShaderProgram;
+				control.CurrentShader = DefaultShaderProgram;
 
 				if (pass == Pass.OPAQUE)
 				{
 					GL.LineWidth(4.0f);
-					GL.Uniform4(defaultShaderProgram["color"], color);
+					GL.Uniform4(DefaultShaderProgram["color"], color);
 				}
 				else
 				{
 					GL.LineWidth(6.0f);
-					GL.Uniform4(defaultShaderProgram["color"], pickingColor);
+					GL.Uniform4(DefaultShaderProgram["color"], pickingColor);
 				}
 
 				GL.BindVertexArray(linesVao);

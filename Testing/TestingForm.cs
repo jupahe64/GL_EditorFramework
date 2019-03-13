@@ -33,7 +33,7 @@ namespace Testing
 			for (int i = 0; i<5; i++)
 			{
 				listBox1.Items.Add("block");
-				scene.objects.Add(new SingleObject(new Vector3(i,0,0)));
+				scene.objects.Add(new TransformableObject(new Vector3(i,0,0)));
 			}
 
 			gL_ControlModern1.MainDrawable = scene;
@@ -75,7 +75,7 @@ namespace Testing
 		{
 			Color rand = Color.FromArgb(rng.Next());
 			listBox1.Items.Add("block"); //make sure to add the entry before you add an object because the SelectionChanged event will be fired
-			scene.Add(new SingleObject(new Vector3()));
+			scene.Add(new TransformableObject(new Vector3()));
 		}
 	}
 }

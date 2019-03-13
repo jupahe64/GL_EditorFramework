@@ -8,10 +8,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinInput = System.Windows.Input;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-	public abstract class EditorSceneBase : AbstractGlDrawable
+	public abstract partial class EditorSceneBase : AbstractGlDrawable
 	{
 		protected bool multiSelect;
 
@@ -25,13 +26,13 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public event EventHandler SelectionChanged;
 
-		private float draggingDepth;
+		protected float draggingDepth;
 
 		protected GL_ControlBase control;
 
 		public AbstractTransformAction currentAction = noAction;
 
-		private static NoAction noAction = new NoAction();
+		protected static NoAction noAction = new NoAction();
 
 		protected void UpdateSelection(uint var)
 		{
@@ -119,17 +120,51 @@ namespace GL_EditorFramework.EditorDrawables
 			}
 		}
 
-		public override uint MouseDown(MouseEventArgs e, I3DControl control)
+		public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
-			if (draggingDepth == -1 && e.Button == MouseButtons.Left && selectedObjects.Contains(hovered))
+			if(currentAction==noAction)
 			{
-				if (hovered.CanStartDragging())
+				if (selectedObjects.Contains(hovered) && hovered.CanStartDragging())
 				{
-					draggingDepth = control.PickingDepth;
-					currentAction = new TranslateAction(control, e.Location, draggingDepth);
+					if (e.Button == MouseButtons.Left)
+					{
+						draggingDepth = control.PickingDepth;
+						currentAction = new TranslateAction(control, e.Location, draggingDepth);
+					}
+					else if (e.Button == MouseButtons.Right)
+					{
+						draggingDepth = control.PickingDepth;
+						Vector3 center = new Vector3();
+						foreach (EditableObject obj in selectedObjects)
+						{
+							center += obj.GetSelectionCenter();
+						}
+						center /= selectedObjects.Count;
+
+						currentAction = new RotateAction(control, e.Location, center, draggingDepth);
+					}
+					else if (e.Button == MouseButtons.Middle)
+					{
+						draggingDepth = control.PickingDepth;
+						Vector3 center = new Vector3();
+						foreach (EditableObject obj in selectedObjects)
+						{
+							center += obj.GetSelectionCenter();
+						}
+						center /= selectedObjects.Count;
+						if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+							currentAction = new ScaleAction(control, e.Location, center);
+						else
+							currentAction = new ScaleActionIndividual(control, e.Location, hovered);
+					}
 				}
 			}
+			else
+			{
+				currentAction = noAction; //abort current action
+			}
+			
 			foreach (AbstractGlDrawable obj in staticObjects)
 			{
 				var |= obj.MouseDown(e, control);
@@ -137,7 +172,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, I3DControl control)
+		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control)
 		{
 			uint var = 0;
 
@@ -146,9 +181,9 @@ namespace GL_EditorFramework.EditorDrawables
 				var |= obj.MouseMove(e, lastMousePos, control);
 			}
 
-			if (draggingDepth != -1)
+			if (currentAction != noAction)
 			{
-				currentAction.UpdateMousePos(e.Location, ref draggingDepth);
+				currentAction.UpdateMousePos(e.Location);
 
 				var |= REDRAW | NO_CAMERA_ACTION;
 
@@ -161,7 +196,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseWheel(MouseEventArgs e, I3DControl control)
+		public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 
@@ -170,9 +205,9 @@ namespace GL_EditorFramework.EditorDrawables
 				var |= obj.MouseWheel(e, control);
 			}
 
-			if (draggingDepth != -1)
+			if (currentAction != noAction)
 			{
-				currentAction.ApplyScrolling(e.Location, e.Delta, ref draggingDepth);
+				currentAction.ApplyScrolling(e.Location, e.Delta);
 
 				var |= REDRAW | NO_CAMERA_ACTION;
 
@@ -182,21 +217,21 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseUp(MouseEventArgs e, I3DControl control)
+		public override uint MouseUp(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 
-			if (!(draggingDepth == -1) && e.Button == MouseButtons.Left)
+			if (currentAction != noAction)
 			{
 				foreach (EditableObject obj in selectedObjects)
 				{
 					obj.ApplyTransformActionToSelection(currentAction);
 				}
 
+				var |= REDRAW;
+
 				currentAction = noAction;
 			}
-
-			draggingDepth = -1;
 
 			foreach (AbstractGlDrawable obj in staticObjects)
 			{
@@ -206,7 +241,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return var;
 		}
 
-		public override uint MouseClick(MouseEventArgs e, I3DControl control)
+		public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
 			foreach (AbstractGlDrawable obj in staticObjects)
@@ -214,81 +249,81 @@ namespace GL_EditorFramework.EditorDrawables
 				var |= obj.MouseClick(e, control);
 			}
 
-			if (!(e.Button == MouseButtons.Left))
-				return var;
-
-			if (!(multiSelect && OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ShiftLeft)))
+			if (e.Button == MouseButtons.Left)
 			{
-				if (multiSelect)
+				if (!(multiSelect && WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift)))
 				{
-					if (!selectedObjects.Contains(hovered))
+					if (multiSelect)
+					{
+						if (!selectedObjects.Contains(hovered))
+						{
+							foreach (EditableObject selected in selectedObjects)
+							{
+								selected.DeselectAll(control);
+							}
+						}
+
+						if (hovered != null && !selectedObjects.Contains(hovered))
+						{
+							selectedObjects.Clear();
+							selectedObjects.Add(hovered);
+							hovered.Select(hoveredPart, control);
+							SelectionChanged?.Invoke(this, new EventArgs());
+						}
+						else if (hovered == null)
+						{
+							selectedObjects.Clear();
+							SelectionChanged?.Invoke(this, new EventArgs());
+						}
+					}
+					else
 					{
 						foreach (EditableObject selected in selectedObjects)
 						{
 							selected.DeselectAll(control);
 						}
-					}
 
-					if (hovered != null && !selectedObjects.Contains(hovered))
-					{
-						selectedObjects.Clear();
-						selectedObjects.Add(hovered);
-						hovered.Select(hoveredPart, control);
-						SelectionChanged?.Invoke(this, new EventArgs());
-					}
-					else if (hovered == null)
-					{
-						selectedObjects.Clear();
-						SelectionChanged?.Invoke(this, new EventArgs());
+						if (hovered != null && !selectedObjects.Contains(hovered))
+						{
+							selectedObjects.Clear();
+							selectedObjects.Add(hovered);
+							hovered.Select(hoveredPart, control);
+							SelectionChanged?.Invoke(this, new EventArgs());
+						}
+						else
+						{
+							selectedObjects.Clear();
+							SelectionChanged?.Invoke(this, new EventArgs());
+						}
 					}
 				}
 				else
 				{
-					foreach (EditableObject selected in selectedObjects)
+					if (selectedObjects.Contains(hovered))
 					{
-						selected.DeselectAll(control);
+						selectedObjects.Remove(hovered);
+						hovered.Deselect(hoveredPart, control);
+						SelectionChanged?.Invoke(this, new EventArgs());
 					}
-
-					if (hovered != null && !selectedObjects.Contains(hovered))
+					else if (hovered != null)
 					{
-						selectedObjects.Clear();
 						selectedObjects.Add(hovered);
 						hovered.Select(hoveredPart, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
-					else
-					{
-						selectedObjects.Clear();
-						SelectionChanged?.Invoke(this, new EventArgs());
-					}
-				}
-			}
-			else
-			{
-				if (selectedObjects.Contains(hovered))
-				{
-					selectedObjects.Remove(hovered);
-					hovered.Deselect(hoveredPart, control);
-					SelectionChanged?.Invoke(this, new EventArgs());
-				}
-				else if (hovered != null)
-				{
-					selectedObjects.Add(hovered);
-					hovered.Select(hoveredPart, control);
-					SelectionChanged?.Invoke(this, new EventArgs());
 				}
 			}
 
-			draggingDepth = -1; //because MouseClick implies that the Mouse Button is not pressed anymore
+			currentAction = noAction; //because MouseClick implies that the Mouse Button is not pressed anymore
 
 			var |= REDRAW;
 
 			return var;
 		}
 
-		public override uint MouseEnter(int inObjectIndex, I3DControl control)
+		public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
 		{
-			if (!(draggingDepth == -1))
+			if (currentAction != noAction)
 				return 0;
 			
 			foreach (AbstractGlDrawable obj in staticObjects)
@@ -303,7 +338,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return 0;
 		}
 
-		public override uint MouseLeave(int inObjectIndex, I3DControl control)
+		public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
 		{
 			foreach (AbstractGlDrawable obj in staticObjects)
 			{
@@ -317,100 +352,10 @@ namespace GL_EditorFramework.EditorDrawables
 			return 0;
 		}
 
-		public override uint MouseLeaveEntirely(I3DControl control)
+		public override uint MouseLeaveEntirely(GL_ControlBase control)
 		{
 			hovered = null;
 			return REDRAW;
-		}
-
-		public abstract class AbstractTransformAction
-		{
-			public abstract Vector3 newPos(Vector3 pos);
-
-			protected I3DControl control;
-
-			public Quaternion deltaRotation;
-
-			public Vector3 scale;
-
-			public virtual void UpdateMousePos(Point mousePos, ref float draggingDepth) { }
-
-			public virtual void ApplyScrolling(Point mousePos, float deltaScroll, ref float draggingDepth) { }
-
-
-		}
-
-		public class TranslateAction : AbstractTransformAction
-		{
-			Point startMousePos;
-			float scrolling = 0;
-			float startDepth;
-			public TranslateAction(I3DControl control, Point mousePos, float draggingDepth)
-			{
-				this.control = control;
-				startMousePos = mousePos;
-				startDepth = draggingDepth;
-			}
-
-			public override void UpdateMousePos(Point mousePos, ref float draggingDepth) {
-				Vector3 vec;
-
-				vec.X = (mousePos.X - startMousePos.X) * startDepth * control.FactorX;
-				vec.Y = -(mousePos.Y - startMousePos.Y) * startDepth * control.FactorY;
-
-				Vector2 normCoords = control.NormMouseCoords(mousePos.X, mousePos.Y);
-
-				vec.X += (float)(-normCoords.X * scrolling) * control.FactorX;
-				vec.Y += (float)(normCoords.Y * scrolling) * control.FactorY;
-				vec.Z = scrolling;
-
-				translation = Vector3.Transform(control.InvertedRotationMatrix, vec);
-
-				if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft)){
-					translation.X = (float)Math.Round(translation.X);
-					translation.Y = (float)Math.Round(translation.Y);
-					translation.Z = (float)Math.Round(translation.Z);
-				}else if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ShiftLeft))
-				{
-					translation.X = (float)Math.Round(translation.X*2) * 0.5f;
-					translation.Y = (float)Math.Round(translation.Y*2) * 0.5f;
-					translation.Z = (float)Math.Round(translation.Z*2) * 0.5f;
-				}
-			}
-
-			public override void ApplyScrolling(Point mousePos, float deltaScroll, ref float draggingDepth)
-			{
-				deltaScroll *= Math.Min(0.01f, draggingDepth / 500f);
-				scrolling -= deltaScroll;
-				Vector3 vec;
-
-				vec.X = (mousePos.X - startMousePos.X) * startDepth * control.FactorX;
-				vec.Y = -(mousePos.Y - startMousePos.Y) * startDepth * control.FactorY;
-
-				Vector2 normCoords = control.NormMouseCoords(mousePos.X, mousePos.Y);
-
-				vec.X += (float)(-normCoords.X * scrolling) * control.FactorX;
-				vec.Y += (float)(normCoords.Y * scrolling) * control.FactorY;
-				vec.Z = scrolling;
-
-				draggingDepth = startDepth - scrolling;
-
-				translation = Vector3.Transform(control.InvertedRotationMatrix, vec);
-			}
-
-			Vector3 translation = new Vector3();
-			public override Vector3 newPos(Vector3 pos)
-			{
-				return pos + translation;
-			}
-		}
-
-		public class NoAction : AbstractTransformAction
-		{
-			public override Vector3 newPos(Vector3 pos)
-			{
-				return pos;
-			}
 		}
 	}
 }

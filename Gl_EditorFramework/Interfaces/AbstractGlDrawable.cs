@@ -28,9 +28,9 @@ namespace GL_EditorFramework.Interfaces
 		public abstract void Draw(GL_ControlModern control, Pass pass);
 		public abstract void Draw(GL_ControlLegacy control, Pass pass);
 		public virtual int GetPickableSpan() => 1;
-		public virtual uint MouseEnter(int index, I3DControl control) { return 0; }
-		public virtual uint MouseLeave(int index, I3DControl control) { return 0; }
-		public virtual uint MouseLeaveEntirely(I3DControl control) { return 0; }
-		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, I3DControl control) { return REPICK; }
+		public virtual uint MouseEnter(int index, GL_ControlBase control) { return 0; }
+		public virtual uint MouseLeave(int index, GL_ControlBase control) { return 0; }
+		public virtual uint MouseLeaveEntirely(GL_ControlBase control) { return 0; }
+		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control) { return REPICK; }
 	}
 }

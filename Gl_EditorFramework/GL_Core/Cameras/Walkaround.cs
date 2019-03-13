@@ -1,4 +1,5 @@
-﻿using GL_EditorFramework.Interfaces;
+﻿using GL_EditorFramework.GL_Core;
+using GL_EditorFramework.Interfaces;
 using OpenTK;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinInput = System.Windows.Input;
 
 namespace GL_EditorFramework.StandardCameras
 {
@@ -19,9 +21,9 @@ namespace GL_EditorFramework.StandardCameras
 			this.maxCamMoveSpeed = maxCamMoveSpeed;
 		}
 
-		public override uint MouseDown(MouseEventArgs e, I3DControl control)
+		public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
 		{
-			if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft) &&
+			if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) &&
 				e.Button == MouseButtons.Right &&
 				control.PickingDepth != control.ZFar)
 			{
@@ -31,22 +33,24 @@ namespace GL_EditorFramework.StandardCameras
 			return UPDATE_CAMERA;
 		}
 
-		public override uint MouseMove(MouseEventArgs e, Point lastMouseLoc, I3DControl control)
+		public override uint MouseMove(MouseEventArgs e, Point lastMouseLoc, GL_ControlBase control)
 		{
 			float deltaX = e.Location.X - lastMouseLoc.X;
 			float deltaY = e.Location.Y - lastMouseLoc.Y;
 
 			if (e.Button == MouseButtons.Right)
 			{
-				control.CamRotX += deltaX * 0.00390625f;
-				control.CamRotY += deltaY * 0.00390625f;
+				if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.Y))
+					control.RotateCameraX(deltaX * 0.002f);
+				if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.X))
+					control.CamRotY += deltaY * 0.002f;
 				return UPDATE_CAMERA;
 			}
 			else if (e.Button == MouseButtons.Left)
 			{
 				base.MouseMove(e, lastMouseLoc, control);
 
-				if (OpenTK.Input.Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.ControlLeft))
+				if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
 				{
 					float delta = ((float)deltaY*-5 * Math.Min(0.01f, depth / 500f));
 					Vector3 vec;
@@ -62,8 +66,15 @@ namespace GL_EditorFramework.StandardCameras
 					//code from Whitehole
 
 					Vector3 vec;
-					vec.X = deltaX * Math.Min(maxCamMoveSpeed, depth * control.FactorX);
-					vec.Y = -deltaY * Math.Min(maxCamMoveSpeed, depth * control.FactorY);
+					if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.Y))
+						vec.X = deltaX * Math.Min(maxCamMoveSpeed, depth * control.FactorX);
+					else
+						vec.X = 0;
+					if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.X))
+						vec.Y = -deltaY * Math.Min(maxCamMoveSpeed, depth * control.FactorY);
+					else
+						vec.Y = 0;
+
 					vec.Z = 0;
 					control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
 				}
@@ -73,7 +84,7 @@ namespace GL_EditorFramework.StandardCameras
 			return 0;
 		}
 
-		public override uint MouseWheel(MouseEventArgs e, I3DControl control)
+		public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
 		{
 			depth = control.PickingDepth;
 			float delta = ((float)e.Delta * Math.Min(0.01f, depth / 500f));
