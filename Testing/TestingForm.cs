@@ -30,7 +30,9 @@ namespace Testing
 
 			listBox1.Items.Add("moving platform");
 			scene.objects.Add(new AnimatedObject(new Vector3(0, -4, 0)));
-			for (int i = 0; i<5; i++)
+			listBox1.Items.Add("path");
+			scene.objects.Add(new Path());
+			for (int i = 5; i<100; i++)
 			{
 				listBox1.Items.Add("block");
 				scene.objects.Add(new TransformableObject(new Vector3(i,0,0)));

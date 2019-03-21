@@ -25,6 +25,8 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override bool IsSelected() => Selected;
 
+		public override bool IsSelected(int partIndex) => Selected;
+
 		protected static Vector4 Color = new Vector4(0f, 0.25f, 1f, 1f);
 
 		
@@ -141,10 +143,14 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override bool CanStartDragging() => true;
 
-		public override Vector3 GetSelectionCenter()
-		{
-			return position;
-		}
+		public override BoundingBox GetSelectionBox() => new BoundingBox(
+			position.X - 0.5f,
+			position.X + 0.5f,
+			position.Y - 0.5f,
+			position.Y + 0.5f,
+			position.Z - 0.5f,
+			position.Z + 0.5f
+			);
 
 		public override uint SelectAll(GL_ControlBase control)
 		{

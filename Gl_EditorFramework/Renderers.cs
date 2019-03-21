@@ -177,7 +177,7 @@ ref list, 3, 7);
 				}
 			}
 
-			public static void Draw(GL_ControlModern control, Pass pass, Vector4 blockColor, Vector4 lineColor, Color pickingColor)
+			public static void Draw(GL_ControlModern control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
 			{
 				control.CurrentShader = solidColorShaderProgram;
 
@@ -204,7 +204,7 @@ ref list, 3, 7);
 				GL.DrawArrays(PrimitiveType.Quads, 0, 24);
 			}
 
-			public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 blockColor, Vector4 lineColor, Color pickingColor)
+			public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
 			{
 				GL.Disable(EnableCap.Texture2D);
 
@@ -398,7 +398,7 @@ ref list, 3, 7);
 				}
 			}
 
-			public static void Draw(GL_ControlModern control, Pass pass, Vector4 color, Color pickingColor)
+			public static void Draw(GL_ControlModern control, Pass pass, Vector4 color, Vector4 pickingColor)
 			{
 				control.CurrentShader = DefaultShaderProgram;
 
@@ -417,7 +417,7 @@ ref list, 3, 7);
 				GL.DrawArrays(PrimitiveType.Lines, 0, 24);
 			}
 
-			public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 color, Color pickingColor)
+			public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 color, Vector4 pickingColor)
 			{
 				GL.Disable(EnableCap.Texture2D);
 

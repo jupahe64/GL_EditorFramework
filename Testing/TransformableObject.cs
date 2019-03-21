@@ -36,8 +36,8 @@ namespace Testing
 			bool hovered = editorScene.hovered == this;
 
 			control.UpdateModelMatrix(
-				Matrix4.CreateScale((Selected ? editorScene.currentAction.scale * scale : scale) * 0.5f) *
-				Matrix4.CreateFromQuaternion(Selected ?  editorScene.currentAction.deltaRotation * Rotation : Rotation) *
+				Matrix4.CreateScale((Selected ? editorScene.currentAction.newScale(scale) : scale) * 0.5f) *
+				Matrix4.CreateFromQuaternion(Selected ? editorScene.currentAction.newRot(rotation) : rotation) *
 				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
 
 			Vector4 blockColor;
@@ -69,9 +69,9 @@ namespace Testing
 			bool hovered = editorScene.hovered == this;
 
 			control.UpdateModelMatrix(
-				Matrix4.CreateScale(        (Selected ? editorScene.currentAction.scale * scale : scale) * 0.5f) *
-				Matrix4.CreateFromQuaternion(Selected ? editorScene.currentAction.deltaRotation * Rotation : Rotation) *
-				Matrix4.CreateTranslation(   Selected ? editorScene.currentAction.newPos(position) : position));
+				Matrix4.CreateScale((Selected ? editorScene.currentAction.newScale(scale) : scale) * 0.5f) *
+				Matrix4.CreateFromQuaternion(Selected ? editorScene.currentAction.newRot(rotation) : rotation) *
+				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -96,8 +96,8 @@ namespace Testing
 		public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
 		{
 			position = transformAction.newPos(position);
-			rotation = transformAction.deltaRotation * rotation;
-			scale = transformAction.scale * scale;
+			rotation = transformAction.newRot(rotation);
+			scale = transformAction.newScale(scale);
 		}
 	}
 }

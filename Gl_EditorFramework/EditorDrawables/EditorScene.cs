@@ -209,6 +209,7 @@ namespace GL_EditorFramework.EditorDrawables
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
 					hovered = obj;
+					hoveredPart = inObjectIndex;
 					return obj.MouseEnter(inObjectIndex, control) | REDRAW;
 				}
 				inObjectIndex -= span;
@@ -247,15 +248,13 @@ namespace GL_EditorFramework.EditorDrawables
 			}
 			else if (e.KeyCode == Keys.Z && selectedObjects.Count>0) //focus camera on the selection
 			{
-				Vector3 sum = new Vector3();
-				int index = 0;
+				EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
+
 				foreach (EditableObject selected in selectedObjects)
 				{
-					sum -= selected.GetSelectionCenter();
-					index++;
+					box.Include(selected.GetSelectionBox());
 				}
-				sum /= index;
-				control.CameraTarget = sum;
+				control.CameraTarget = -box.GetCenter();
 
 				var = REDRAW_PICKING;
 			}
@@ -269,21 +268,28 @@ namespace GL_EditorFramework.EditorDrawables
 			}
 			else if(e.KeyCode == Keys.S && selectedObjects.Count > 0 && e.Shift) //auto snap selected objects
 			{
+				SnapAction action = new SnapAction();
 				foreach (EditableObject selected in selectedObjects)
 				{
-					Vector3 pos = selected.Position;
-					pos.X = (float)Math.Round(pos.X);
-					pos.Y = (float)Math.Round(pos.Y);
-					pos.Z = (float)Math.Round(pos.Z);
-					selected.Position = pos;
+					selected.ApplyTransformActionToSelection(action);
+				}
+				var = REDRAW_PICKING;
+			}
+			else if (e.KeyCode == Keys.R && selectedObjects.Count > 0 && e.Shift && e.Control) //reset rotation for selected objects
+			{
+				ResetScale action = new ResetScale();
+				foreach (EditableObject selected in selectedObjects)
+				{
+					selected.ApplyTransformActionToSelection(action);
 				}
 				var = REDRAW_PICKING;
 			}
 			else if (e.KeyCode == Keys.R && selectedObjects.Count > 0 && e.Shift) //reset rotation for selected objects
 			{
+				ResetRot action = new ResetRot();
 				foreach (EditableObject selected in selectedObjects)
 				{
-					selected.Rotation = Quaternion.Identity;
+					selected.ApplyTransformActionToSelection(action);
 				}
 				var = REDRAW_PICKING;
 			}

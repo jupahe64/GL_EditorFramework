@@ -125,7 +125,7 @@ namespace GL_EditorFramework.EditorDrawables
 			uint var = 0;
 			if(currentAction==noAction)
 			{
-				if (selectedObjects.Contains(hovered) && hovered.CanStartDragging())
+				if (selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart) && hovered.CanStartDragging())
 				{
 					if (e.Button == MouseButtons.Left)
 					{
@@ -135,26 +135,26 @@ namespace GL_EditorFramework.EditorDrawables
 					else if (e.Button == MouseButtons.Right)
 					{
 						draggingDepth = control.PickingDepth;
-						Vector3 center = new Vector3();
-						foreach (EditableObject obj in selectedObjects)
-						{
-							center += obj.GetSelectionCenter();
-						}
-						center /= selectedObjects.Count;
+						EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
 
-						currentAction = new RotateAction(control, e.Location, center, draggingDepth);
+						foreach (EditableObject selected in selectedObjects)
+						{
+							box.Include(selected.GetSelectionBox());
+						}
+
+						currentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
 					}
 					else if (e.Button == MouseButtons.Middle)
 					{
 						draggingDepth = control.PickingDepth;
-						Vector3 center = new Vector3();
-						foreach (EditableObject obj in selectedObjects)
+						EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
+
+						foreach (EditableObject selected in selectedObjects)
 						{
-							center += obj.GetSelectionCenter();
+							box.Include(selected.GetSelectionBox());
 						}
-						center /= selectedObjects.Count;
 						if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
-							currentAction = new ScaleAction(control, e.Location, center);
+							currentAction = new ScaleAction(control, e.Location, box.GetCenter());
 						else
 							currentAction = new ScaleActionIndividual(control, e.Location, hovered);
 					}
@@ -255,7 +255,7 @@ namespace GL_EditorFramework.EditorDrawables
 				{
 					if (multiSelect)
 					{
-						if (!selectedObjects.Contains(hovered))
+						if (!(selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
 						{
 							foreach (EditableObject selected in selectedObjects)
 							{
@@ -263,10 +263,11 @@ namespace GL_EditorFramework.EditorDrawables
 							}
 						}
 
-						if (hovered != null && !selectedObjects.Contains(hovered))
+						if (hovered != null && !(selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
 						{
 							selectedObjects.Clear();
-							selectedObjects.Add(hovered);
+							if(!selectedObjects.Contains(hovered))
+								selectedObjects.Add(hovered);
 							hovered.Select(hoveredPart, control);
 							SelectionChanged?.Invoke(this, new EventArgs());
 						}
@@ -276,17 +277,18 @@ namespace GL_EditorFramework.EditorDrawables
 							SelectionChanged?.Invoke(this, new EventArgs());
 						}
 					}
-					else
+					else 
 					{
 						foreach (EditableObject selected in selectedObjects)
 						{
 							selected.DeselectAll(control);
 						}
 
-						if (hovered != null && !selectedObjects.Contains(hovered))
+						if (hovered != null && !(selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
 						{
 							selectedObjects.Clear();
-							selectedObjects.Add(hovered);
+							if (!selectedObjects.Contains(hovered))
+								selectedObjects.Add(hovered);
 							hovered.Select(hoveredPart, control);
 							SelectionChanged?.Invoke(this, new EventArgs());
 						}
@@ -299,15 +301,17 @@ namespace GL_EditorFramework.EditorDrawables
 				}
 				else
 				{
-					if (selectedObjects.Contains(hovered))
+					if ((selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
 					{
-						selectedObjects.Remove(hovered);
+						if(!hovered.IsSelected())
+							selectedObjects.Remove(hovered);
 						hovered.Deselect(hoveredPart, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
 					else if (hovered != null)
 					{
-						selectedObjects.Add(hovered);
+						if (!selectedObjects.Contains(hovered))
+							selectedObjects.Add(hovered);
 						hovered.Select(hoveredPart, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}

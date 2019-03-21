@@ -37,7 +37,7 @@ namespace Testing
 			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position);
 			control.UpdateModelMatrix(mtx);
 
-			Color pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.nextPickingColor();
 			
 			Vector4 lineBoxColor;
 
@@ -69,7 +69,7 @@ namespace Testing
 			mtx *= Matrix4.CreateTranslation(position);
 			control.UpdateModelMatrix(mtx);
 
-			Color pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.nextPickingColor();
 
 			Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 
@@ -96,7 +96,7 @@ namespace Testing
 			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position);
 			control.UpdateModelMatrix(mtx);
 
-			Color pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.nextPickingColor();
 
 			Vector4 lineBoxColor;
 
@@ -128,7 +128,7 @@ namespace Testing
 			mtx *= Matrix4.CreateTranslation(position);
 			control.UpdateModelMatrix(mtx);
 
-			Color pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.nextPickingColor();
 
 			Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 

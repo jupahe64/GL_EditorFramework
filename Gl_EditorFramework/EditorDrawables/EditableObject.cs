@@ -32,7 +32,9 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public abstract bool IsSelected();
 
-		public abstract Vector3 GetSelectionCenter();
+		public abstract bool IsSelected(int partIndex);
+
+		public abstract BoundingBox GetSelectionBox();
 
 		public abstract uint SelectAll(GL_ControlBase control);
 
@@ -92,6 +94,69 @@ namespace GL_EditorFramework.EditorDrawables
 			{
 
 			}
+		}
+
+		public struct BoundingBox
+		{
+			public float minX;
+			public float maxX;
+			public float minY;
+			public float maxY;
+			public float minZ;
+			public float maxZ;
+
+			public static BoundingBox Default = new BoundingBox(float.MaxValue, float.MinValue, float.MaxValue, float.MinValue, float.MaxValue, float.MinValue);
+
+			public BoundingBox(float minX, float maxX, float minY, float maxY, float minZ, float maxZ)
+			{				   
+				this.minX = minX;
+				this.maxX = maxX;
+				this.minY = minY;
+				this.maxY = maxY;
+				this.minZ = minZ;
+				this.maxZ = maxZ;
+			}
+
+			public void Include(Vector3 vec)
+			{
+				if (vec.X < minX)
+					minX = vec.X;
+				if (vec.X > maxX)
+					maxX = vec.X;
+
+				if (vec.Y < minY)
+					minY = vec.Y;
+				if (vec.Y > maxY)
+					maxY = vec.Y;
+
+				if (vec.Z < minZ)
+					minZ = vec.Z;
+				if (vec.Z > maxZ)
+					maxZ = vec.Z;
+			}
+
+			public void Include(BoundingBox other)
+			{
+				if (other.minX < minX)
+					minX = other.minX;
+				if (other.maxX > maxX)
+					maxX = other.maxX;
+
+				if (other.minY < minY)
+					minY = other.minY;
+				if (other.maxY > maxY)
+					maxY = other.maxY;
+
+				if (other.minZ < minZ)
+					minZ = other.minZ;
+				if (other.maxZ > maxZ)
+					maxZ = other.maxZ;
+			}
+
+			public Vector3 GetCenter() => new Vector3(
+				(minX + maxX) * 0.5f,
+				(minY + maxY) * 0.5f,
+				(minZ + maxZ) * 0.5f);
 		}
 	}
 }

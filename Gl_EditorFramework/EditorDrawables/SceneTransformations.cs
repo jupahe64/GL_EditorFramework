@@ -21,13 +21,13 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public abstract class AbstractTransformAction
 		{
-			public abstract Vector3 newPos(Vector3 pos);
+			public virtual Vector3 newPos(Vector3 pos) => pos;
+
+			public virtual Quaternion newRot(Quaternion rot) => rot;
+
+			public virtual Vector3 newScale(Vector3 scale) => scale;
 
 			protected GL_ControlBase control;
-
-			public Quaternion deltaRotation = Quaternion.Identity;
-
-			public Vector3 scale = Vector3.One;
 
 			public virtual void UpdateMousePos(Point mousePos) { }
 
@@ -321,6 +321,10 @@ namespace GL_EditorFramework.EditorDrawables
 
 			Point centerPoint;
 
+			Quaternion deltaRotation;
+
+			public override Quaternion newRot(Quaternion rot) => deltaRotation * rot;
+
 			static double halfPI = Math.PI / 2d;
 
 			static double eighthPI = Math.PI / 8d;
@@ -529,7 +533,11 @@ namespace GL_EditorFramework.EditorDrawables
 			Vector3 center;
 
 			Point centerPoint;
-			
+
+			public override Vector3 newScale(Vector3 _scale) => scale * _scale;
+
+			Vector3 scale;
+
 			public ScaleAction(GL_ControlBase control, Point mousePos, Vector3 center)
 			{
 				Renderers.LineBoxRenderer.Initialize();
@@ -562,6 +570,10 @@ namespace GL_EditorFramework.EditorDrawables
 			Point startMousePos;
 
 			Point centerPoint;
+
+			public override Vector3 newScale(Vector3 _scale) => scale * _scale;
+
+			Vector3 scale;
 
 			EditableObject obj;
 
@@ -687,6 +699,28 @@ namespace GL_EditorFramework.EditorDrawables
 					GL.End();
 				}
 			}
+		}
+
+		public class SnapAction : AbstractTransformAction
+		{
+			public override Vector3 newPos(Vector3 pos)
+			{
+				return new Vector3(
+					(float)Math.Round(pos.X),
+					(float)Math.Round(pos.Y),
+					(float)Math.Round(pos.Z)
+					);
+			}
+		}
+
+		public class ResetRot : AbstractTransformAction
+		{
+			public override Quaternion newRot(Quaternion rot) => Quaternion.Identity;
+		}
+
+		public class ResetScale : AbstractTransformAction
+		{
+			public override Vector3 newScale(Vector3 rot) => Vector3.One;
 		}
 
 		public class NoAction : AbstractTransformAction

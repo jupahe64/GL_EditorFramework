@@ -24,7 +24,7 @@ namespace GL_EditorFramework.GL_Core
 		{
 			base.Refresh();
 			if (repickerOwners > 0)
-				Repick();
+				_Repick();
 			RedrawerFrame++;
 		}
 
@@ -224,10 +224,15 @@ namespace GL_EditorFramework.GL_Core
 		public float NormPickingDepth => normPickingDepth;
 
 		public ulong RedrawerFrame { get; private set; } = 0;
-		
-		public Color nextPickingColor()
+
+		public Vector4 nextPickingColor()
 		{
-			return Color.FromArgb(pickingIndex++);
+			return new Vector4(
+				((pickingIndex >> 16) & 0xFF)/256f,
+				((pickingIndex >>  8) & 0xFF)/256f,
+				(pickingIndex & 0xFF) / 256f,
+				((pickingIndex++ >> 24) & 0xFF) / 256f
+				);
 		}
 
 		public void skipPickingColors(uint count)
@@ -281,7 +286,13 @@ namespace GL_EditorFramework.GL_Core
 
 		
 
-		protected void Repick()
+		public void Repick()
+		{
+			if (redrawerOwners == 0) //Redrawer is deactivated?
+				_Repick();
+		}
+
+		protected void _Repick()
 		{
 			int pickingMouseX = stereoscopy ? lastMouseLoc.X / 2 : lastMouseLoc.X;
 
@@ -296,7 +307,7 @@ namespace GL_EditorFramework.GL_Core
 			// depth math from http://www.opengl.org/resources/faq/technical/depthbuffer.htm
 
 			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref normPickingDepth);
-			
+
 			pickingDepth = -(zfar * znear / (normPickingDepth * (zfar - znear) - zfar));
 
 			int picked = (int)pickingFrameBuffer - pickingIndexOffset;
@@ -315,9 +326,10 @@ namespace GL_EditorFramework.GL_Core
 					handleDrawableEvtResult(mainDrawable.MouseLeave(lastPicked, this));
 				}
 				lastPicked = picked;
+				Console.WriteLine(picked);
 			}
 		}
-		
+
 		public virtual void DrawPicking() { }
 
 		protected void DrawFakeCursor()
