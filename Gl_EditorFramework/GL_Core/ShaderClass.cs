@@ -177,7 +177,7 @@ namespace GL_EditorFramework.GL_Core
 
         public void SetMatrix4x4(string name, ref Matrix4 value, bool Transpose = false)
         {
-            GL.UniformMatrix4(this["mvpMatrix"], false, ref value);
+            GL.UniformMatrix4(this[name], false, ref value);
         }
 
         public void SetVector4(string name, Vector4 value)
