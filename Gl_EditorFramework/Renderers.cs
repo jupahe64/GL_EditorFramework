@@ -202,7 +202,8 @@ ref list, 3, 7);
 
 				GL.BindVertexArray(blockVao);
 				GL.DrawArrays(PrimitiveType.Quads, 0, 24);
-			}
+                GL.BindVertexArray(0);
+            }
 
 			public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
 			{
