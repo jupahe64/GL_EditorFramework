@@ -162,7 +162,7 @@ namespace GL_EditorFramework.EditorDrawables
 			return new LocalOrientation(position);
 		}
 
-        public override bool IsInRange(float rangeSquared, Vector3 pos)
+        public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
         {
             return (pos - position).LengthSquared < rangeSquared;
         }

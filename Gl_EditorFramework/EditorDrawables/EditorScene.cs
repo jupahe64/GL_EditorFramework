@@ -11,11 +11,29 @@ using System.Windows.Forms;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-	public class EditorScene : EditorSceneBase
-	{
-		public List<EditableObject> objects = new List<EditableObject>();
+    public class EditorScene : EditorSceneBase
+    {
+        public List<EditableObject> objects = new List<EditableObject>();
 
-        public int RenderDistance = 10000;
+        private float renderDistanceSquared = 1000000;
+        private float renderDistance = 1000;
+
+        public float RenderDistance{
+            get => renderDistanceSquared;
+            set
+            {
+                if (value < 1f)
+                {
+                    renderDistanceSquared = 1f;
+                    renderDistance = 1f;
+                }
+                else
+                {
+                    renderDistanceSquared = value * value;
+                    renderDistance = value;
+                }
+            }
+        }
 
 		public EditorScene(bool multiSelect = true)
 		{
@@ -87,7 +105,7 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			foreach (EditableObject obj in objects)
 			{
-				if(obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition))
+				if(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
 					obj.Draw(control, pass, this);
 			}
 			foreach (AbstractGlDrawable obj in staticObjects)
@@ -105,7 +123,7 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			foreach (EditableObject obj in objects)
 			{
-				if (obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition))
+				if (obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
 					obj.Draw(control, pass, this);
 			}
 			foreach (AbstractGlDrawable obj in staticObjects)
@@ -201,7 +219,7 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			int var = 0;
 			foreach (EditableObject obj in objects)
-                if (obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition))
+                if (obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
                     var += obj.GetPickableSpan();
 			foreach (AbstractGlDrawable obj in staticObjects)
 				var += obj.GetPickableSpan();
@@ -214,7 +232,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return 0;
 			foreach (EditableObject obj in objects)
 			{
-                if (!(obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition)))
+                if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
                     continue;
                 int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
@@ -236,7 +254,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return 0;
             foreach (EditableObject obj in objects)
 			{
-                if (!(obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition)))
+                if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
                     continue;
                 int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)

@@ -1229,9 +1229,8 @@ namespace GL_EditorFramework.EditorDrawables
 			}
 		}
 
-        public override bool IsInRange(float rangeSquared, Vector3 pos)
+        public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
         {
-            float range = (float)Math.Sqrt(rangeSquared);
             BoundingBox box;
             for (int i = 1; i<pathPoints.Count; i++)
             {

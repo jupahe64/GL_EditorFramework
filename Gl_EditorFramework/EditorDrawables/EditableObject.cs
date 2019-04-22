@@ -37,7 +37,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public abstract LocalOrientation GetLocalOrientation(int partIndex);
 
-        public abstract bool IsInRange(float rangeSquared, Vector3 pos);
+        public abstract bool IsInRange(float range, float rangeSquared, Vector3 pos);
 
 		public abstract uint SelectAll(GL_ControlBase control);
 
