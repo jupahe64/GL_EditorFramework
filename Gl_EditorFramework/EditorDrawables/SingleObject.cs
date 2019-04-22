@@ -41,10 +41,10 @@ namespace GL_EditorFramework.EditorDrawables
 			if (pass == Pass.TRANSPARENT)
 				return;
 
-			bool hovered = editorScene.hovered == this;
+			bool hovered = editorScene.Hovered == this;
 
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
+				Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -63,7 +63,7 @@ namespace GL_EditorFramework.EditorDrawables
 			else
 				blockColor = Color;
 
-			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.nextPickingColor());
+			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
 
 		}
 
@@ -75,7 +75,7 @@ namespace GL_EditorFramework.EditorDrawables
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
 				Matrix4.CreateTranslation(position));
 
-			Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.nextPickingColor());
+			Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
 
 		}
 
@@ -84,10 +84,10 @@ namespace GL_EditorFramework.EditorDrawables
 			if (pass == Pass.TRANSPARENT)
 				return;
 
-			bool hovered = editorScene.hovered == this;
+			bool hovered = editorScene.Hovered == this;
 
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
+				Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -106,7 +106,7 @@ namespace GL_EditorFramework.EditorDrawables
 			else
 				blockColor = Color;
 
-			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.nextPickingColor());
+			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
 		}
 
 		public override void Draw(GL_ControlLegacy control, Pass pass)
@@ -117,7 +117,7 @@ namespace GL_EditorFramework.EditorDrawables
 			control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
 				Matrix4.CreateTranslation(position));
 
-			Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.nextPickingColor());
+			Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
 
 		}
 
@@ -128,8 +128,8 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override void Prepare(GL_ControlLegacy control)
 		{
-			
-		}
+            Renderers.ColorBlockRenderer.Initialize();
+        }
 
 		public virtual void Translate(Vector3 lastPos, Vector3 translate, int subObj)
 		{
@@ -140,10 +140,15 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			
 		}
+        
+        public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
+        {
+            localOrientation = new LocalOrientation(position);
+            dragExclusively = false;
+            return Selected;
+        }
 
-		public override bool CanStartDragging() => true;
-
-		public override BoundingBox GetSelectionBox() => new BoundingBox(
+        public override BoundingBox GetSelectionBox() => new BoundingBox(
 			position.X - 0.5f,
 			position.X + 0.5f,
 			position.Y - 0.5f,
@@ -152,7 +157,17 @@ namespace GL_EditorFramework.EditorDrawables
 			position.Z + 0.5f
 			);
 
-		public override uint SelectAll(GL_ControlBase control)
+		public override LocalOrientation GetLocalOrientation(int partIndex)
+		{
+			return new LocalOrientation(position);
+		}
+
+        public override bool IsInRange(float rangeSquared, Vector3 pos)
+        {
+            return (pos - position).LengthSquared < rangeSquared;
+        }
+        
+        public override uint SelectAll(GL_ControlBase control)
 		{
 			Selected = true;
 			return REDRAW;
@@ -184,7 +199,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
 		{
-			position = transformAction.newPos(position);
+			position = transformAction.NewPos(position);
 		}
 
 		public override Vector3 Position

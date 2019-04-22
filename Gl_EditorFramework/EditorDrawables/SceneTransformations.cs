@@ -21,11 +21,11 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public abstract class AbstractTransformAction
 		{
-			public virtual Vector3 newPos(Vector3 pos) => pos;
+			public virtual Vector3 NewPos(Vector3 pos) => pos;
 
-			public virtual Quaternion newRot(Quaternion rot) => rot;
+			public virtual Quaternion NewRot(Quaternion rot) => rot;
 
-			public virtual Vector3 newScale(Vector3 scale) => scale;
+			public virtual Vector3 NewScale(Vector3 scale) => scale;
 
 			protected GL_ControlBase control;
 
@@ -53,8 +53,10 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			Point startMousePos;
 			float scrolling = 0;
-			float draggingDepth;
+            readonly float draggingDepth;
 			Vector3 planeOrigin;
+            Vector3 origin;
+            bool absoluteSnapping;
 
 			bool allowScrolling = true;
 
@@ -73,12 +75,15 @@ namespace GL_EditorFramework.EditorDrawables
 
 			Vector3 translation = new Vector3();
 			
-			public TranslateAction(GL_ControlBase control, Point mousePos, float draggingDepth)
+			public TranslateAction(GL_ControlBase control, Point mousePos, Vector3 center, float draggingDepth)
 			{
-				this.control = control;
+                Renderers.LineBoxRenderer.Initialize();
+
+                this.control = control;
 				startMousePos = mousePos;
 				this.draggingDepth = draggingDepth;
-				planeOrigin = control.coordFor(mousePos.X, mousePos.Y, draggingDepth);
+				planeOrigin = control.CoordFor(mousePos.X, mousePos.Y, draggingDepth);
+                origin = center;
 			}
 
 			Vector3 PointOnScrollPlane(Point mousePos)
@@ -116,7 +121,7 @@ namespace GL_EditorFramework.EditorDrawables
 						else
 							vec.X = 0;
 
-						translation = control.screenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
+						translation = control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
 						translation *= -Vector3.UnitX;
 						break;
 
@@ -131,7 +136,7 @@ namespace GL_EditorFramework.EditorDrawables
 						else
 							vec.Y = 0;
 
-						translation = control.screenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
+						translation = control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
 						translation *= -Vector3.UnitY;
 						break;
 
@@ -146,7 +151,7 @@ namespace GL_EditorFramework.EditorDrawables
 						else
 							vec.Z = 0;
 
-						translation = control.screenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
+						translation = control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
 						translation *= -Vector3.UnitZ;
 						break;
 
@@ -160,7 +165,7 @@ namespace GL_EditorFramework.EditorDrawables
 						}
 						else
 						{
-							translation = control.screenCoordPlaneIntersection(mousePos, Vector3.UnitX, planeOrigin) - planeOrigin;
+							translation = control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitX, planeOrigin) - planeOrigin;
 							translation *= -1;
 						}
 						break;
@@ -175,7 +180,7 @@ namespace GL_EditorFramework.EditorDrawables
 						}
 						else
 						{
-							translation = control.screenCoordPlaneIntersection(mousePos, Vector3.UnitY, planeOrigin) - planeOrigin;
+							translation = control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitY, planeOrigin) - planeOrigin;
 							translation *= -1;
 						}
 						break;
@@ -190,26 +195,34 @@ namespace GL_EditorFramework.EditorDrawables
 						}
 						else
 						{
-							translation = control.screenCoordPlaneIntersection(mousePos, Vector3.UnitZ, planeOrigin) - planeOrigin;
+							translation = control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitZ, planeOrigin) - planeOrigin;
 							translation *= -1;
 						}
 						break;
 				}
-				
-				//snapping
+
+                //snapping
+                if(absoluteSnapping)
+                    vec = origin + translation;
+                else
+                    vec = translation;
 				if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
 				{
-					translation.X = (float)Math.Round(translation.X);
-					translation.Y = (float)Math.Round(translation.Y);
-					translation.Z = (float)Math.Round(translation.Z);
+					vec.X = (float)Math.Round(vec.X);
+					vec.Y = (float)Math.Round(vec.Y);
+                    vec.Z = (float)Math.Round(vec.Z);
 				}
 				else if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
 				{
-					translation.X = (float)Math.Round(translation.X * 2) * 0.5f;
-					translation.Y = (float)Math.Round(translation.Y * 2) * 0.5f;
-					translation.Z = (float)Math.Round(translation.Z * 2) * 0.5f;
+					vec.X = (float)Math.Round(vec.X * 2) * 0.5f;
+					vec.Y = (float)Math.Round(vec.Y * 2) * 0.5f;
+                    vec.Z = (float)Math.Round(vec.Z * 2) * 0.5f;
 				}
-			}
+                if (absoluteSnapping)
+                    translation = vec - origin;
+                else
+                    translation = vec;
+            }
 
 			public override void ApplyScrolling(Point mousePos, float deltaScroll)
 			{
@@ -225,6 +238,10 @@ namespace GL_EditorFramework.EditorDrawables
 
 			public override void KeyDown(KeyEventArgs e)
 			{
+                Vector3 vec;
+                if (e.Shift && e.KeyCode == Keys.S)
+                    absoluteSnapping = !absoluteSnapping;
+
 				AxisRestriction old = axisRestriction;
 				switch (e.KeyCode)
 				{
@@ -245,7 +262,7 @@ namespace GL_EditorFramework.EditorDrawables
 					axisRestriction = AxisRestriction.NONE;
 
 
-				Vector3 vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
 
 				if (axisRestriction == AxisRestriction.NONE ||
 					(axisRestriction == AxisRestriction.X && (Math.Round(vec.X, 7) == 1 || Math.Round(vec.X, 7) == -1)) ||
@@ -262,11 +279,10 @@ namespace GL_EditorFramework.EditorDrawables
 				{
 					allowScrolling = false;
 					scrolling = 0;
-					draggingDepth = draggingDepth;
 				}
 			}
 
-			public override Vector3 newPos(Vector3 pos)
+			public override Vector3 NewPos(Vector3 pos)
 			{
 				return pos + translation;
 			}
@@ -323,11 +339,11 @@ namespace GL_EditorFramework.EditorDrawables
 
 			Quaternion deltaRotation;
 
-			public override Quaternion newRot(Quaternion rot) => deltaRotation * rot;
+			public override Quaternion NewRot(Quaternion rot) => deltaRotation * rot;
 
-			static double halfPI = Math.PI / 2d;
+			static readonly double halfPI = Math.PI / 2d;
 
-			static double eighthPI = Math.PI / 8d;
+			static readonly double eighthPI = Math.PI / 8d;
 
 			bool showRotationInicator = true;
 
@@ -350,8 +366,8 @@ namespace GL_EditorFramework.EditorDrawables
 				this.control = control;
 				startMousePos = mousePos;
 				this.center = center;
-				planeOrigin = control.coordFor(mousePos.X, mousePos.Y, draggingDepth);
-				centerPoint = control.screenCoordFor(center);
+				planeOrigin = control.CoordFor(mousePos.X, mousePos.Y, draggingDepth);
+				centerPoint = control.ScreenCoordFor(center);
 			}
 
 			public override void UpdateMousePos(Point mousePos)
@@ -379,8 +395,8 @@ namespace GL_EditorFramework.EditorDrawables
 						}
 						else
 						{
-							lastIntersection = -control.screenCoordPlaneIntersection(mousePos, Vector3.UnitX, planeOrigin);
-							Vector3 vec2 = -control.screenCoordPlaneIntersection(startMousePos, Vector3.UnitX, planeOrigin);
+							lastIntersection = -control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitX, planeOrigin);
+							Vector3 vec2 = -control.ScreenCoordPlaneIntersection(startMousePos, Vector3.UnitX, planeOrigin);
 
 							angle = (Math.Atan2(lastIntersection.Z - center.Y, lastIntersection.Y - center.Y) -
 									 Math.Atan2(vec2.Z - center.Y, vec2.Y - center.Y));
@@ -403,8 +419,8 @@ namespace GL_EditorFramework.EditorDrawables
 						}
 						else
 						{
-							lastIntersection = -control.screenCoordPlaneIntersection(mousePos, Vector3.UnitY, planeOrigin);
-							Vector3 vec2 = -control.screenCoordPlaneIntersection(startMousePos, Vector3.UnitY, planeOrigin);
+							lastIntersection = -control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitY, planeOrigin);
+							Vector3 vec2 = -control.ScreenCoordPlaneIntersection(startMousePos, Vector3.UnitY, planeOrigin);
 
 							angle = (Math.Atan2(lastIntersection.X - center.X, lastIntersection.Z - center.Z) -
 									 Math.Atan2(vec2.X - center.X, vec2.Z - center.Z));
@@ -424,8 +440,8 @@ namespace GL_EditorFramework.EditorDrawables
 						}
 						else
 						{
-							lastIntersection = -control.screenCoordPlaneIntersection(mousePos, Vector3.UnitZ, planeOrigin);
-							Vector3 vec2 = -control.screenCoordPlaneIntersection(startMousePos, Vector3.UnitZ, planeOrigin);
+							lastIntersection = -control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitZ, planeOrigin);
+							Vector3 vec2 = -control.ScreenCoordPlaneIntersection(startMousePos, Vector3.UnitZ, planeOrigin);
 
 							angle = (Math.Atan2(lastIntersection.Y - center.Y, lastIntersection.X - center.X) -
 									 Math.Atan2(vec2.Y - center.Y, vec2.X - center.X));
@@ -467,7 +483,7 @@ namespace GL_EditorFramework.EditorDrawables
 					axisRestriction = AxisRestriction.NONE;
 			}
 
-			public override Vector3 newPos(Vector3 pos)
+			public override Vector3 NewPos(Vector3 pos)
 			{
 				return Vector3.Transform(pos-center, deltaRotation)+center;
 			}
@@ -526,15 +542,13 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public class ScaleAction : AbstractTransformAction
 		{
-			float scrolling = 0;
-
 			Point startMousePos;
 
 			Vector3 center;
 
 			Point centerPoint;
 
-			public override Vector3 newScale(Vector3 _scale) => scale * _scale;
+			public override Vector3 NewScale(Vector3 _scale) => scale * _scale;
 
 			Vector3 scale;
 
@@ -545,7 +559,7 @@ namespace GL_EditorFramework.EditorDrawables
 				this.control = control;
 				startMousePos = mousePos;
 				this.center = center;
-				centerPoint = control.screenCoordFor(center);
+				centerPoint = control.ScreenCoordFor(center);
 			}
 
 			public override void UpdateMousePos(Point mousePos)
@@ -555,11 +569,13 @@ namespace GL_EditorFramework.EditorDrawables
 				int a2 = startMousePos.X - centerPoint.X;
 				int b2 = startMousePos.Y - centerPoint.Y;
 				float scaling = (float)(Math.Sqrt(a1 * a1 + b1 * b1) / Math.Sqrt(a2 * a2 + b2 * b2));
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
+                    scaling = (float)Math.Round(scaling);
 
-				scale = new Vector3(scaling, scaling, scaling);
+                scale = new Vector3(scaling, scaling, scaling);
 			}
 
-			public override Vector3 newPos(Vector3 pos)
+			public override Vector3 NewPos(Vector3 pos)
 			{
 				return (pos - center) * scale + center;
 			}
@@ -571,11 +587,15 @@ namespace GL_EditorFramework.EditorDrawables
 
 			Point centerPoint;
 
-			public override Vector3 newScale(Vector3 _scale) => scale * _scale;
+			public override Vector3 NewScale(Vector3 _scale) => new Vector3(
+				WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.X * _scale.X) : scale.X * _scale.X,
+				WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Y * _scale.Y) : scale.Y * _scale.Y,
+				WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Z * _scale.Z) : scale.Z * _scale.Z
+				);
 
 			Vector3 scale;
 
-			EditableObject obj;
+			EditableObject.LocalOrientation orientation;
 
 			enum AxisRestriction
 			{
@@ -590,14 +610,14 @@ namespace GL_EditorFramework.EditorDrawables
 
 			AxisRestriction axisRestriction = AxisRestriction.NONE;
 
-			public ScaleActionIndividual(GL_ControlBase control, Point mousePos, EditableObject obj)
+			public ScaleActionIndividual(GL_ControlBase control, Point mousePos, EditableObject.LocalOrientation orientation)
 			{
 				Renderers.LineBoxRenderer.Initialize();
 
 				this.control = control;
 				startMousePos = mousePos;
-				this.obj = obj;
-				centerPoint = control.screenCoordFor(obj.Position);
+				this.orientation = orientation;
+				centerPoint = control.ScreenCoordFor(orientation.Origin);
 			}
 
 			public override void UpdateMousePos(Point mousePos)
@@ -634,7 +654,7 @@ namespace GL_EditorFramework.EditorDrawables
 				}
 			}
 
-			public override Vector3 newPos(Vector3 pos)
+			public override Vector3 NewPos(Vector3 pos)
 			{
 				return pos;
 			}
@@ -676,8 +696,8 @@ namespace GL_EditorFramework.EditorDrawables
 				{
 					GL.Uniform4(Renderers.LineBoxRenderer.DefaultShaderProgram["color"], colorX);
 					GL.Begin(PrimitiveType.Lines);
-					GL.Vertex3(obj.Position + obj.Rotation * Vector3.UnitX * control.ZFar);
-					GL.Vertex3(obj.Position - obj.Rotation * Vector3.UnitX * control.ZFar);
+					GL.Vertex3(orientation.Origin + orientation.Rotation * Vector3.UnitX * control.ZFar);
+					GL.Vertex3(orientation.Origin - orientation.Rotation * Vector3.UnitX * control.ZFar);
 					GL.End();
 				}
 
@@ -685,8 +705,8 @@ namespace GL_EditorFramework.EditorDrawables
 				{
 					GL.Uniform4(Renderers.LineBoxRenderer.DefaultShaderProgram["color"], colorY);
 					GL.Begin(PrimitiveType.Lines);
-					GL.Vertex3(obj.Position + obj.Rotation * Vector3.UnitY * control.ZFar);
-					GL.Vertex3(obj.Position - obj.Rotation * Vector3.UnitY * control.ZFar);
+					GL.Vertex3(orientation.Origin + orientation.Rotation * Vector3.UnitY * control.ZFar);
+					GL.Vertex3(orientation.Origin - orientation.Rotation * Vector3.UnitY * control.ZFar);
 					GL.End();
 				}
 
@@ -694,8 +714,8 @@ namespace GL_EditorFramework.EditorDrawables
 				{
 					GL.Uniform4(Renderers.LineBoxRenderer.DefaultShaderProgram["color"], colorZ);
 					GL.Begin(PrimitiveType.Lines);
-					GL.Vertex3(obj.Position + obj.Rotation * Vector3.UnitZ * control.ZFar);
-					GL.Vertex3(obj.Position - obj.Rotation * Vector3.UnitZ * control.ZFar);
+					GL.Vertex3(orientation.Origin + orientation.Rotation * Vector3.UnitZ * control.ZFar);
+					GL.Vertex3(orientation.Origin - orientation.Rotation * Vector3.UnitZ * control.ZFar);
 					GL.End();
 				}
 			}
@@ -703,7 +723,7 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public class SnapAction : AbstractTransformAction
 		{
-			public override Vector3 newPos(Vector3 pos)
+			public override Vector3 NewPos(Vector3 pos)
 			{
 				return new Vector3(
 					(float)Math.Round(pos.X),
@@ -715,17 +735,17 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public class ResetRot : AbstractTransformAction
 		{
-			public override Quaternion newRot(Quaternion rot) => Quaternion.Identity;
+			public override Quaternion NewRot(Quaternion rot) => Quaternion.Identity;
 		}
 
 		public class ResetScale : AbstractTransformAction
 		{
-			public override Vector3 newScale(Vector3 rot) => Vector3.One;
+			public override Vector3 NewScale(Vector3 rot) => Vector3.One;
 		}
 
-		public class NoAction : AbstractTransformAction
+		public class NoTransformAction : AbstractTransformAction
 		{
-			public override Vector3 newPos(Vector3 pos)
+			public override Vector3 NewPos(Vector3 pos)
 			{
 				return pos;
 			}

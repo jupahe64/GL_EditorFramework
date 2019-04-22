@@ -14,7 +14,7 @@ namespace GL_EditorFramework.StandardCameras
 {
 	public class WalkaroundCamera : AbstractCamera
 	{
-		private float maxCamMoveSpeed;
+		private readonly float maxCamMoveSpeed;
 
 		public WalkaroundCamera(float maxCamMoveSpeed = 0.1f)
 		{
@@ -27,7 +27,7 @@ namespace GL_EditorFramework.StandardCameras
 				e.Button == MouseButtons.Right &&
 				control.PickingDepth != control.ZFar)
 			{
-				control.CameraTarget = control.coordFor(e.Location.X, e.Location.Y, control.PickingDepth);
+				control.CameraTarget = -control.CoordFor(e.Location.X, e.Location.Y, control.PickingDepth);
 			}
 			base.MouseDown(e, control);
 			return UPDATE_CAMERA;
@@ -58,7 +58,7 @@ namespace GL_EditorFramework.StandardCameras
 					vec.Y = 0;
 					vec.Z = delta;
 
-					control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
+					control.CameraTarget -= Vector3.Transform(control.InvertedRotationMatrix, vec);
 				}
 				else
 				{
@@ -76,7 +76,7 @@ namespace GL_EditorFramework.StandardCameras
 						vec.Y = 0;
 
 					vec.Z = 0;
-					control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
+					control.CameraTarget -= Vector3.Transform(control.InvertedRotationMatrix, vec);
 				}
 
 				return UPDATE_CAMERA;
@@ -92,11 +92,11 @@ namespace GL_EditorFramework.StandardCameras
 
 			Vector2 normCoords = control.NormMouseCoords(e.Location.X, e.Location.Y);
 
-			vec.X = (float)(-normCoords.X * delta) * control.FactorX;
-			vec.Y = (float)( normCoords.Y * delta) * control.FactorY;
+			vec.X = (-normCoords.X * delta) * control.FactorX;
+			vec.Y = ( normCoords.Y * delta) * control.FactorY;
 			vec.Z = delta;
 
-			control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec);
+			control.CameraTarget -= Vector3.Transform(control.InvertedRotationMatrix, vec);
 			
 			return UPDATE_CAMERA;
 		}

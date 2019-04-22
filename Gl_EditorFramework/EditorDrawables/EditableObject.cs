@@ -27,14 +27,17 @@ namespace GL_EditorFramework.EditorDrawables
 
 		}
 
-		//only gets called when the object is selected
-		public abstract bool CanStartDragging();
+        public abstract bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively);
 
 		public abstract bool IsSelected();
 
 		public abstract bool IsSelected(int partIndex);
 
 		public abstract BoundingBox GetSelectionBox();
+
+		public abstract LocalOrientation GetLocalOrientation(int partIndex);
+
+        public abstract bool IsInRange(float rangeSquared, Vector3 pos);
 
 		public abstract uint SelectAll(GL_ControlBase control);
 
@@ -60,7 +63,12 @@ namespace GL_EditorFramework.EditorDrawables
 			
 		}
 
-		public virtual Vector3 Position
+        public virtual void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part)
+        {
+
+        }
+
+        public virtual Vector3 Position
 		{
 			get
 			{
@@ -157,6 +165,23 @@ namespace GL_EditorFramework.EditorDrawables
 				(minX + maxX) * 0.5f,
 				(minY + maxY) * 0.5f,
 				(minZ + maxZ) * 0.5f);
+		}
+
+		public struct LocalOrientation
+		{
+			public Vector3 Origin;
+			public Quaternion Rotation;
+			public LocalOrientation(Vector3 origin, Quaternion rotation)
+			{
+				this.Origin = origin;
+				this.Rotation = rotation;
+			}
+
+			public LocalOrientation(Vector3 origin)
+			{
+				this.Origin = origin;
+				this.Rotation = Quaternion.Identity;
+			}
 		}
 	}
 }

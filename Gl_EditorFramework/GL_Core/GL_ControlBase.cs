@@ -33,9 +33,9 @@ namespace GL_EditorFramework.GL_Core
 			
 		}
 
+        public Random RNG;
 
-
-		protected Matrix4 orientationCubeMtx;
+        protected Matrix4 orientationCubeMtx;
 
 		protected bool showFakeCursor;
 
@@ -49,12 +49,11 @@ namespace GL_EditorFramework.GL_Core
 		protected Point dragStartPos = new Point(-1, -1);
 		protected float camRotX = 0;
 		protected float camRotY = 0;
-		protected float camDistance = -10f;
-		protected Vector3 camTarget;
 
 		protected Matrix3 mtxRotInv;
+        public Vector3 CameraPosition;
 
-		protected float zfar = 1000f;
+        protected float zfar = 1000f;
 		protected float znear = 0.01f;
 		protected float fov = MathHelper.PiOver4;
 
@@ -63,8 +62,6 @@ namespace GL_EditorFramework.GL_Core
 		protected uint pickingFrameBuffer;
 		protected int pickingIndex;
 		private int lastPicked = -1;
-		protected float normPickingDepth = 0f;
-		protected float pickingDepth = 0f;
 
 		protected Matrix4 mtxMdl, mtxCam, mtxProj;
 
@@ -73,14 +70,12 @@ namespace GL_EditorFramework.GL_Core
 		public Matrix4 ProjectionMatrix => mtxProj;
 		public Matrix3 InvertedRotationMatrix => mtxRotInv;
 
-		protected float factorX, factorY;
-
 		protected bool stereoscopy;
 		protected bool showOrientationCube = true;
 
-		protected int viewPortX(int x) => stereoscopy ? x % (Width / 2) : x;
-		protected int viewPortDX(int dx) => stereoscopy ? dx * 2 : dx;
-		protected int viewPortXOff(int x) => stereoscopy ? (x - Width / 4) * 2 : x - Width / 2;
+		protected int ViewPortX(int x) => stereoscopy ? x % (Width / 2) : x;
+		protected int ViewPortDX(int dx) => stereoscopy ? dx * 2 : dx;
+		protected int ViewPortXOff(int x) => stereoscopy ? (x - Width / 4) * 2 : x - Width / 2;
 
 		public Color BackgroundColor1 = Color.FromArgb(20, 20, 20);
 
@@ -119,18 +114,18 @@ namespace GL_EditorFramework.GL_Core
 			}
 		}
 
-		public Vector3 coordFor(int x, int y, float depth)
+		public Vector3 CoordFor(int x, int y, float depth)
 		{
 			Vector3 vec;
 			
 			Vector2 normCoords = NormMouseCoords(x, y);
 
-			vec.X = (-normCoords.X * depth) * factorX;
-			vec.Y = ( normCoords.Y * depth) * factorY;
+			vec.X = (-normCoords.X * depth) * FactorX;
+			vec.Y = ( normCoords.Y * depth) * FactorY;
 
-			vec.Z = depth + camDistance;
+			vec.Z = depth - CameraDistance;
 
-			return camTarget + Vector3.Transform(mtxRotInv, vec);
+			return -CameraTarget + Vector3.Transform(mtxRotInv, vec);
 		}
 
 		public static Vector3 IntersectPoint(Vector3 rayVector, Vector3 rayPoint, Vector3 planeNormal, Vector3 planePoint)
@@ -143,22 +138,22 @@ namespace GL_EditorFramework.GL_Core
 			return rayPoint - rayVector * prod3;
 		}
 
-		public Vector3 screenCoordPlaneIntersection(Point point, Vector3 planeNormal, Vector3 planeOrigin)
+		public Vector3 ScreenCoordPlaneIntersection(Point point, Vector3 planeNormal, Vector3 planeOrigin)
 		{
 			Vector3 ray;
 
 			Vector2 normCoords = NormMouseCoords(point.X, point.Y);
 
-			ray.X = (-normCoords.X * zfar) * factorX;
-			ray.Y = ( normCoords.Y * zfar) * factorY;
+			ray.X = (-normCoords.X * zfar) * FactorX;
+			ray.Y = ( normCoords.Y * zfar) * FactorY;
 			ray.Z = zfar;
 			return IntersectPoint(
 				Vector3.Transform(mtxRotInv,ray), 
-				camTarget + Vector3.Transform(mtxRotInv, new Vector3(0,0,camDistance)), 
+				-CameraTarget - Vector3.Transform(mtxRotInv, new Vector3(0,0,CameraDistance)), 
 				planeNormal, planeOrigin);
 		}
 
-		public Point screenCoordFor(Vector3 coord)
+		public Point ScreenCoordFor(Vector3 coord)
 		{
 			Vector3 vec = Vector3.Project(coord, 0, 0, Width, Height, -1, 1,  mtxCam * mtxProj);
 
@@ -169,9 +164,6 @@ namespace GL_EditorFramework.GL_Core
 		public virtual AbstractGlDrawable MainDrawable { get; set; }
 
 		protected AbstractCamera activeCamera;
-		private bool shouldRedraw;
-		private bool shouldRepick;
-		private bool skipCameraAction;
 		private int pickingIndexOffset = 7;
 
         public AbstractCamera ActiveCamera
@@ -194,19 +186,62 @@ namespace GL_EditorFramework.GL_Core
 			return new Vector2(x - Width / 2, y - Height / 2);
 		}
 
-		public float ZFar { get => zfar; set { zfar = value; } }
-		public float ZNear { get => znear; set { znear = value; } }
-		public float Fov { get => fov; set { fov = value; } }
+		public float ZFar { get => zfar; set {
+                zfar = value;
 
-		public float FactorX => factorX;
+                if (DesignMode) return;
 
-		public float FactorY => factorY;
+                float aspect_ratio;
+                if (stereoscopy)
+                    aspect_ratio = Width / 2 / (float)Height;
+                else
+                    aspect_ratio = Width / (float)Height;
 
-		public Vector3 CameraTarget { get => camTarget; set { camTarget = value; } }
-		public float CameraDistance { get => camDistance; set { camDistance = value; } }
-		public float CamRotX { get => camRotX; set { camRotX = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI; ; } }
+                mtxProj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect_ratio, znear, zfar);
+            } }
 
-		public bool RotXIsReversed { get; private set; }
+		public float ZNear { get => znear; set {
+                znear = value;
+
+                if (DesignMode) return;
+
+                float aspect_ratio;
+                if (stereoscopy)
+                    aspect_ratio = Width / 2 / (float)Height;
+                else
+                    aspect_ratio = Width / (float)Height;
+
+                mtxProj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect_ratio, znear, zfar);
+            } }
+
+		public float Fov { get => fov; set {
+                fov = value;
+
+                if (DesignMode) return;
+
+                float aspect_ratio;
+                if (stereoscopy)
+                    aspect_ratio = Width / 2 / (float)Height;
+                else
+                    aspect_ratio = Width / (float)Height;
+
+                mtxProj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect_ratio, znear, zfar);
+
+                //using the calculation from whitehole
+                FactorX = (2f * (float)Math.Tan(fov * 0.5f) * aspect_ratio) / Width;
+
+                FactorY = (2f * (float)Math.Tan(fov * 0.5f)) / Height;
+            } }
+
+		public float FactorX { get; protected set; }
+
+		public float FactorY { get; protected set; }
+
+        public Vector3 CameraTarget;
+		public float CameraDistance = 10f;
+        public float CamRotX { get => camRotX; set { camRotX = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI; ; } }
+
+		public bool RotXIsReversed { get; protected set; }
 
 		public void RotateCameraX(float amount)
 		{
@@ -219,13 +254,16 @@ namespace GL_EditorFramework.GL_Core
 		}
 		public float CamRotY { get => camRotY; set { camRotY = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI; } }
 
-		public float PickingDepth => pickingDepth;
+        public float PickingDepth { get; protected set; } = 0;
 
-		public float NormPickingDepth => normPickingDepth;
+        protected float normPickingDepth = 0;
+        public float NormPickingDepth { get => normPickingDepth; set {
+                normPickingDepth = value;
+            } }
 
-		public ulong RedrawerFrame { get; private set; } = 0;
+        public ulong RedrawerFrame { get; private set; } = 0;
 
-		public Vector4 nextPickingColor()
+		public Vector4 NextPickingColor()
 		{
 			return new Vector4(
 				((pickingIndex >> 16) & 0xFF)/256f,
@@ -235,7 +273,7 @@ namespace GL_EditorFramework.GL_Core
 				);
 		}
 
-		public void skipPickingColors(uint count)
+		public void SkipPickingColors(uint count)
 		{
 			pickingIndex += (int)count;
 		}
@@ -259,9 +297,8 @@ namespace GL_EditorFramework.GL_Core
 			GL.Enable(EnableCap.Texture2D);
 
 			GL.Enable(EnableCap.AlphaTest);
-			
-			GL.Enable(EnableCap.LineSmooth);
-			GL.Enable(EnableCap.PolygonSmooth);
+
+			GL.Hint(HintTarget.MultisampleFilterHintNv, HintMode.Nicest);
 			
 		}
 
@@ -278,9 +315,9 @@ namespace GL_EditorFramework.GL_Core
 			mtxProj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect_ratio, znear, zfar);
 
 			//using the calculation from whitehole
-			factorX = (2f * (float)Math.Tan(fov * 0.5f) * aspect_ratio) / Width;
+			FactorX = (2f * (float)Math.Tan(fov * 0.5f) * aspect_ratio) / Width;
 
-			factorY = (2f * (float)Math.Tan(fov * 0.5f)) / Height;
+			FactorY = (2f * (float)Math.Tan(fov * 0.5f)) / Height;
 			Refresh();
 		}
 
@@ -308,22 +345,22 @@ namespace GL_EditorFramework.GL_Core
 
 			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref normPickingDepth);
 
-			pickingDepth = -(zfar * znear / (normPickingDepth * (zfar - znear) - zfar));
+			PickingDepth = -(zfar * znear / (NormPickingDepth * (zfar - znear) - zfar));
 
 			int picked = (int)pickingFrameBuffer - pickingIndexOffset;
-			if (lastPicked != picked)
+			if (lastPicked != picked || forceReEnter)
 			{
 				if (picked >= 0)
 				{
-					handleDrawableEvtResult(mainDrawable.MouseEnter(picked, this));
+					HandleDrawableEvtResult(mainDrawable.MouseEnter(picked, this));
 				}
 				else
 				{
-					handleDrawableEvtResult(mainDrawable.MouseLeaveEntirely(this));
+					HandleDrawableEvtResult(mainDrawable.MouseLeaveEntirely(this));
 				}
 				if (lastPicked >= 0)
 				{
-					handleDrawableEvtResult(mainDrawable.MouseLeave(lastPicked, this));
+					HandleDrawableEvtResult(mainDrawable.MouseLeave(lastPicked, this));
 				}
 				lastPicked = picked;
 				Console.WriteLine(picked);

@@ -9,38 +9,49 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WinInput = System.Windows.Input;
+using static GL_EditorFramework.EditorDrawables.EditableObject;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-	public abstract partial class EditorSceneBase : AbstractGlDrawable
-	{
-		protected bool multiSelect;
+    public abstract partial class EditorSceneBase : AbstractGlDrawable
+    {
+        protected bool multiSelect;
 
-		public EditableObject hovered = null;
+        public EditableObject Hovered { get; protected set; } = null;
 
-		public int hoveredPart = 0;
+        public int HoveredPart { get; protected set; } = 0;
 
-		protected List<EditableObject> selectedObjects = new List<EditableObject>();
+        protected List<EditableObject> selectedObjects = new List<EditableObject>();
 
-		public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
+        public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 
-		public event EventHandler SelectionChanged;
+        public event EventHandler SelectionChanged;
 
-		protected float draggingDepth;
+        protected float draggingDepth;
 
-		protected GL_ControlBase control;
+        protected GL_ControlBase control;
 
-		public AbstractTransformAction currentAction = noAction;
+        public enum DragActionType
+        {
+            TRANSLATE,
+            ROTATE,
+            SCALE,
+            SCALE_EXCLUSIVE
+        }
 
-		protected static NoAction noAction = new NoAction();
+        public AbstractTransformAction CurrentAction { get; protected set; } = NoAction;
+
+        public AbstractTransformAction ExclusiveAction { get; protected set; } = NoAction;
+
+        public static NoTransformAction NoAction {get; private set;} = new NoTransformAction();
 
 		protected void UpdateSelection(uint var)
 		{
 			SelectionChanged?.Invoke(this, new EventArgs());
 
-			if ((var & AbstractGlDrawable.REDRAW) > 0)
+			if ((var & REDRAW) > 0)
 				control.Refresh();
-			if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+			if ((var & REDRAW_PICKING) > 0)
 				control.DrawPicking();
 		}
 
@@ -123,46 +134,86 @@ namespace GL_EditorFramework.EditorDrawables
 		public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
 		{
 			uint var = 0;
-			if(currentAction==noAction)
+			if(CurrentAction==NoAction && ExclusiveAction==NoAction && Hovered!=null)
 			{
-				if (selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart) && hovered.CanStartDragging())
+                LocalOrientation rLocalOrientation;
+                bool rDragExclusively;
+				if (e.Button == MouseButtons.Left)
 				{
-					if (e.Button == MouseButtons.Left)
-					{
-						draggingDepth = control.PickingDepth;
-						currentAction = new TranslateAction(control, e.Location, draggingDepth);
-					}
-					else if (e.Button == MouseButtons.Right)
-					{
-						draggingDepth = control.PickingDepth;
-						EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
+                    if (Hovered.TryStartDragging(DragActionType.TRANSLATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
+                    {
+                        draggingDepth = control.PickingDepth;
+                        if (rDragExclusively)
+                            ExclusiveAction = new TranslateAction(control, e.Location, rLocalOrientation.Origin, draggingDepth);
+                        else
+                        {
+                            BoundingBox box = BoundingBox.Default;
 
-						foreach (EditableObject selected in selectedObjects)
-						{
-							box.Include(selected.GetSelectionBox());
-						}
+                            foreach (EditableObject selected in selectedObjects)
+                            {
+                                box.Include(selected.GetSelectionBox());
+                            }
 
-						currentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
-					}
-					else if (e.Button == MouseButtons.Middle)
-					{
-						draggingDepth = control.PickingDepth;
-						EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
+                            CurrentAction = new TranslateAction(control, e.Location, box.GetCenter(), draggingDepth);
+                        }
+                    }
+				}
+				else if (e.Button == MouseButtons.Right)
+				{
+                    if (Hovered.TryStartDragging(DragActionType.ROTATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
+                    {
+                        draggingDepth = control.PickingDepth;
+                        if (rDragExclusively)
+                            ExclusiveAction = new RotateAction(control, e.Location, rLocalOrientation.Origin, draggingDepth);
+                        else
+                        {
+                            BoundingBox box = BoundingBox.Default;
 
-						foreach (EditableObject selected in selectedObjects)
-						{
-							box.Include(selected.GetSelectionBox());
-						}
-						if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
-							currentAction = new ScaleAction(control, e.Location, box.GetCenter());
-						else
-							currentAction = new ScaleActionIndividual(control, e.Location, hovered);
-					}
+                            foreach (EditableObject selected in selectedObjects)
+                            {
+                                box.Include(selected.GetSelectionBox());
+                            }
+
+                            CurrentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
+                        }
+                    }
+				}
+				else if (e.Button == MouseButtons.Middle)
+				{
+                    bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
+                    if (Hovered.TryStartDragging(shift ? DragActionType.SCALE : DragActionType.SCALE_EXCLUSIVE, HoveredPart, out rLocalOrientation, out rDragExclusively))
+                    {
+                        draggingDepth = control.PickingDepth;
+                        if (rDragExclusively)
+                        {
+                            if (shift)
+                                ExclusiveAction = new ScaleAction(control, e.Location, rLocalOrientation.Origin);
+                            else
+                                ExclusiveAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
+                        }
+                        else
+                        {
+                            BoundingBox box = BoundingBox.Default;
+
+                            foreach (EditableObject selected in selectedObjects)
+                            {
+                                box.Include(selected.GetSelectionBox());
+                            }
+                            if (shift)
+                                CurrentAction = new ScaleAction(control, e.Location, box.GetCenter());
+                            else
+                                CurrentAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
+                        }
+                    }
 				}
 			}
 			else
 			{
-				currentAction = noAction; //abort current action
+                var |= REDRAW_PICKING;
+                var |= FORCE_REENTER;
+
+                CurrentAction = NoAction; //abort current action
+                ExclusiveAction = NoAction;
 			}
 			
 			foreach (AbstractGlDrawable obj in staticObjects)
@@ -181,11 +232,12 @@ namespace GL_EditorFramework.EditorDrawables
 				var |= obj.MouseMove(e, lastMousePos, control);
 			}
 
-			if (currentAction != noAction)
+			if (CurrentAction != NoAction || ExclusiveAction != NoAction)
 			{
-				currentAction.UpdateMousePos(e.Location);
+				CurrentAction.UpdateMousePos(e.Location);
+                ExclusiveAction.UpdateMousePos(e.Location);
 
-				var |= REDRAW | NO_CAMERA_ACTION;
+                var |= REDRAW | NO_CAMERA_ACTION;
 
 				var &= ~REPICK;
 			}
@@ -205,11 +257,12 @@ namespace GL_EditorFramework.EditorDrawables
 				var |= obj.MouseWheel(e, control);
 			}
 
-			if (currentAction != noAction)
+			if (CurrentAction != NoAction)
 			{
-				currentAction.ApplyScrolling(e.Location, e.Delta);
+				CurrentAction.ApplyScrolling(e.Location, e.Delta);
+                ExclusiveAction.ApplyScrolling(e.Location, e.Delta);
 
-				var |= REDRAW | NO_CAMERA_ACTION;
+                var |= REDRAW | NO_CAMERA_ACTION;
 
 				var &= ~REPICK;
 			}
@@ -221,19 +274,28 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			uint var = 0;
 
-			if (currentAction != noAction)
+			if (CurrentAction != NoAction)
 			{
 				foreach (EditableObject obj in selectedObjects)
 				{
-					obj.ApplyTransformActionToSelection(currentAction);
+					obj.ApplyTransformActionToSelection(CurrentAction);
 				}
 
-				var |= REDRAW;
+				var |= REDRAW_PICKING;
 
-				currentAction = noAction;
+				CurrentAction = NoAction;
 			}
 
-			foreach (AbstractGlDrawable obj in staticObjects)
+            if (ExclusiveAction != NoAction)
+            {
+                Hovered.ApplyTransformActionToPart(ExclusiveAction, HoveredPart);
+
+                var |= REDRAW_PICKING;
+
+                ExclusiveAction = NoAction;
+            }
+
+            foreach (AbstractGlDrawable obj in staticObjects)
 			{
 				var |= obj.MouseUp(e, control);
 			}
@@ -255,7 +317,7 @@ namespace GL_EditorFramework.EditorDrawables
 				{
 					if (multiSelect)
 					{
-						if (!(selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
+						if (!(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
 						{
 							foreach (EditableObject selected in selectedObjects)
 							{
@@ -263,15 +325,15 @@ namespace GL_EditorFramework.EditorDrawables
 							}
 						}
 
-						if (hovered != null && !(selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
+						if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
 						{
 							selectedObjects.Clear();
-							if(!selectedObjects.Contains(hovered))
-								selectedObjects.Add(hovered);
-							hovered.Select(hoveredPart, control);
+							if(!selectedObjects.Contains(Hovered))
+								selectedObjects.Add(Hovered);
+							Hovered.Select(HoveredPart, control);
 							SelectionChanged?.Invoke(this, new EventArgs());
 						}
-						else if (hovered == null)
+						else if (Hovered == null)
 						{
 							selectedObjects.Clear();
 							SelectionChanged?.Invoke(this, new EventArgs());
@@ -284,12 +346,12 @@ namespace GL_EditorFramework.EditorDrawables
 							selected.DeselectAll(control);
 						}
 
-						if (hovered != null && !(selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
+						if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
 						{
 							selectedObjects.Clear();
-							if (!selectedObjects.Contains(hovered))
-								selectedObjects.Add(hovered);
-							hovered.Select(hoveredPart, control);
+							if (!selectedObjects.Contains(Hovered))
+								selectedObjects.Add(Hovered);
+							Hovered.Select(HoveredPart, control);
 							SelectionChanged?.Invoke(this, new EventArgs());
 						}
 						else
@@ -301,33 +363,34 @@ namespace GL_EditorFramework.EditorDrawables
 				}
 				else
 				{
-					if ((selectedObjects.Contains(hovered) && hovered.IsSelected(hoveredPart)))
+					if ((selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
 					{
-						if(!hovered.IsSelected())
-							selectedObjects.Remove(hovered);
-						hovered.Deselect(hoveredPart, control);
+						if(!Hovered.IsSelected())
+							selectedObjects.Remove(Hovered);
+						Hovered.Deselect(HoveredPart, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
-					else if (hovered != null)
+					else if (Hovered != null)
 					{
-						if (!selectedObjects.Contains(hovered))
-							selectedObjects.Add(hovered);
-						hovered.Select(hoveredPart, control);
+						if (!selectedObjects.Contains(Hovered))
+							selectedObjects.Add(Hovered);
+						Hovered.Select(HoveredPart, control);
 						SelectionChanged?.Invoke(this, new EventArgs());
 					}
 				}
 			}
 
-			currentAction = noAction; //because MouseClick implies that the Mouse Button is not pressed anymore
+			CurrentAction = NoAction; //because MouseClick implies that the Mouse Button is not pressed anymore
 
 			var |= REDRAW;
+            var |= FORCE_REENTER;
 
-			return var;
+            return var;
 		}
 
 		public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
 		{
-			if (currentAction != noAction)
+			if (CurrentAction != NoAction || ExclusiveAction != NoAction)
 				return 0;
 			
 			foreach (AbstractGlDrawable obj in staticObjects)
@@ -358,7 +421,10 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override uint MouseLeaveEntirely(GL_ControlBase control)
 		{
-			hovered = null;
+            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+                return 0;
+
+            Hovered = null;
 			return REDRAW;
 		}
 	}

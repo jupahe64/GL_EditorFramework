@@ -15,6 +15,8 @@ namespace GL_EditorFramework.EditorDrawables
 	{
 		public List<EditableObject> objects = new List<EditableObject>();
 
+        public int RenderDistance = 10000;
+
 		public EditorScene(bool multiSelect = true)
 		{
 			this.multiSelect = multiSelect;
@@ -85,31 +87,37 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			foreach (EditableObject obj in objects)
 			{
-				if(obj.Visible)
+				if(obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition))
 					obj.Draw(control, pass, this);
 			}
 			foreach (AbstractGlDrawable obj in staticObjects)
 			{
 				obj.Draw(control, pass);
 			}
-			if(pass == Pass.OPAQUE)
-				currentAction.Draw(control);
-		}
+            if (pass == Pass.OPAQUE)
+            {
+                CurrentAction.Draw(control);
+                ExclusiveAction.Draw(control);
+            }
+        }
 
 		public override void Draw(GL_ControlLegacy control, Pass pass)
 		{
 			foreach (EditableObject obj in objects)
 			{
-				if (obj.Visible)
+				if (obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition))
 					obj.Draw(control, pass, this);
 			}
 			foreach (AbstractGlDrawable obj in staticObjects)
 			{
 				obj.Draw(control, pass);
 			}
-			if (pass == Pass.OPAQUE)
-				currentAction.Draw(control);
-		}
+            if (pass == Pass.OPAQUE)
+            {
+                CurrentAction.Draw(control);
+                ExclusiveAction.Draw(control);
+            }
+        }
 
 		public override void Prepare(GL_ControlModern control)
 		{
@@ -174,8 +182,6 @@ namespace GL_EditorFramework.EditorDrawables
 
 			var |= base.MouseClick(e, control);
 
-			var |= REDRAW;
-
 			return var;
 		}
 
@@ -195,7 +201,8 @@ namespace GL_EditorFramework.EditorDrawables
 		{
 			int var = 0;
 			foreach (EditableObject obj in objects)
-				var += obj.GetPickableSpan();
+                if (obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition))
+                    var += obj.GetPickableSpan();
 			foreach (AbstractGlDrawable obj in staticObjects)
 				var += obj.GetPickableSpan();
 			return var;
@@ -203,13 +210,17 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
 		{
+            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+                return 0;
 			foreach (EditableObject obj in objects)
 			{
-				int span = obj.GetPickableSpan();
+                if (!(obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition)))
+                    continue;
+                int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
-					hovered = obj;
-					hoveredPart = inObjectIndex;
+					Hovered = obj;
+					HoveredPart = inObjectIndex;
 					return obj.MouseEnter(inObjectIndex, control) | REDRAW;
 				}
 				inObjectIndex -= span;
@@ -221,9 +232,13 @@ namespace GL_EditorFramework.EditorDrawables
 
 		public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
 		{
-			foreach (EditableObject obj in objects)
+            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+                return 0;
+            foreach (EditableObject obj in objects)
 			{
-				int span = obj.GetPickableSpan();
+                if (!(obj.Visible && obj.IsInRange(RenderDistance, control.CameraPosition)))
+                    continue;
+                int span = obj.GetPickableSpan();
 				if (inObjectIndex >= 0 && inObjectIndex < span)
 				{
 					return obj.MouseLeave(inObjectIndex, control);
@@ -241,10 +256,11 @@ namespace GL_EditorFramework.EditorDrawables
 
 			bool selectionHasChanged = false;
 
-			if (currentAction != noAction)
+			if (CurrentAction != NoAction || ExclusiveAction != NoAction)
 			{
-				currentAction.KeyDown(e);
-				var = NO_CAMERA_ACTION | REDRAW;
+				CurrentAction.KeyDown(e);
+                ExclusiveAction.KeyDown(e);
+                var = NO_CAMERA_ACTION | REDRAW;
 			}
 			else if (e.KeyCode == Keys.Z && selectedObjects.Count>0) //focus camera on the selection
 			{
@@ -254,7 +270,7 @@ namespace GL_EditorFramework.EditorDrawables
 				{
 					box.Include(selected.GetSelectionBox());
 				}
-				control.CameraTarget = -box.GetCenter();
+				control.CameraTarget = box.GetCenter();
 
 				var = REDRAW_PICKING;
 			}
@@ -275,7 +291,7 @@ namespace GL_EditorFramework.EditorDrawables
 				}
 				var = REDRAW_PICKING;
 			}
-			else if (e.KeyCode == Keys.R && selectedObjects.Count > 0 && e.Shift && e.Control) //reset rotation for selected objects
+			else if (e.KeyCode == Keys.R && selectedObjects.Count > 0 && e.Shift && e.Control) //reset scale for selected objects
 			{
 				ResetScale action = new ResetScale();
 				foreach (EditableObject selected in selectedObjects)

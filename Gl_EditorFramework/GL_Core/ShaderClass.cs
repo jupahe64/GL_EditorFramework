@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -10,7 +11,7 @@ namespace GL_EditorFramework.GL_Core
 {
     public class ShaderProgram
     {
-        private int fragSh, vertSh, geomSh;
+        private int fragSh, vertSh, geomSh = -1;
         private Matrix4 modelMatrix;
         private Matrix4 computedCamMtx;
         private Dictionary<string, int> attributes = new Dictionary<string, int>();
@@ -45,13 +46,25 @@ namespace GL_EditorFramework.GL_Core
             foreach (Shader shader in shaders)
             {
                 if (shader.type == ShaderType.VertexShader)
+                {
                     Console.WriteLine("vertex:");
+                    vertSh = shader.id;
+                }
                 if (shader.type == ShaderType.FragmentShader)
+                {
                     Console.WriteLine("fragment:");
+                    fragSh = shader.id;
+                }
                 if (shader.type == ShaderType.GeometryShader)
+                {
                     Console.WriteLine("geometry:");
-                    
-                Console.WriteLine(GL.GetShaderInfoLog(shader.id));
+                    geomSh = shader.id;
+                }
+
+                string log = GL.GetShaderInfoLog(shader.id);
+                Console.WriteLine(log);
+                if (log != "")
+                    MessageBox.Show(log);
             }
             LoadAttributes();
         }
@@ -59,7 +72,12 @@ namespace GL_EditorFramework.GL_Core
         public void AttachShader(Shader shader)
         {
             Console.WriteLine("shader:");
-            Console.WriteLine(GL.GetShaderInfoLog(shader.id));
+
+            string log = GL.GetShaderInfoLog(shader.id);
+            Console.WriteLine(log);
+            if (log != "")
+                MessageBox.Show(log);
+
             GL.AttachShader(program, shader.id);
         }
 
@@ -86,6 +104,19 @@ namespace GL_EditorFramework.GL_Core
             GL.DetachShader(program, vertSh);
             GL.AttachShader(program, shader.id);
             vertSh = shader.id;
+            GL.LinkProgram(program);
+
+            GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxMdl"), false, ref modelMatrix);
+            GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxCam"), false, ref computedCamMtx);
+        }
+
+        public void SetGeometryShader(VertexShader shader)
+        {
+            if(geomSh != -1)
+                GL.DetachShader(program, geomSh);
+
+            GL.AttachShader(program, shader.id);
+            geomSh = shader.id;
             GL.LinkProgram(program);
 
             GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxMdl"), false, ref modelMatrix);

@@ -11,6 +11,7 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using GL_EditorFramework.Interfaces;
 using GL_EditorFramework.StandardCameras;
+using OpenTK.Graphics;
 
 namespace GL_EditorFramework.GL_Core
 {
@@ -100,9 +101,9 @@ namespace GL_EditorFramework.GL_Core
             orientationCubeMtx = Matrix4.CreateOrthographic(Width, Height, 0.125f, 2f) * Matrix4.CreateTranslation(0, 0, 1);
 
             //using the calculation from whitehole
-            factorX = (2f * (float)Math.Tan(fov * 0.5f) * aspect_ratio) / Width;
+            FactorX = (2f * (float)Math.Tan(fov * 0.5f) * aspect_ratio) / Width;
 
-            factorY = (2f * (float)Math.Tan(fov * 0.5f)) / Height;
+            FactorY = (2f * (float)Math.Tan(fov * 0.5f)) / Height;
 
             base.OnResize(e);
         }
@@ -120,7 +121,7 @@ namespace GL_EditorFramework.GL_Core
             MakeCurrent();
 
             base.OnPaint(e);
-
+            
 			GL.ClearColor(BackgroundColor1);
 
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -137,15 +138,17 @@ namespace GL_EditorFramework.GL_Core
 
                 mtxMdl = Matrix4.Identity;
                 mtxCam =
-                    Matrix4.CreateTranslation(camTarget) *
+                    Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(0.25f, 0, camDistance) *
+                    Matrix4.CreateTranslation(0.25f, 0, -CameraDistance) *
                     Matrix4.CreateRotationY(0.02f);
 
+                RNG = new Random(0);
                 mainDrawable.Draw(this, Pass.OPAQUE);
 
-				mainDrawable.Draw(this, Pass.TRANSPARENT);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.TRANSPARENT);
 
 				shader = null;
 				GL.UseProgram(0);
@@ -175,15 +178,17 @@ namespace GL_EditorFramework.GL_Core
 
                 mtxMdl = Matrix4.Identity;
                 mtxCam =
-                    Matrix4.CreateTranslation(camTarget) *
+                    Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(-0.25f, 0, camDistance) *
+                    Matrix4.CreateTranslation(-0.25f, 0, -CameraDistance) *
                     Matrix4.CreateRotationY(-0.02f);
 
-				mainDrawable.Draw(this, Pass.OPAQUE);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.OPAQUE);
 
-				mainDrawable.Draw(this, Pass.TRANSPARENT);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.TRANSPARENT);
 
 				shader = null;
 				GL.UseProgram(0);
@@ -215,14 +220,16 @@ namespace GL_EditorFramework.GL_Core
 
                 mtxMdl = Matrix4.Identity;
                 mtxCam =
-                    Matrix4.CreateTranslation(camTarget) *
+                    Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(0, 0, camDistance);
+                    Matrix4.CreateTranslation(0, 0, -CameraDistance);
 
-				mainDrawable.Draw(this, Pass.OPAQUE);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.OPAQUE);
 
-				mainDrawable.Draw(this, Pass.TRANSPARENT);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.TRANSPARENT);
 
 				shader = null;
 				GL.UseProgram(0);
@@ -242,6 +249,7 @@ namespace GL_EditorFramework.GL_Core
 					DrawOrientationCube();
 				}
 			}
+            
             SwapBuffers();
         }
 
@@ -258,11 +266,14 @@ namespace GL_EditorFramework.GL_Core
                 GL.Viewport(0, 0, Width, Height);
 
 			if (showOrientationCube)
-				skipPickingColors(6); //the orientation cube faces
+				SkipPickingColors(6); //the orientation cube faces
 
 			mainDrawable.Draw(this, Pass.PICKING);
 
-			if (showOrientationCube)
+            shader = null;
+            GL.UseProgram(0);
+
+            if (showOrientationCube)
 			{
 				GL.UseProgram(0);
 				GL.Disable(EnableCap.Texture2D);

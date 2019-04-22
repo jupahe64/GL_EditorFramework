@@ -20,9 +20,7 @@ namespace Testing
 		}
 
 		private EditorScene scene;
-
-		private Random rng = new Random();
-
+        
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
@@ -30,9 +28,79 @@ namespace Testing
 
 			listBox1.Items.Add("moving platform");
 			scene.objects.Add(new AnimatedObject(new Vector3(0, -4, 0)));
+
 			listBox1.Items.Add("path");
-			scene.objects.Add(new Path());
-			for (int i = 5; i<100; i++)
+            List<Path.PathPoint> pathPoints = new List<Path.PathPoint>
+            {
+                new Path.PathPoint(
+                new Vector3(0, 0, 0),
+                new Vector3(0, 0, 0),
+                new Vector3(2, 0, 0)
+                ),
+                new Path.PathPoint(
+                new Vector3(8, 4, 2),
+                new Vector3(-4, 0, 4),
+                new Vector3(4, 0, -4)
+                ),
+                new Path.PathPoint(
+                new Vector3(4, 2, -6),
+                new Vector3(0, 0, 0),
+                new Vector3(0, 0, 0)
+                )
+            };
+            scene.objects.Add(new Path(pathPoints));
+
+            listBox1.Items.Add("path");
+            pathPoints = new List<Path.PathPoint>
+            {
+                new Path.PathPoint(
+                new Vector3(-3, 6, 0),
+                new Vector3(0, 0, -1.75f),
+                new Vector3(0, 0, 1.75f)
+                ),
+                new Path.PathPoint(
+                new Vector3(0, 6, 3),
+                new Vector3(-1.75f, 0, 0),
+                new Vector3(1.75f, 0, 0)
+                ),
+                new Path.PathPoint(
+                new Vector3(3, 6, 0),
+                new Vector3(0, 0, 1.75f),
+                new Vector3(0, 0, -1.75f)
+                ),
+                new Path.PathPoint(
+                new Vector3(0, 6, -3),
+                new Vector3(1.75f, 0, 0),
+                new Vector3(-1.75f, 0, 0)
+                )
+            };
+            scene.objects.Add(new Path(pathPoints) { Closed = true });
+
+            listBox1.Items.Add("path");
+            /*pathPoints = new List<Path.PathPoint>();
+            pathPoints.Add(new Path.PathPoint(
+                new Vector3(-3, 6, 0),
+                new Vector3(0, 0, -1.75f),
+                new Vector3(0, 0, 1.75f)
+                ));
+            pathPoints.Add(new Path.PathPoint(
+                new Vector3(0, 6, 3),
+                new Vector3(-1.75f, 0, 0),
+                new Vector3(1.75f, 0, 0)
+                ));
+            pathPoints.Add(new Path.PathPoint(
+                new Vector3(3, 6, 0),
+                new Vector3(0, 0, 1.75f),
+                new Vector3(0, 0, -1.75f)
+                ));
+            pathPoints.Add(new Path.PathPoint(
+                new Vector3(0, 6, -3),
+                new Vector3(1.75f, 0, 0),
+                new Vector3(-1.75f, 0, 0)
+                ));*/
+            scene.objects.Add(new Path(pathPoints) { Closed = true });
+
+            for (int i = 5; i<10000; i++)
 			{
 				listBox1.Items.Add("block");
 				scene.objects.Add(new TransformableObject(new Vector3(i,0,0)));
@@ -75,7 +143,6 @@ namespace Testing
 
 		private void button1_Click(object sender, EventArgs e)
 		{
-			Color rand = Color.FromArgb(rng.Next());
 			listBox1.Items.Add("block"); //make sure to add the entry before you add an object because the SelectionChanged event will be fired
 			scene.Add(new TransformableObject(new Vector3()));
 		}

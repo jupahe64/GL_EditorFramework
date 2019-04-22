@@ -30,14 +30,14 @@ namespace Testing
 			if (pass == Pass.TRANSPARENT)
 				return;
 
-			bool hovered = editorScene.hovered == this;
+			bool hovered = editorScene.Hovered == this;
 
 			Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
 			mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
-			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position);
+			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position);
 			control.UpdateModelMatrix(mtx);
 
-			Vector4 pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.NextPickingColor();
 			
 			Vector4 lineBoxColor;
 
@@ -69,7 +69,7 @@ namespace Testing
 			mtx *= Matrix4.CreateTranslation(position);
 			control.UpdateModelMatrix(mtx);
 
-			Vector4 pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.NextPickingColor();
 
 			Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 
@@ -89,14 +89,14 @@ namespace Testing
 			if (pass == Pass.TRANSPARENT)
 				return;
 
-			bool hovered = editorScene.hovered == this;
+			bool hovered = editorScene.Hovered == this;
 
 			Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
 			mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, (float)Math.PI / 2f);
-			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position);
+			mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position);
 			control.UpdateModelMatrix(mtx);
 
-			Vector4 pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.NextPickingColor();
 
 			Vector4 lineBoxColor;
 
@@ -128,7 +128,7 @@ namespace Testing
 			mtx *= Matrix4.CreateTranslation(position);
 			control.UpdateModelMatrix(mtx);
 
-			Vector4 pickingColor = control.nextPickingColor();
+			Vector4 pickingColor = control.NextPickingColor();
 
 			Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 

@@ -23,7 +23,7 @@ namespace GL_EditorFramework.GL_Core
 
         public GL_ControlLegacy() : base(1, 16)
         {
-
+            
         }
 
         protected override void OnLoad(EventArgs e)
@@ -94,19 +94,21 @@ namespace GL_EditorFramework.GL_Core
 
                 ResetModelMatrix();
                 mtxCam =
-                    Matrix4.CreateTranslation(camTarget) *
+                    Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(0.25f, 0, camDistance) *
+                    Matrix4.CreateTranslation(0.25f, 0, -CameraDistance) *
                     Matrix4.CreateRotationY(0.02f);
 
                 GL.MatrixMode(MatrixMode.Projection);
                 Matrix4 computedMatrix = mtxCam * mtxProj;
                 GL.LoadMatrix(ref computedMatrix);
 
-				mainDrawable.Draw(this, Pass.OPAQUE);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.OPAQUE);
 
-				mainDrawable.Draw(this, Pass.TRANSPARENT);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.TRANSPARENT);
 
 				GL.MatrixMode(MatrixMode.Projection);
 				GL.LoadIdentity();
@@ -138,19 +140,21 @@ namespace GL_EditorFramework.GL_Core
 
                 ResetModelMatrix();
                 mtxCam =
-                    Matrix4.CreateTranslation(camTarget) *
+                    Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(-0.25f, 0, camDistance) *
+                    Matrix4.CreateTranslation(-0.25f, 0, -CameraDistance) *
                     Matrix4.CreateRotationY(-0.02f);
 
                 GL.MatrixMode(MatrixMode.Projection);
                 computedMatrix = mtxCam * mtxProj;
                 GL.LoadMatrix(ref computedMatrix);
 
-				mainDrawable.Draw(this, Pass.OPAQUE);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.OPAQUE);
 
-				mainDrawable.Draw(this, Pass.TRANSPARENT);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.TRANSPARENT);
 
 				GL.MatrixMode(MatrixMode.Projection);
 				GL.LoadIdentity();
@@ -183,18 +187,20 @@ namespace GL_EditorFramework.GL_Core
 
                 ResetModelMatrix();
                 mtxCam =
-                    Matrix4.CreateTranslation(camTarget) *
+                    Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(0, 0, camDistance);
+                    Matrix4.CreateTranslation(0, 0, -CameraDistance);
 
                 GL.MatrixMode(MatrixMode.Projection);
                 Matrix4 computedMatrix = mtxCam * mtxProj;
                 GL.LoadMatrix(ref computedMatrix);
 
-				mainDrawable.Draw(this, Pass.OPAQUE);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.OPAQUE);
 
-				mainDrawable.Draw(this, Pass.TRANSPARENT);
+                RNG = new Random(0);
+                mainDrawable.Draw(this, Pass.TRANSPARENT);
 
 				GL.MatrixMode(MatrixMode.Projection);
 				GL.LoadIdentity();
@@ -234,17 +240,17 @@ namespace GL_EditorFramework.GL_Core
 
             ResetModelMatrix();
             mtxCam =
-                Matrix4.CreateTranslation(camTarget) *
+                Matrix4.CreateTranslation(-CameraTarget) *
                 Matrix4.CreateRotationY(camRotX) *
                 Matrix4.CreateRotationX(camRotY) *
-                Matrix4.CreateTranslation(0, 0, camDistance);
+                Matrix4.CreateTranslation(0, 0, -CameraDistance);
 
             GL.MatrixMode(MatrixMode.Projection);
             Matrix4 computedMatrix = mtxCam * mtxProj;
             GL.LoadMatrix(ref computedMatrix);
 
 			if (showOrientationCube)
-				skipPickingColors(6); //the orientation cube faces
+				SkipPickingColors(6); //the orientation cube faces
 
 			mainDrawable.Draw(this, Pass.PICKING);
 

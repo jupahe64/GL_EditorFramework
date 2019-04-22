@@ -33,12 +33,12 @@ namespace Testing
 			if (pass == Pass.TRANSPARENT)
 				return;
 
-			bool hovered = editorScene.hovered == this;
+			bool hovered = editorScene.Hovered == this;
 
 			control.UpdateModelMatrix(
-				Matrix4.CreateScale((Selected ? editorScene.currentAction.newScale(scale) : scale) * 0.5f) *
-				Matrix4.CreateFromQuaternion(Selected ? editorScene.currentAction.newRot(rotation) : rotation) *
-				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
+				Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(scale) : scale) * 0.5f) *
+				Matrix4.CreateFromQuaternion(Selected ? editorScene.CurrentAction.NewRot(rotation) : rotation) *
+				Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -57,7 +57,7 @@ namespace Testing
 			else
 				blockColor = Color;
 
-			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.nextPickingColor());
+			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
 
 		}
 
@@ -66,12 +66,12 @@ namespace Testing
 			if (pass == Pass.TRANSPARENT)
 				return;
 
-			bool hovered = editorScene.hovered == this;
+			bool hovered = editorScene.Hovered == this;
 
 			control.UpdateModelMatrix(
-				Matrix4.CreateScale((Selected ? editorScene.currentAction.newScale(scale) : scale) * 0.5f) *
-				Matrix4.CreateFromQuaternion(Selected ? editorScene.currentAction.newRot(rotation) : rotation) *
-				Matrix4.CreateTranslation(Selected ? editorScene.currentAction.newPos(position) : position));
+				Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(scale) : scale) * 0.5f) *
+				Matrix4.CreateFromQuaternion(Selected ? editorScene.CurrentAction.NewRot(rotation) : rotation) *
+				Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
 
 			Vector4 blockColor;
 			Vector4 lineColor;
@@ -90,14 +90,26 @@ namespace Testing
 			else
 				blockColor = Color;
 
-			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.nextPickingColor());
+			Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
 		}
 
-		public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
+		public override LocalOrientation GetLocalOrientation(int partIndex)
 		{
-			position = transformAction.newPos(position);
-			rotation = transformAction.newRot(rotation);
-			scale = transformAction.newScale(scale);
+			return new LocalOrientation(position, rotation);
+		}
+
+        public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
+        {
+            localOrientation = new LocalOrientation(position,rotation);
+            dragExclusively = false;
+            return Selected;
+        }
+
+        public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
+		{
+			position = transformAction.NewPos(position);
+			rotation = transformAction.NewRot(rotation);
+			scale = transformAction.NewScale(scale);
 		}
 	}
 }
