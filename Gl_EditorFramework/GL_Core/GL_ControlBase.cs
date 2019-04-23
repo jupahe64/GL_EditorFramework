@@ -266,10 +266,10 @@ namespace GL_EditorFramework.GL_Core
 		public Vector4 NextPickingColor()
 		{
 			return new Vector4(
-				((pickingIndex >> 16) & 0xFF)/256f,
-				((pickingIndex >>  8) & 0xFF)/256f,
-				(pickingIndex & 0xFF) / 256f,
-				((pickingIndex++ >> 24) & 0xFF) / 256f
+				((pickingIndex >> 16) & 0xFF)/255f,
+				((pickingIndex >>  8) & 0xFF)/255f,
+				(pickingIndex & 0xFF) / 255f,
+				((pickingIndex++ >> 24) & 0xFF) / 255f
 				);
 		}
 

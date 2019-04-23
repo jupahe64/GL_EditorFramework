@@ -72,9 +72,9 @@ namespace GL_EditorFramework.EditorDrawables
 
                 int randomColor = control.RNG.Next();
                 Vector4 color = new Vector4(
-                    ((randomColor >> 16) & 0xFF) / 256f,
-                    ((randomColor >> 8) & 0xFF) / 256f,
-                    (randomColor & 0xFF) / 256f,
+                    ((randomColor >> 16) & 0xFF) / 255f,
+                    ((randomColor >> 8) & 0xFF) / 255f,
+                    (randomColor & 0xFF) / 255f,
                     1f
                     );
 
