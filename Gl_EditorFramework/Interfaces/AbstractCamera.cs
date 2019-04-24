@@ -10,32 +10,32 @@ using System.Windows.Forms;
 
 namespace GL_EditorFramework.Interfaces
 {
-	public abstract class AbstractCamera : AbstractEventHandling3DObj
-	{
-		public const uint UPDATE_CAMERA = 0x80000000;
-		private const float depthAdjust = 1;
+    public abstract class AbstractCamera : AbstractEventHandling3DObj
+    {
+        public const uint UPDATE_CAMERA = 0x80000000;
+        private const float depthAdjust = 1;
 
-		protected float depth, desiredDepth;
+        protected float depth, desiredDepth;
 
-		public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
-		{
-			desiredDepth = control.PickingDepth;
-			return 0;
-		}
+        public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
+        {
+            desiredDepth = control.PickingDepth;
+            return 0;
+        }
 
-		public override uint MouseMove(MouseEventArgs e, Point lastMouseLoc, GL_ControlBase control)
-		{
-			if (e.Button == MouseButtons.Left)
-			{
-				if (depth < desiredDepth - depthAdjust)
-					depth += depthAdjust;
-				else if (depth != desiredDepth)
-					depth = desiredDepth;
-			}
+        public override uint MouseMove(MouseEventArgs e, Point lastMouseLoc, GL_ControlBase control)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                if (depth < desiredDepth - depthAdjust)
+                    depth += depthAdjust;
+                else if (depth != desiredDepth)
+                    depth = desiredDepth;
+            }
+            
+            return 0;
+            }
 
-			return 0;
-		}
-
-		public virtual void Update() { }
-	}
+        public virtual void Update() { }
+    }
 }
