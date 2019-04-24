@@ -72,8 +72,6 @@
             this.gL_ControlLegacy1.Stereoscopy = true;
             this.gL_ControlLegacy1.TabIndex = 2;
             this.gL_ControlLegacy1.VSync = false;
-            this.gL_ControlLegacy1.ZFar = 1000F;
-            this.gL_ControlLegacy1.ZNear = 0.01F;
             // 
             // gL_ControlModern1
             // 
@@ -95,8 +93,6 @@
             this.gL_ControlModern1.Stereoscopy = false;
             this.gL_ControlModern1.TabIndex = 1;
             this.gL_ControlModern1.VSync = false;
-            this.gL_ControlModern1.ZFar = 1000F;
-            this.gL_ControlModern1.ZNear = 0.01F;
             // 
             // TestingForm
             // 

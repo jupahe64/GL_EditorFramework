@@ -98,7 +98,8 @@ namespace GL_EditorFramework.GL_Core
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
                     Matrix4.CreateTranslation(0.25f, 0, -CameraDistance) *
-                    Matrix4.CreateRotationY(0.02f);
+                    Matrix4.CreateRotationY(0.02f) *
+                    Matrix4.CreateScale(0.03125f);
 
                 GL.MatrixMode(MatrixMode.Projection);
                 Matrix4 computedMatrix = mtxCam * mtxProj;
@@ -144,7 +145,8 @@ namespace GL_EditorFramework.GL_Core
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
                     Matrix4.CreateTranslation(-0.25f, 0, -CameraDistance) *
-                    Matrix4.CreateRotationY(-0.02f);
+                    Matrix4.CreateRotationY(-0.02f) *
+                    Matrix4.CreateScale(0.03125f);
 
                 GL.MatrixMode(MatrixMode.Projection);
                 computedMatrix = mtxCam * mtxProj;
@@ -190,7 +192,8 @@ namespace GL_EditorFramework.GL_Core
                     Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(0, 0, -CameraDistance);
+                    Matrix4.CreateTranslation(0, 0, -CameraDistance) *
+                    Matrix4.CreateScale(0.03125f);
 
                 GL.MatrixMode(MatrixMode.Projection);
                 Matrix4 computedMatrix = mtxCam * mtxProj;
@@ -243,7 +246,8 @@ namespace GL_EditorFramework.GL_Core
                 Matrix4.CreateTranslation(-CameraTarget) *
                 Matrix4.CreateRotationY(camRotX) *
                 Matrix4.CreateRotationX(camRotY) *
-                Matrix4.CreateTranslation(0, 0, -CameraDistance);
+                Matrix4.CreateTranslation(0, 0, -CameraDistance) *
+                Matrix4.CreateScale(0.03125f);
 
             GL.MatrixMode(MatrixMode.Projection);
             Matrix4 computedMatrix = mtxCam * mtxProj;

@@ -54,7 +54,7 @@ namespace GL_EditorFramework.GL_Core
         public Vector3 CameraPosition;
 
         protected float zfar = 1000f;
-		protected float znear = 0.01f;
+        protected float znear = 0.01f;
 		protected float fov = MathHelper.PiOver4;
 
 		public float PickedObjectPart => pickingFrameBuffer;
@@ -186,8 +186,8 @@ namespace GL_EditorFramework.GL_Core
 			return new Vector2(x - Width / 2, y - Height / 2);
 		}
 
-		public float ZFar { get => zfar; set {
-                zfar = value;
+		public float ZFar { get => zfar * 32; set {
+                zfar = value * 0.03125f;
 
                 if (DesignMode) return;
 
@@ -200,8 +200,8 @@ namespace GL_EditorFramework.GL_Core
                 mtxProj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect_ratio, znear, zfar);
             } }
 
-		public float ZNear { get => znear; set {
-                znear = value;
+		public float ZNear { get => znear * 32; set {
+                znear = value * 0.03125f;
 
                 if (DesignMode) return;
 
@@ -345,7 +345,7 @@ namespace GL_EditorFramework.GL_Core
 
 			GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref normPickingDepth);
 
-			PickingDepth = -(zfar * znear / (NormPickingDepth * (zfar - znear) - zfar));
+			PickingDepth = -(zfar * znear / (NormPickingDepth * (zfar - znear) - zfar))*32;
 
 			int picked = (int)pickingFrameBuffer - pickingIndexOffset;
 			if (lastPicked != picked || forceReEnter)

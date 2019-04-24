@@ -142,7 +142,8 @@ namespace GL_EditorFramework.GL_Core
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
                     Matrix4.CreateTranslation(0.25f, 0, -CameraDistance) *
-                    Matrix4.CreateRotationY(0.02f);
+                    Matrix4.CreateRotationY(0.02f) *
+                    Matrix4.CreateScale(0.03125f);
 
                 RNG = new Random(0);
                 mainDrawable.Draw(this, Pass.OPAQUE);
@@ -182,7 +183,8 @@ namespace GL_EditorFramework.GL_Core
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
                     Matrix4.CreateTranslation(-0.25f, 0, -CameraDistance) *
-                    Matrix4.CreateRotationY(-0.02f);
+                    Matrix4.CreateRotationY(-0.02f) *
+                    Matrix4.CreateScale(0.03125f);
 
                 RNG = new Random(0);
                 mainDrawable.Draw(this, Pass.OPAQUE);
@@ -223,7 +225,8 @@ namespace GL_EditorFramework.GL_Core
                     Matrix4.CreateTranslation(-CameraTarget) *
                     Matrix4.CreateRotationY(camRotX) *
                     Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(0, 0, -CameraDistance);
+                    Matrix4.CreateTranslation(0, 0, -CameraDistance) *
+                    Matrix4.CreateScale(0.03125f);
 
                 RNG = new Random(0);
                 mainDrawable.Draw(this, Pass.OPAQUE);
@@ -268,7 +271,14 @@ namespace GL_EditorFramework.GL_Core
 			if (showOrientationCube)
 				SkipPickingColors(6); //the orientation cube faces
 
-			mainDrawable.Draw(this, Pass.PICKING);
+            mtxCam =
+                Matrix4.CreateTranslation(-CameraTarget) *
+                Matrix4.CreateRotationY(camRotX) *
+                Matrix4.CreateRotationX(camRotY) *
+                Matrix4.CreateTranslation(0, 0, -CameraDistance) *
+                Matrix4.CreateScale(0.03125f);
+
+            mainDrawable.Draw(this, Pass.PICKING);
 
             shader = null;
             GL.UseProgram(0);
