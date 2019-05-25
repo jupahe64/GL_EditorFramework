@@ -88,9 +88,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Gl_EditorFramework\Gl_EditorFramework.csproj">
+    <ProjectReference Include="..\Gl_EditorFramework\GL_EditorFramework.csproj">
       <Project>{D593A72D-554D-40FB-9967-503CB15A744F}</Project>
-      <Name>Gl_EditorFramework</Name>
+      <Name>GL_EditorFramework</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

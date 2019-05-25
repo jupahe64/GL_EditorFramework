@@ -11,167 +11,164 @@ namespace GL_EditorFramework.GL_Core
 {
     public class ShaderProgram
     {
-        private int fragSh, vertSh, geomSh = -1;
         private Matrix4 modelMatrix;
         private Matrix4 computedCamMtx;
         private Dictionary<string, int> attributes = new Dictionary<string, int>();
         private int activeAttributeCount;
-        public int program;
+        private Dictionary<string, int> uniforms = new Dictionary<string, int>();
+        public Dictionary<GLControl, int> programs = new Dictionary<GLControl, int>();
+        private Dictionary<ShaderType, Shader> shaders = new Dictionary<ShaderType, Shader>();
 
-        public ShaderProgram(FragmentShader frag, VertexShader vert)
+        public ShaderProgram(Shader frag, Shader vert, GLControl control)
         {
-            LoadShaders(new Shader[] { vert, frag });
+            shaders[ShaderType.FragmentShader] = frag;
+            shaders[ShaderType.VertexShader] = vert;
+            Link(control);
         }
 
-        public ShaderProgram(FragmentShader frag, VertexShader vert, GeomertyShader geom)
+        public ShaderProgram(Shader frag, Shader vert, Shader geom, GLControl control)
         {
-            LoadShaders(new Shader[] { vert, frag, geom });
+            shaders[ShaderType.FragmentShader] = frag;
+            shaders[ShaderType.VertexShader] = vert;
+            shaders[ShaderType.GeometryShader] = geom;
+            Link(control);
         }
 
-        public ShaderProgram(Shader[] shaders)
+        public ShaderProgram(Shader[] shaders, GLControl control)
         {
-            LoadShaders(shaders);
-        }
-
-        private void LoadShaders(Shader[] shaders)
-        {
-            program = GL.CreateProgram();
-
             foreach (Shader shader in shaders)
             {
-                AttachShader(shader);
+                if (!this.shaders.ContainsKey(shader.type))
+                    this.shaders[shader.type] = shader;
+            }
+            Link(control);
+        }
+
+        public void Link(GLControl control)
+        {
+            if (programs.ContainsKey(control))
+                return;
+            
+            int program = GL.CreateProgram();
+            
+            foreach (Shader shader in shaders.Values)
+            {
+                GL.AttachShader(program, shader.id);
             }
 
             GL.LinkProgram(program);
-            foreach (Shader shader in shaders)
+            foreach (KeyValuePair<ShaderType, Shader> shader in shaders)
             {
-                if (shader.type == ShaderType.VertexShader)
-                {
-                    Console.WriteLine("vertex:");
-                    vertSh = shader.id;
-                }
-                if (shader.type == ShaderType.FragmentShader)
-                {
-                    Console.WriteLine("fragment:");
-                    fragSh = shader.id;
-                }
-                if (shader.type == ShaderType.GeometryShader)
-                {
-                    Console.WriteLine("geometry:");
-                    geomSh = shader.id;
-                }
+                Console.WriteLine($"{shader.Key.ToString("g")}:");
 
-                string log = GL.GetShaderInfoLog(shader.id);
+                string log = GL.GetShaderInfoLog(shader.Value.id);
                 Console.WriteLine(log);
                 if (log != "")
                     MessageBox.Show(log);
             }
-            LoadAttributes();
+            LoadAttributes(program);
+            LoadUniorms(program);
+            programs[control] = program;
         }
 
-        public void AttachShader(Shader shader)
+        public void AttachShader(Shader shader, bool linkImediatly)
         {
-            Console.WriteLine("shader:");
+            shaders[shader.type] = shader;
+            foreach (int program in programs.Values)
+            {
+                GL.AttachShader(program, shader.id);
 
-            string log = GL.GetShaderInfoLog(shader.id);
-            Console.WriteLine(log);
-            if (log != "")
-                MessageBox.Show(log);
+                if (linkImediatly)
+                    GL.LinkProgram(program);
+            }
 
-            GL.AttachShader(program, shader.id);
+            if (linkImediatly && programs.Count > 0)
+            {
+                LoadAttributes(programs.First().Value);
+                LoadUniorms(programs.First().Value);
+            }
         }
 
-        public void DetachShader(Shader shader)
+        public void DetachShader(ShaderType type, bool linkImediatly)
         {
-            GL.DetachShader(program, shader.id);
+            if (type == ShaderType.FragmentShader || type == ShaderType.VertexShader)
+                throw new Exception("You can't remove the FragmentShader or the VertexShader from this Program");
+            if (!shaders.ContainsKey(type))
+                return;
+
+            foreach (int program in programs.Values)
+            {
+                GL.DetachShader(program, shaders[type].id);
+
+                if (linkImediatly)
+                    GL.LinkProgram(program);
+            }
         }
 
-        public void LinkShaders()
+        public void LinkAll()
         {
-            GL.LinkProgram(program);
+            foreach (int program in programs.Values)
+                GL.LinkProgram(program);
         }
 
-        public void SetFragmentShader(FragmentShader shader)
+        public void Setup(Matrix4 mtxMdl, Matrix4 mtxCam, Matrix4 mtxProj, GLControl control)
         {
-            GL.DetachShader(program, fragSh);
-            GL.AttachShader(program, shader.id);
-            fragSh = shader.id;
-            GL.LinkProgram(program);
-        }
-
-        public void SetVertexShader(VertexShader shader)
-        {
-            GL.DetachShader(program, vertSh);
-            GL.AttachShader(program, shader.id);
-            vertSh = shader.id;
-            GL.LinkProgram(program);
-
-            GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxMdl"), false, ref modelMatrix);
-            GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxCam"), false, ref computedCamMtx);
-        }
-
-        public void SetGeometryShader(VertexShader shader)
-        {
-            if(geomSh != -1)
-                GL.DetachShader(program, geomSh);
-
-            GL.AttachShader(program, shader.id);
-            geomSh = shader.id;
-            GL.LinkProgram(program);
-
-            GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxMdl"), false, ref modelMatrix);
-            GL.UniformMatrix4(GL.GetUniformLocation(program, "mtxCam"), false, ref computedCamMtx);
-        }
-
-        public void Setup(Matrix4 mtxMdl, Matrix4 mtxCam, Matrix4 mtxProj)
-        {
-            GL.UseProgram(program);
+            GL.UseProgram(programs[control]);
             modelMatrix = mtxMdl;
-            int mtxMdl_loc = GL.GetUniformLocation(program, "mtxMdl");
-            if (mtxMdl_loc != -1)
-                GL.UniformMatrix4(mtxMdl_loc, false, ref modelMatrix);
+            if (uniforms.ContainsKey("mtxMdl"))
+                GL.UniformMatrix4(uniforms["mtxMdl"], false, ref modelMatrix);
 
             computedCamMtx = mtxCam * mtxProj;
 
-            int mtxCam_loc = GL.GetUniformLocation(program, "mtxCam");
-            if (mtxCam_loc != -1)
-                GL.UniformMatrix4(mtxCam_loc, false, ref computedCamMtx);
+            if (uniforms.ContainsKey("mtxCam"))
+                GL.UniformMatrix4(uniforms["mtxCam"], false, ref computedCamMtx);
         }
 
-        public void UpdateModelMatrix(Matrix4 matrix)
+        public void UpdateModelMatrix(Matrix4 matrix, GLControl control)
         {
             modelMatrix = matrix;
-            int mtxMdl_loc = GL.GetUniformLocation(program, "mtxMdl");
-            if (mtxMdl_loc != -1)
-                GL.UniformMatrix4(mtxMdl_loc, false, ref modelMatrix);
+            if (uniforms.ContainsKey("mtxMdl"))
+                GL.UniformMatrix4(uniforms["mtxMdl"], false, ref modelMatrix);
         }
 
-        public void Activate()
+        public void Use(GLControl control)
         {
-            GL.UseProgram(program);
+            GL.UseProgram(programs[control]);
         }
-
+        
         public int this[string name]
         {
-            get => GL.GetUniformLocation(program, name);
+            get => uniforms[name];
         }
 
-        private void LoadAttributes()
+        private void LoadUniorms(int program)
+        {
+            uniforms.Clear();
+
+            GL.GetProgram(program, GetProgramParameterName.ActiveUniforms, out activeAttributeCount);
+            for (int i = 0; i < activeAttributeCount; i++)
+            {
+                string name = GL.GetActiveUniform(program, i, out int size, out ActiveUniformType type);
+                int location = GL.GetUniformLocation(program, name);
+
+                // Overwrite existing vertex attributes.
+                uniforms[name] = location;
+            }
+        }
+
+        private void LoadAttributes(int program)
         {
             attributes.Clear();
 
             GL.GetProgram(program, GetProgramParameterName.ActiveAttributes, out activeAttributeCount);
             for (int i = 0; i < activeAttributeCount; i++)
-                AddAttribute(i);
-        }
+            {
+                string name = GL.GetActiveAttrib(program, i, out int size, out ActiveAttribType type);
+                int location = GL.GetAttribLocation(program, name);
 
-        private void AddAttribute(int index)
-        {
-            string name = GL.GetActiveAttrib(program, index, out int size, out ActiveAttribType type);
-            int location = GL.GetAttribLocation(program, name);
-
-            // Overwrite existing vertex attributes.
-            attributes[name] = location;
+                // Overwrite existing vertex attributes.
+                attributes[name] = location;
+            }
         }
 
         public int GetAttribute(string name)
@@ -201,39 +198,39 @@ namespace GL_EditorFramework.GL_Core
         public void SetBoolToInt(string name, bool value)
         {
             if (value)
-                GL.Uniform1(this[name], 1);
+                GL.Uniform1(uniforms[name], 1);
             else
                 GL.Uniform1(this[name], 0);
         }
 
         public void SetMatrix4x4(string name, ref Matrix4 value, bool Transpose = false)
         {
-            GL.UniformMatrix4(this[name], Transpose, ref value);
+            GL.UniformMatrix4(uniforms[name], Transpose, ref value);
         }
 
         public void SetVector4(string name, Vector4 value)
         {
-            GL.Uniform4(this[name], value);
+            GL.Uniform4(uniforms[name], value);
         }
 
         public void SetVector3(string name, Vector3 value)
         {
-            GL.Uniform3(this[name], value);
+            GL.Uniform3(uniforms[name], value);
         }
 
         public void SetVector2(string name, Vector2 value)
         {
-            GL.Uniform2(this[name], value);
+            GL.Uniform2(uniforms[name], value);
         }
 
         public void SetFloat(string name, float value)
         {
-            GL.Uniform1(this[name], value);
+            GL.Uniform1(uniforms[name], value);
         }
 
         public void SetInt(string name, int value)
         {
-            GL.Uniform1(this[name], value);
+            GL.Uniform1(uniforms[name], value);
         }
     }
 

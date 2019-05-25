@@ -123,12 +123,12 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void Prepare(GL_ControlModern control)
         {
-            Renderers.ColorBlockRenderer.Initialize();
+            Renderers.ColorBlockRenderer.Initialize(control);
         }
 
         public override void Prepare(GL_ControlLegacy control)
         {
-            Renderers.ColorBlockRenderer.Initialize();
+            Renderers.ColorBlockRenderer.Initialize(control);
         }
 
         public virtual void Translate(Vector3 lastPos, Vector3 translate, int subObj)

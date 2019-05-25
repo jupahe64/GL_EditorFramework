@@ -58,16 +58,14 @@ namespace GL_EditorFramework
 
         public static class ColorBlockRenderer {
             private static bool Initialized = false;
-        
+            private static bool InitializedLegacy = false;
+
             public static ShaderProgram DefaultShaderProgram { get; private set; }
-            private static ShaderProgram solidColorShaderProgram;
+            public static ShaderProgram SolidColorShaderProgram { get; private set; }
 
-            private static int linesVao;
-            private static int blockVao;
-
-            private static int defColorLoc;
-            private static int solidColorLoc;
-
+            private static VertexArrayObject linesVao;
+            private static VertexArrayObject blockVao;
+            
             private static int lineDrawList;
 
             public static float[][] points = new float[][]
@@ -83,7 +81,7 @@ namespace GL_EditorFramework
             };
 
 
-            public static void Initialize()
+            public static void Initialize(GL_ControlModern control)
             {
                 if (!Initialized)
                 {
@@ -131,23 +129,21 @@ namespace GL_EditorFramework
                         void main(){
                             gl_Position = mtxCam*mtxMdl*position;
                         }");
-                    DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert);
-                    GL.Uniform1(DefaultShaderProgram["tex"], Framework.TextureSheet - 1);
-
-                    defColorLoc = DefaultShaderProgram["color"];
-
-                    solidColorShaderProgram = new ShaderProgram(solidColorFrag, solidColorVert);
-
-                    solidColorLoc = solidColorShaderProgram["color"];
-
+                    DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert, control);
+                    DefaultShaderProgram.SetInt("tex", Framework.TextureSheet);
+                    
+                    SolidColorShaderProgram = new ShaderProgram(solidColorFrag, solidColorVert, control);
+                    
                     int buffer;
 
                     #region block
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, buffer = GL.GenBuffer());
+                    buffer = GL.GenBuffer();
+                    
+                    blockVao = new VertexArrayObject(buffer, control);
+                    blockVao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+                    blockVao.Initialize(control);
 
-                    GL.BindVertexArray(blockVao = GL.GenVertexArray());
                     List<float> list = new List<float>();
-
                     Face(ref points, ref list, 0, 1, 2, 3);
                     FaceInv(ref points, ref list, 4, 5, 6, 7);
                     FaceInv(ref points, ref list, 0, 1, 4, 5);
@@ -158,16 +154,17 @@ namespace GL_EditorFramework
                     float[] data = list.ToArray();
                     GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.StaticDraw);
 
-                    GL.EnableVertexAttribArray(0);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+
                     #endregion
 
                     #region lines
-                    GL.BindVertexArray(linesVao = GL.GenVertexArray());
+                    buffer = GL.GenBuffer();
 
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, buffer = GL.GenBuffer());
+                    linesVao = new VertexArrayObject(buffer, control);
+                    linesVao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+                    linesVao.Initialize(control);
+                    
                     list = new List<float>();
-
                     LineFace(ref points, ref list, 0, 1, 2, 3);
                     LineFace(ref points, ref list, 4, 5, 6, 7);
                     Line(ref points, ref list, 0, 4);
@@ -177,11 +174,25 @@ namespace GL_EditorFramework
 
                     data = list.ToArray();
                     GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.StaticDraw);
-
-                    GL.EnableVertexAttribArray(0);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+                    
                     #endregion
+                    
+                    Initialized = true;
 
+                }
+                else
+                {
+                    DefaultShaderProgram.Link(control);
+                    SolidColorShaderProgram.Link(control);
+                    blockVao.Initialize(control);
+                    linesVao.Initialize(control);
+                }
+            }
+
+            public static void Initialize(GL_ControlLegacy control)
+            {
+                if (!InitializedLegacy)
+                {
                     lineDrawList = GL.GenLists(1);
 
                     GL.NewList(lineDrawList, ListMode.Compile);
@@ -210,13 +221,13 @@ namespace GL_EditorFramework
                     GL.Vertex3(points[5]);
                     GL.End();
                     GL.EndList();
-                    Initialized = true;
+                    InitializedLegacy = true;
                 }
             }
 
             public static void Draw(GL_ControlModern control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
             {
-                control.CurrentShader = solidColorShaderProgram;
+                control.CurrentShader = SolidColorShaderProgram;
 
                 if (pass == Pass.OPAQUE)
                 {
@@ -224,21 +235,20 @@ namespace GL_EditorFramework
                     #region outlines
                     GL.LineWidth(2.0f);
 
-                    GL.Uniform4(solidColorLoc, lineColor);
-                    GL.BindVertexArray(linesVao);
+                    SolidColorShaderProgram.SetVector4("color", lineColor);
+                    linesVao.Use(control);
                     GL.DrawArrays(PrimitiveType.Lines, 0, 24);
                     #endregion
                     
                     control.CurrentShader = DefaultShaderProgram;
 
-                    GL.Uniform4(defColorLoc, blockColor);
+                    DefaultShaderProgram.SetVector4("color", blockColor);
                 }
                 else
-                    GL.Uniform4(solidColorLoc, pickingColor);
+                    SolidColorShaderProgram.SetVector4("color", pickingColor);
 
-                GL.BindVertexArray(blockVao);
+                blockVao.Use(control);
                 GL.DrawArrays(PrimitiveType.Quads, 0, 24);
-                GL.BindVertexArray(0);
             }
 
             public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
@@ -254,31 +264,7 @@ namespace GL_EditorFramework
                 {
                     GL.Color4(pickingColor);
 
-
-                    GL.Begin(PrimitiveType.Quads);
-                    GL.Vertex3(points[7]);
-                    GL.Vertex3(points[6]);
-                    GL.Vertex3(points[2]);
-                    GL.Vertex3(points[3]);
-
-                    GL.Vertex3(points[4]);
-                    GL.Vertex3(points[5]);
-                    GL.Vertex3(points[1]);
-                    GL.Vertex3(points[0]);
-                    GL.End();
-
-                    GL.Begin(PrimitiveType.QuadStrip);
-                    GL.Vertex3(points[7]);
-                    GL.Vertex3(points[5]);
-                    GL.Vertex3(points[6]);
-                    GL.Vertex3(points[4]);
-                    GL.Vertex3(points[2]);
-                    GL.Vertex3(points[0]);
-                    GL.Vertex3(points[3]);
-                    GL.Vertex3(points[1]);
-                    GL.Vertex3(points[7]);
-                    GL.Vertex3(points[5]);
-                    GL.End();
+                    GL.CallList(lineDrawList);
                 }
 
                 if (pass == Pass.OPAQUE)
@@ -336,97 +322,27 @@ namespace GL_EditorFramework
                     #endregion
                 }
             }
-        }
 
-        public static class LineBoxRenderer
-        {
-
-            private static bool Initialized = false;
-
-            public static ShaderProgram DefaultShaderProgram { get; private set; }
-
-            private static int linesVao;
-
-            private static float[][] points = new float[][]
+            public static void DrawLineBox(GL_ControlModern control, Pass pass, Vector4 color, Vector4 pickingColor)
             {
-                new float[]{-1,-1, 1},
-                new float[]{ 1,-1, 1},
-                new float[]{-1, 1, 1},
-                new float[]{ 1, 1, 1},
-                new float[]{-1,-1,-1},
-                new float[]{ 1,-1,-1},
-                new float[]{-1, 1,-1},
-                new float[]{ 1, 1,-1}
-            };
-
-
-            public static void Initialize()
-            {
-                if (!Initialized)
-                {
-                    var defaultFrag = new FragmentShader(
-                        @"#version 330
-                        uniform vec4 color;
-                        void main(){
-                            gl_FragColor = color;
-                        }");
-                    var defaultVert = new VertexShader(
-                        @"#version 330
-                        layout(location = 0) in vec4 position;
-                        uniform mat4 mtxMdl;
-                        uniform mat4 mtxCam;
-                        void main(){
-                            gl_Position = mtxCam*mtxMdl*position;
-                        }");
-                    DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert);
-
-                    int buffer;
-
-                    #region lines
-                    GL.BindVertexArray(linesVao = GL.GenVertexArray());
-
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, buffer = GL.GenBuffer());
-                    List<float> list = new List<float>();
-
-                    LineFace(ref points, ref list, 0, 1, 2, 3);
-                    LineFace(ref points, ref list, 4, 5, 6, 7);
-                    Line(ref points, ref list, 0, 4);
-                    Line(ref points, ref list, 1, 5);
-                    Line(ref points, ref list, 2, 6);
-                    Line(ref points, ref list, 3, 7);
-
-                    float[] data = list.ToArray();
-                    GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.StaticDraw);
-
-                    GL.EnableVertexAttribArray(0);
-                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-                    #endregion
-
-
-                    Initialized = true;
-                }
-            }
-
-            public static void Draw(GL_ControlModern control, Pass pass, Vector4 color, Vector4 pickingColor)
-            {
-                control.CurrentShader = DefaultShaderProgram;
+                control.CurrentShader = SolidColorShaderProgram;
 
                 if (pass == Pass.OPAQUE)
                 {
                     GL.LineWidth(4.0f);
-                    GL.Uniform4(DefaultShaderProgram["color"], color);
+                    SolidColorShaderProgram.SetVector4("color", color);
                 }
                 else
                 {
                     GL.LineWidth(6.0f);
-                    GL.Uniform4(DefaultShaderProgram["color"], pickingColor);
+                    SolidColorShaderProgram.SetVector4("color", pickingColor);
                 }
 
-                GL.BindVertexArray(linesVao);
+                linesVao.Use(control);
                 GL.DrawArrays(PrimitiveType.Lines, 0, 24);
             }
 
-            public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 color, Vector4 pickingColor)
+            public static void DrawLineBox(GL_ControlLegacy control, Pass pass, Vector4 color, Vector4 pickingColor)
             {
                 GL.Disable(EnableCap.Texture2D);
 
@@ -441,29 +357,8 @@ namespace GL_EditorFramework
                     GL.Color4(pickingColor);
                 }
 
-                GL.Begin(PrimitiveType.LineStrip);
-                GL.Vertex3(points[6]);
-                GL.Vertex3(points[2]);
-                GL.Vertex3(points[3]);
-                GL.Vertex3(points[7]);
-                GL.Vertex3(points[6]);
+                GL.CallList(lineDrawList);
 
-                GL.Vertex3(points[4]);
-                GL.Vertex3(points[5]);
-                GL.Vertex3(points[1]);
-                GL.Vertex3(points[0]);
-                GL.Vertex3(points[4]);
-                GL.End();
-
-                GL.Begin(PrimitiveType.Lines);
-                GL.Vertex3(points[2]);
-                GL.Vertex3(points[0]);
-                GL.Vertex3(points[3]);
-                GL.Vertex3(points[1]);
-                GL.Vertex3(points[7]);
-                GL.Vertex3(points[5]);
-                GL.End();
-                
                 GL.Enable(EnableCap.Texture2D);
             }
         }

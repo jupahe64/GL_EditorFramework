@@ -41,10 +41,13 @@ namespace GL_EditorFramework.GL_Core
             get => shader;
             set
             {
-                if (value == null || value == shader || DesignMode) return;
+                if (value == shader || DesignMode) return;
                 shader = value;
 
-                shader.Setup(mtxMdl, mtxCam, mtxProj);
+                if (shader == null)
+                    GL.UseProgram(0);
+                else
+                    shader.Setup(mtxMdl, mtxCam, mtxProj, this);
             }
         }
 
@@ -66,19 +69,19 @@ namespace GL_EditorFramework.GL_Core
             if (DesignMode) return;
             mtxMdl = matrix;
             if (shader!=null)
-                shader.UpdateModelMatrix(matrix);
+                shader.UpdateModelMatrix(matrix, this);
         }
 
         public override void ApplyModelTransform(Matrix4 matrix)
         {
             if (DesignMode) return;
-            shader.UpdateModelMatrix(mtxMdl *= matrix);
+            shader.UpdateModelMatrix(mtxMdl *= matrix, this);
         }
 
         public override void ResetModelMatrix()
         {
             if (DesignMode) return;
-            shader.UpdateModelMatrix(mtxMdl = Matrix4.Identity);
+            shader.UpdateModelMatrix(mtxMdl = Matrix4.Identity, this);
         }
 
         protected override void OnResize(EventArgs e)

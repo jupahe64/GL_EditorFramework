@@ -608,7 +608,7 @@ namespace GL_EditorFramework.EditorDrawables
                         face(1,3,5,7);
                     }
                 }
-                "));
+                "), control);
                 #endregion
                 
 
@@ -768,7 +768,7 @@ namespace GL_EditorFramework.EditorDrawables
                         EndPrimitive();
                     }
                 }
-                "));
+                "), control);
                 #endregion
                 
                 lineColorLoc = bezierCurveShaderProgram["lineColor"];
@@ -776,6 +776,11 @@ namespace GL_EditorFramework.EditorDrawables
                 isPickingModeLoc = bezierCurveShaderProgram["isPickingMode"];
 
                 Initialized = true;
+            }
+            else
+            {
+                defaultShaderProgram.Link(control);
+                bezierCurveShaderProgram.Link(control);
             }
         }
 

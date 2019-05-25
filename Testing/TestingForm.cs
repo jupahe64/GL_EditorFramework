@@ -110,7 +110,7 @@ namespace Testing
             gL_ControlModern1.ActiveCamera = new GL_EditorFramework.StandardCameras.InspectCamera(1f);
 
             gL_ControlLegacy1.MainDrawable = new SingleObject(new Vector3());
-
+            gL_ControlModern1.CameraDistance = 20;
             scene.SelectionChanged += Scene_SelectionChanged;
             listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
         }

@@ -73,6 +73,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="GL_Core\OldGlEmulator.cs" />
+    <Compile Include="GL_Core\VertexArrayObject.cs" />
     <Compile Include="Interfaces\AbstractCamera.cs" />
     <Compile Include="Interfaces\AbstractEventHandlingObj.cs" />
     <Compile Include="Interfaces\AbstractGlDrawable.cs" />
