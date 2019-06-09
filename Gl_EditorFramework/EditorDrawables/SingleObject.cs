@@ -1,5 +1,4 @@
-﻿using Gl_EditorFramework;
-using GL_EditorFramework.GL_Core;
+﻿using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -197,9 +196,23 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
+        public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
         {
-            position = transformAction.NewPos(position);
+            prevPos = null;
+            prevRot = null;
+            prevScale = null;
+
+            if (pos.HasValue)
+            {
+                prevPos = position;
+                position = pos.Value;
+            }
+        }
+
+        public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos infos)
+        {
+            position = transformAction.NewPos(position, out Vector3? prevPos);
+            infos.Add(this, 0, prevPos, null, null);
         }
 
         public override Vector3 Position

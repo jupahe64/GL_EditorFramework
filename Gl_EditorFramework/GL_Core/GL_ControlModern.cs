@@ -75,13 +75,15 @@ namespace GL_EditorFramework.GL_Core
         public override void ApplyModelTransform(Matrix4 matrix)
         {
             if (DesignMode) return;
-            shader.UpdateModelMatrix(mtxMdl *= matrix, this);
+            if (shader != null)
+                shader.UpdateModelMatrix(mtxMdl *= matrix, this);
         }
 
         public override void ResetModelMatrix()
         {
             if (DesignMode) return;
-            shader.UpdateModelMatrix(mtxMdl = Matrix4.Identity, this);
+            if (shader != null)
+                shader.UpdateModelMatrix(mtxMdl = Matrix4.Identity, this);
         }
 
         protected override void OnResize(EventArgs e)

@@ -31,6 +31,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         protected GL_ControlBase control;
 
+        protected Stack<IRevertable> undoStack = new Stack<IRevertable>();
+        protected Stack<IRevertable> redoStack = new Stack<IRevertable>();
+
         public enum DragActionType
         {
             TRANSLATE,
@@ -45,101 +48,101 @@ namespace GL_EditorFramework.EditorDrawables
 
         public static NoTransformAction NoAction {get; private set;} = new NoTransformAction();
 
-		protected void UpdateSelection(uint var)
-		{
-			SelectionChanged?.Invoke(this, new EventArgs());
+        protected void UpdateSelection(uint var)
+        {
+            SelectionChanged?.Invoke(this, new EventArgs());
 
-			if ((var & REDRAW) > 0)
-				control.Refresh();
-			if ((var & REDRAW_PICKING) > 0)
-				control.DrawPicking();
-		}
+            if ((var & REDRAW) > 0)
+                control.Refresh();
+            if ((var & REDRAW_PICKING) > 0)
+                control.DrawPicking();
+        }
 
-		public List<EditableObject> SelectedObjects
-		{
-			get => selectedObjects;
-			set
-			{
-				uint var = 0;
+        public List<EditableObject> SelectedObjects
+        {
+            get => selectedObjects;
+            set
+            {
+                uint var = 0;
 
-				bool selectionHasChanged = false;
+                bool selectionHasChanged = false;
 
-				foreach (EditableObject obj in value)
-				{
-					if (!selectedObjects.Contains(obj)) //object wasn't selected before
-					{
-						var |= obj.SelectDefault(control); //select it
-						selectionHasChanged = true;
-					}
-					else //object stays selected 
-					{
-						selectedObjects.Remove(obj); //filter out these to find all objects which are not selected anymore
-						selectionHasChanged = true;
-					}
-				}
+                foreach (EditableObject obj in value)
+                {
+                    if (!selectedObjects.Contains(obj)) //object wasn't selected before
+                    {
+                        var |= obj.SelectDefault(control); //select it
+                        selectionHasChanged = true;
+                    }
+                    else //object stays selected 
+                    {
+                        selectedObjects.Remove(obj); //filter out these to find all objects which are not selected anymore
+                        selectionHasChanged = true;
+                    }
+                }
 
-				foreach (EditableObject obj in selectedObjects) //now the selected objects are a list of objects to deselect
-																//which is fine because in the end they get overwriten anyway
-				{
-					var |= obj.DeselectAll(control); //Deselect them all
-					selectionHasChanged = true;
-				}
-				selectedObjects = value;
+                foreach (EditableObject obj in selectedObjects) //now the selected objects are a list of objects to deselect
+                                                                //which is fine because in the end they get overwriten anyway
+                {
+                    var |= obj.DeselectAll(control); //Deselect them all
+                    selectionHasChanged = true;
+                }
+                selectedObjects = value;
 
-				if (selectionHasChanged)
-				{
-					SelectionChanged?.Invoke(this, new EventArgs());
+                if (selectionHasChanged)
+                {
+                    SelectionChanged?.Invoke(this, new EventArgs());
 
-					if ((var & AbstractGlDrawable.REDRAW) > 0)
-						control.Refresh();
-					if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
-						control.DrawPicking();
-				}
-			}
-		}
+                    if ((var & AbstractGlDrawable.REDRAW) > 0)
+                        control.Refresh();
+                    if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+                        control.DrawPicking();
+                }
+            }
+        }
 
-		public void ToogleSelected(EditableObject obj, bool isSelected)
-		{
-			uint var = 0;
+        public void ToogleSelected(EditableObject obj, bool isSelected)
+        {
+            uint var = 0;
 
-			bool selectionHasChanged = false;
+            bool selectionHasChanged = false;
 
-			bool alreadySelected = selectedObjects.Contains(obj);
-			if (alreadySelected && !isSelected)
-			{
-				var |= obj.DeselectAll(control);
-				selectedObjects.Remove(obj);
+            bool alreadySelected = selectedObjects.Contains(obj);
+            if (alreadySelected && !isSelected)
+            {
+                var |= obj.DeselectAll(control);
+                selectedObjects.Remove(obj);
 
-				selectionHasChanged = true;
-			}
-			else if (!alreadySelected && isSelected)
-			{
-				var |= obj.SelectDefault(control);
-				selectedObjects.Add(obj);
+                selectionHasChanged = true;
+            }
+            else if (!alreadySelected && isSelected)
+            {
+                var |= obj.SelectDefault(control);
+                selectedObjects.Add(obj);
 
-				selectionHasChanged = true;
-			}
+                selectionHasChanged = true;
+            }
 
-			if (selectionHasChanged)
-			{
-				SelectionChanged?.Invoke(this, new EventArgs());
+            if (selectionHasChanged)
+            {
+                SelectionChanged?.Invoke(this, new EventArgs());
 
-				if ((var & AbstractGlDrawable.REDRAW) > 0)
-					control.Refresh();
-				if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
-					control.DrawPicking();
-			}
-		}
+                if ((var & AbstractGlDrawable.REDRAW) > 0)
+                    control.Refresh();
+                if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
+                    control.DrawPicking();
+            }
+        }
 
-		public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
-		{
-			uint var = 0;
-			if(CurrentAction==NoAction && ExclusiveAction==NoAction && Hovered!=null)
-			{
+        public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
+        {
+            uint var = 0;
+            if(CurrentAction==NoAction && ExclusiveAction==NoAction && Hovered!=null)
+            {
                 LocalOrientation rLocalOrientation;
                 bool rDragExclusively;
-				if (e.Button == MouseButtons.Left)
-				{
+                if (e.Button == MouseButtons.Left)
+                {
                     if (Hovered.TryStartDragging(DragActionType.TRANSLATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
                     {
                         draggingDepth = control.PickingDepth;
@@ -157,9 +160,9 @@ namespace GL_EditorFramework.EditorDrawables
                             CurrentAction = new TranslateAction(control, e.Location, box.GetCenter(), draggingDepth);
                         }
                     }
-				}
-				else if (e.Button == MouseButtons.Right)
-				{
+                }
+                else if (e.Button == MouseButtons.Right)
+                {
                     if (Hovered.TryStartDragging(DragActionType.ROTATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
                     {
                         draggingDepth = control.PickingDepth;
@@ -177,9 +180,9 @@ namespace GL_EditorFramework.EditorDrawables
                             CurrentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
                         }
                     }
-				}
-				else if (e.Button == MouseButtons.Middle)
-				{
+                }
+                else if (e.Button == MouseButtons.Middle)
+                {
                     bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
                     if (Hovered.TryStartDragging(shift ? DragActionType.SCALE : DragActionType.SCALE_EXCLUSIVE, HoveredPart, out rLocalOrientation, out rDragExclusively))
                     {
@@ -205,90 +208,91 @@ namespace GL_EditorFramework.EditorDrawables
                                 CurrentAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
                         }
                     }
-				}
-			}
-			else
-			{
+                }
+            }
+            else
+            {
                 var |= REDRAW_PICKING;
                 var |= FORCE_REENTER;
 
                 CurrentAction = NoAction; //abort current action
                 ExclusiveAction = NoAction;
-			}
-			
-			foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				var |= obj.MouseDown(e, control);
-			}
-			return var;
-		}
+            }
+            
+            foreach (AbstractGlDrawable obj in staticObjects)
+            {
+                var |= obj.MouseDown(e, control);
+            }
+            return var;
+        }
 
-		public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control)
-		{
-			uint var = 0;
+        public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control)
+        {
+            uint var = 0;
 
-			foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				var |= obj.MouseMove(e, lastMousePos, control);
-			}
+            foreach (AbstractGlDrawable obj in staticObjects)
+            {
+                var |= obj.MouseMove(e, lastMousePos, control);
+            }
 
-			if (CurrentAction != NoAction || ExclusiveAction != NoAction)
-			{
-				CurrentAction.UpdateMousePos(e.Location);
+            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+            {
+                CurrentAction.UpdateMousePos(e.Location);
                 ExclusiveAction.UpdateMousePos(e.Location);
 
                 var |= REDRAW | NO_CAMERA_ACTION;
 
-				var &= ~REPICK;
-			}
-			else
-			{
-				var |= REPICK;
-			}
-			return var;
-		}
+                var &= ~REPICK;
+            }
+            else
+            {
+                var |= REPICK;
+            }
+            return var;
+        }
 
-		public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
-		{
-			uint var = 0;
+        public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
+        {
+            uint var = 0;
 
-			foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				var |= obj.MouseWheel(e, control);
-			}
+            foreach (AbstractGlDrawable obj in staticObjects)
+            {
+                var |= obj.MouseWheel(e, control);
+            }
 
-			if (CurrentAction != NoAction)
-			{
-				CurrentAction.ApplyScrolling(e.Location, e.Delta);
+            if (CurrentAction != NoAction)
+            {
+                CurrentAction.ApplyScrolling(e.Location, e.Delta);
                 ExclusiveAction.ApplyScrolling(e.Location, e.Delta);
 
                 var |= REDRAW | NO_CAMERA_ACTION;
 
-				var &= ~REPICK;
-			}
+                var &= ~REPICK;
+            }
 
-			return var;
-		}
+            return var;
+        }
 
-		public override uint MouseUp(MouseEventArgs e, GL_ControlBase control)
-		{
-			uint var = 0;
+        public override uint MouseUp(MouseEventArgs e, GL_ControlBase control)
+        {
+            TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
+            uint var = 0;
 
-			if (CurrentAction != NoAction)
-			{
-				foreach (EditableObject obj in selectedObjects)
-				{
-					obj.ApplyTransformActionToSelection(CurrentAction);
-				}
+            if (CurrentAction != NoAction)
+            {
+                foreach (EditableObject obj in selectedObjects)
+                {
+                    obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
+                }
 
-				var |= REDRAW_PICKING;
+                var |= REDRAW_PICKING;
 
-				CurrentAction = NoAction;
-			}
+                CurrentAction = NoAction;
+            }
 
             if (ExclusiveAction != NoAction)
             {
-                Hovered.ApplyTransformActionToPart(ExclusiveAction, HoveredPart);
+                Hovered.ApplyTransformActionToPart(ExclusiveAction, HoveredPart, ref transformChangeInfos);
 
                 var |= REDRAW_PICKING;
 
@@ -296,136 +300,137 @@ namespace GL_EditorFramework.EditorDrawables
             }
 
             foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				var |= obj.MouseUp(e, control);
-			}
-			
-			return var;
-		}
+            {
+                var |= obj.MouseUp(e, control);
+            }
 
-		public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
-		{
-			uint var = 0;
-			foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				var |= obj.MouseClick(e, control);
-			}
+            AddTransformToUndo(transformChangeInfos);
+            return var;
+        }
 
-			if (e.Button == MouseButtons.Left)
-			{
-				if (!(multiSelect && WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift)))
-				{
-					if (multiSelect)
-					{
-						if (!(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
-						{
-							foreach (EditableObject selected in selectedObjects)
-							{
-								selected.DeselectAll(control);
-							}
-						}
+        public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
+        {
+            uint var = 0;
+            foreach (AbstractGlDrawable obj in staticObjects)
+            {
+                var |= obj.MouseClick(e, control);
+            }
 
-						if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
-						{
-							selectedObjects.Clear();
-							if(!selectedObjects.Contains(Hovered))
-								selectedObjects.Add(Hovered);
-							Hovered.Select(HoveredPart, control);
-							SelectionChanged?.Invoke(this, new EventArgs());
-						}
-						else if (Hovered == null)
-						{
-							selectedObjects.Clear();
-							SelectionChanged?.Invoke(this, new EventArgs());
-						}
-					}
-					else 
-					{
-						foreach (EditableObject selected in selectedObjects)
-						{
-							selected.DeselectAll(control);
-						}
+            if (e.Button == MouseButtons.Left)
+            {
+                if (!(multiSelect && WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift)))
+                {
+                    if (multiSelect)
+                    {
+                        if (!(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
+                        {
+                            foreach (EditableObject selected in selectedObjects)
+                            {
+                                selected.DeselectAll(control);
+                            }
+                        }
 
-						if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
-						{
-							selectedObjects.Clear();
-							if (!selectedObjects.Contains(Hovered))
-								selectedObjects.Add(Hovered);
-							Hovered.Select(HoveredPart, control);
-							SelectionChanged?.Invoke(this, new EventArgs());
-						}
-						else
-						{
-							selectedObjects.Clear();
-							SelectionChanged?.Invoke(this, new EventArgs());
-						}
-					}
-				}
-				else
-				{
-					if ((selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
-					{
-						if(!Hovered.IsSelected())
-							selectedObjects.Remove(Hovered);
-						Hovered.Deselect(HoveredPart, control);
-						SelectionChanged?.Invoke(this, new EventArgs());
-					}
-					else if (Hovered != null)
-					{
-						if (!selectedObjects.Contains(Hovered))
-							selectedObjects.Add(Hovered);
-						Hovered.Select(HoveredPart, control);
-						SelectionChanged?.Invoke(this, new EventArgs());
-					}
-				}
-			}
+                        if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
+                        {
+                            selectedObjects.Clear();
+                            if(!selectedObjects.Contains(Hovered))
+                                selectedObjects.Add(Hovered);
+                            Hovered.Select(HoveredPart, control);
+                            SelectionChanged?.Invoke(this, new EventArgs());
+                        }
+                        else if (Hovered == null)
+                        {
+                            selectedObjects.Clear();
+                            SelectionChanged?.Invoke(this, new EventArgs());
+                        }
+                    }
+                    else 
+                    {
+                        foreach (EditableObject selected in selectedObjects)
+                        {
+                            selected.DeselectAll(control);
+                        }
 
-			CurrentAction = NoAction; //because MouseClick implies that the Mouse Button is not pressed anymore
+                        if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
+                        {
+                            selectedObjects.Clear();
+                            if (!selectedObjects.Contains(Hovered))
+                                selectedObjects.Add(Hovered);
+                            Hovered.Select(HoveredPart, control);
+                            SelectionChanged?.Invoke(this, new EventArgs());
+                        }
+                        else
+                        {
+                            selectedObjects.Clear();
+                            SelectionChanged?.Invoke(this, new EventArgs());
+                        }
+                    }
+                }
+                else
+                {
+                    if ((selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
+                    {
+                        if(!Hovered.IsSelected())
+                            selectedObjects.Remove(Hovered);
+                        Hovered.Deselect(HoveredPart, control);
+                        SelectionChanged?.Invoke(this, new EventArgs());
+                    }
+                    else if (Hovered != null)
+                    {
+                        if (!selectedObjects.Contains(Hovered))
+                            selectedObjects.Add(Hovered);
+                        Hovered.Select(HoveredPart, control);
+                        SelectionChanged?.Invoke(this, new EventArgs());
+                    }
+                }
+            }
 
-			var |= REDRAW;
+            CurrentAction = NoAction; //because MouseClick implies that the Mouse Button is not pressed anymore
+
+            var |= REDRAW;
             var |= FORCE_REENTER;
 
             return var;
-		}
+        }
 
-		public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
-		{
-			if (CurrentAction != NoAction || ExclusiveAction != NoAction)
-				return 0;
-			
-			foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				int span = obj.GetPickableSpan();
-				if (inObjectIndex >= 0 && inObjectIndex < span)
-				{
-					return obj.MouseEnter(inObjectIndex, control);
-				}
-				inObjectIndex -= span;
-			}
-			return 0;
-		}
+        public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
+        {
+            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+                return 0;
+            
+            foreach (AbstractGlDrawable obj in staticObjects)
+            {
+                int span = obj.GetPickableSpan();
+                if (inObjectIndex >= 0 && inObjectIndex < span)
+                {
+                    return obj.MouseEnter(inObjectIndex, control);
+                }
+                inObjectIndex -= span;
+            }
+            return 0;
+        }
 
-		public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
-		{
-			foreach (AbstractGlDrawable obj in staticObjects)
-			{
-				int span = obj.GetPickableSpan();
-				if (inObjectIndex >= 0 && inObjectIndex < span)
-				{
-					return obj.MouseLeave(inObjectIndex, control);
-				}
-				inObjectIndex -= span;
-			}
-			return 0;
-		}
+        public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
+        {
+            foreach (AbstractGlDrawable obj in staticObjects)
+            {
+                int span = obj.GetPickableSpan();
+                if (inObjectIndex >= 0 && inObjectIndex < span)
+                {
+                    return obj.MouseLeave(inObjectIndex, control);
+                }
+                inObjectIndex -= span;
+            }
+            return 0;
+        }
 
-		public override uint MouseLeaveEntirely(GL_ControlBase control)
-		{
+        public override uint MouseLeaveEntirely(GL_ControlBase control)
+        {
             if (CurrentAction != NoAction || ExclusiveAction != NoAction)
                 return 0;
 
             Hovered = null;
-			return REDRAW;
-		}
-	}
+            return REDRAW;
+        }
+    }
 }

@@ -7,8 +7,8 @@
     <ProjectGuid>{D593A72D-554D-40FB-9967-503CB15A744F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Gl_EditorFramework</RootNamespace>
-    <AssemblyName>Gl_EditorFramework</AssemblyName>
+    <RootNamespace>GL_EditorFramework</RootNamespace>
+    <AssemblyName>GL_EditorFramework</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -54,6 +54,7 @@
     <Compile Include="EditorDrawables\EditorSceneBase.cs" />
     <Compile Include="EditorDrawables\SceneTransformations.cs" />
     <Compile Include="EditorDrawables\SingleObject.cs" />
+    <Compile Include="EditorDrawables\UndoAndRedo.cs" />
     <Compile Include="GL_Core\Cameras\Inspect.cs" />
     <Compile Include="GL_Core\Cameras\Walkaround.cs" />
     <Compile Include="EditorDrawables\EditableObject.cs" />

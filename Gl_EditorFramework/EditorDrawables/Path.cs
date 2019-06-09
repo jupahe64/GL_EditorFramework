@@ -1070,11 +1070,61 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
+        public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int _part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
         {
-            Quaternion rotation = transformAction.NewRot(Quaternion.Identity);
+            prevPos = null;
+            prevRot = null;
+            prevScale = null;
 
-            Vector3 scale = transformAction.NewScale(Vector3.One);
+            if (!pos.HasValue)
+                return;
+
+            int part = 1;
+
+            PathPoint[] points = pathPoints.ToArray();
+
+            for (int i = 0; i < pathPoints.Count; i++)
+            {
+                if (part == _part)
+                {
+                    prevPos = points[i].position;
+                    points[i].position = pos.Value;
+                    break;
+                }
+                part++;
+
+                if (points[i].controlPoint1 != Vector3.Zero)
+                {
+                    if (part == _part)
+                    {
+                        prevPos = points[i].controlPoint1;
+                        points[i].controlPoint1 = pos.Value;
+                        break;
+                    }
+                    part++;
+                }
+
+                if (points[i].controlPoint2 != Vector3.Zero)
+                {
+                    if (part == _part)
+                    {
+                        prevPos = points[i].controlPoint2;
+                        points[i].controlPoint2 = pos.Value;
+                        break;
+                    }
+                    part++;
+                }
+            }
+            pathPoints = points.ToList();
+        }
+
+        public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
+        {
+            int part = 1;
+
+            Quaternion rotation = transformAction.NewRot(Quaternion.Identity, out Quaternion? prevRot);
+
+            Vector3 scale = transformAction.NewScale(Vector3.One, out Vector3? prevScale);
 
             PathPoint[] points = pathPoints.ToArray();
 
@@ -1082,17 +1132,42 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (selectedIndices.Contains(i))
                 {
-                    points[i].position = transformAction.NewPos(pathPoints[i].position);
+                    points[i].position = transformAction.NewPos(pathPoints[i].position, out Vector3? prevPos);
+                    transformChangeInfos.Add(this, part, prevPos, null, null);
+                    part++;
 
-                    points[i].controlPoint1 = Vector3.Transform(points[i].controlPoint1, rotation) * scale;
+                    if (points[i].controlPoint1 != Vector3.Zero)
+                    {
+                        
+                        Vector3 prevCP1 = points[i].controlPoint1;
+                        points[i].controlPoint1 = Vector3.Transform(points[i].controlPoint1, rotation) * scale;
+                        if(prevCP1!= points[i].controlPoint1)
+                            transformChangeInfos.Add(this, part, points[i].controlPoint1, null, null);
+                        part++;
+                    }
 
-                    points[i].controlPoint2 = Vector3.Transform(points[i].controlPoint2, rotation) * scale;
+                    if (points[i].controlPoint2 != Vector3.Zero)
+                    {
+                        Vector3 prevCP2 = points[i].controlPoint2;
+                        points[i].controlPoint2 = Vector3.Transform(points[i].controlPoint2, rotation) * scale;
+                        if (prevCP2 != points[i].controlPoint2)
+                            transformChangeInfos.Add(this, part, points[i].controlPoint2, null, null);
+                        part++;
+                    }
+                }
+                else
+                {
+                    part++;
+                    if (points[i].controlPoint1 != Vector3.Zero)
+                        part++;
+                    if (points[i].controlPoint1 != Vector3.Zero)
+                        part++;
                 }
             }
             pathPoints = points.ToList();
         }
 
-        public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part)
+        public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
         {
             int part = 1;
 
@@ -1106,7 +1181,10 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (part == _part)
                     {
-                        points[i].controlPoint1 = transformAction.NewPos(points[i].position + points[i].controlPoint1) - points[i].position;
+                        Vector3 prevCP1 = points[i].controlPoint1;
+                        points[i].controlPoint1 = transformAction.NewPos(points[i].position + points[i].controlPoint1, out Vector3? prevPos) - points[i].position;
+                        if (prevCP1 != points[i].controlPoint1)
+                            transformChangeInfos.Add(this, part, points[i].controlPoint1, null, null);
                         break;
                     }
                     part++;
@@ -1116,7 +1194,10 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (part == _part)
                     {
-                        points[i].controlPoint2 = transformAction.NewPos(points[i].position + points[i].controlPoint2) - points[i].position;
+                        Vector3 prevCP2 = points[i].controlPoint2;
+                        points[i].controlPoint2 = transformAction.NewPos(points[i].position + points[i].controlPoint2, out Vector3? prevPos) - points[i].position;
+                        if (prevCP2 != points[i].controlPoint2)
+                            transformChangeInfos.Add(this, part, points[i].controlPoint2, null, null);
                         break;
                     }
                     part++;

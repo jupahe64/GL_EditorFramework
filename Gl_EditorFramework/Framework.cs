@@ -22,7 +22,7 @@ namespace GL_EditorFramework
             TextureSheet = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, TextureSheet);
 
-            var bmp = Gl_EditorFramework.Properties.Resources.TextureSheet;
+            var bmp = Properties.Resources.TextureSheet;
             var bmpData = bmp.LockBits(
                 new System.Drawing.Rectangle(0, 0, 128*4, 128*2),
                 System.Drawing.Imaging.ImageLockMode.ReadOnly,

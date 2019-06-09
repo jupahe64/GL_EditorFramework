@@ -8,7 +8,6 @@ using GL_EditorFramework;
 using GL_EditorFramework.EditorDrawables;
 using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
-using Gl_EditorFramework;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 

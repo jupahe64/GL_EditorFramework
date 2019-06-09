@@ -105,11 +105,37 @@ namespace Testing
             return Selected;
         }
 
-        public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
+        public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
         {
-            position = transformAction.NewPos(position);
-            rotation = transformAction.NewRot(rotation);
-            scale = transformAction.NewScale(scale);
+            prevPos = null;
+            prevRot = null;
+            prevScale = null;
+
+            if (pos.HasValue)
+            {
+                prevPos = position;
+                position = pos.Value;
+            }
+
+            if (rot.HasValue)
+            {
+                prevRot = rotation;
+                rotation = rot.Value;
+            }
+
+            if (scale.HasValue)
+            {
+                prevScale = this.scale;
+                this.scale = scale.Value;
+            }
+        }
+
+        public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos infos)
+        {
+            position = transformAction.NewPos(position, out Vector3? prevPos);
+            rotation = transformAction.NewRot(rotation, out Quaternion? prevRot);
+            scale = transformAction.NewScale(scale, out Vector3? prevScale);
+            infos.Add(this, 0, prevPos, prevRot, prevScale);
         }
     }
 }

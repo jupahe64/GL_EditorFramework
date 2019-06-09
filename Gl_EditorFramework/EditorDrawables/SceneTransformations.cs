@@ -23,9 +23,39 @@ namespace GL_EditorFramework.EditorDrawables
         {
             public virtual Vector3 NewPos(Vector3 pos) => pos;
 
+            public virtual Vector3 NewPos(Vector3 pos, out Vector3? prevPos)
+            {
+                Vector3 newPos = NewPos(pos);
+                if (newPos == pos)
+                    prevPos = null;
+                else
+                    prevPos = pos;
+                return newPos;
+            }
+
             public virtual Quaternion NewRot(Quaternion rot) => rot;
 
+            public virtual Quaternion NewRot(Quaternion rot, out Quaternion? prevRot)
+            {
+                Quaternion newRot = NewRot(rot);
+                if (newRot == rot)
+                    prevRot = null;
+                else
+                    prevRot = rot;
+                return newRot;
+            }
+
             public virtual Vector3 NewScale(Vector3 scale) => scale;
+
+            public virtual Vector3 NewScale(Vector3 scale, out Vector3? prevScale)
+            {
+                Vector3 newScale = NewScale(scale);
+                if (newScale == scale)
+                    prevScale = null;
+                else
+                    prevScale = scale;
+                return newScale;
+            }
 
             protected GL_ControlBase control;
 

@@ -270,6 +270,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint KeyDown(KeyEventArgs e, GL_ControlBase control)
         {
+            TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
             uint var = 0;
 
             bool selectionHasChanged = false;
@@ -280,15 +281,29 @@ namespace GL_EditorFramework.EditorDrawables
                 ExclusiveAction.KeyDown(e);
                 var = NO_CAMERA_ACTION | REDRAW;
             }
-            else if (e.KeyCode == Keys.Z && selectedObjects.Count>0) //focus camera on the selection
+            else if (e.KeyCode == Keys.Z) //focus camera on the selection
             {
-                EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
-
-                foreach (EditableObject selected in selectedObjects)
+                if (e.Control)
                 {
-                    box.Include(selected.GetSelectionBox());
+                    if (undoStack.Count > 0)
+                        redoStack.Push(undoStack.Pop().Revert());
                 }
-                control.CameraTarget = box.GetCenter();
+                else if (selectedObjects.Count > 0)
+                {
+                    EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
+
+                    foreach (EditableObject selected in selectedObjects)
+                    {
+                        box.Include(selected.GetSelectionBox());
+                    }
+                    control.CameraTarget = box.GetCenter();
+                }
+
+                var = REDRAW_PICKING;
+            }
+            else if (e.KeyCode == Keys.Y && e.Control && redoStack.Count > 0) //focus camera on the selection
+            {
+                undoStack.Push(redoStack.Pop().Revert());
 
                 var = REDRAW_PICKING;
             }
@@ -305,7 +320,7 @@ namespace GL_EditorFramework.EditorDrawables
                 SnapAction action = new SnapAction();
                 foreach (EditableObject selected in selectedObjects)
                 {
-                    selected.ApplyTransformActionToSelection(action);
+                    selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
@@ -314,7 +329,7 @@ namespace GL_EditorFramework.EditorDrawables
                 ResetScale action = new ResetScale();
                 foreach (EditableObject selected in selectedObjects)
                 {
-                    selected.ApplyTransformActionToSelection(action);
+                    selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
@@ -323,7 +338,7 @@ namespace GL_EditorFramework.EditorDrawables
                 ResetRot action = new ResetRot();
                 foreach (EditableObject selected in selectedObjects)
                 {
-                    selected.ApplyTransformActionToSelection(action);
+                    selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
@@ -360,6 +375,8 @@ namespace GL_EditorFramework.EditorDrawables
             }
             if(selectionHasChanged)
                 UpdateSelection(var);
+
+            AddTransformToUndo(transformChangeInfos);
 
             return var;
         }

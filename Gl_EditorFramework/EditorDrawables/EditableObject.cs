@@ -58,12 +58,19 @@ namespace GL_EditorFramework.EditorDrawables
         public abstract uint Deselect(int partIndex, GL_ControlBase control);
         public abstract uint DeselectAll(GL_ControlBase control);
 
-        public virtual void ApplyTransformActionToSelection(AbstractTransformAction transformAction)
+        public virtual void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
+        {
+            prevPos = null;
+            prevRot = null;
+            prevScale = null;
+        }
+
+        public virtual void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
         {
             
         }
 
-        public virtual void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part)
+        public virtual void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part, ref TransformChangeInfos transformChangeInfos)
         {
 
         }
@@ -173,14 +180,14 @@ namespace GL_EditorFramework.EditorDrawables
             public Quaternion Rotation;
             public LocalOrientation(Vector3 origin, Quaternion rotation)
             {
-                this.Origin = origin;
-                this.Rotation = rotation;
+                Origin = origin;
+                Rotation = rotation;
             }
 
             public LocalOrientation(Vector3 origin)
             {
-                this.Origin = origin;
-                this.Rotation = Quaternion.Identity;
+                Origin = origin;
+                Rotation = Quaternion.Identity;
             }
         }
     }

@@ -35,7 +35,7 @@ namespace GL_EditorFramework.GL_Core
                     Matrix3.CreateRotationX(-camRotY) *
                     Matrix3.CreateRotationY(-camRotX);
 
-                CameraPosition = CameraTarget + Vector3.Transform(mtxRotInv, new Vector3(0,0,CameraDistance));
+                CameraPosition = CameraTarget + mtxRotInv.Row2*CameraDistance;
             }
         }
 
