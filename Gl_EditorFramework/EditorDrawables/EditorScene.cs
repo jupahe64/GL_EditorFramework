@@ -285,8 +285,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (e.Control)
                 {
-                    if (undoStack.Count > 0)
-                        redoStack.Push(undoStack.Pop().Revert());
+                    Undo();
                 }
                 else if (selectedObjects.Count > 0)
                 {
@@ -301,9 +300,9 @@ namespace GL_EditorFramework.EditorDrawables
 
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.Y && e.Control && redoStack.Count > 0) //focus camera on the selection
+            else if (e.KeyCode == Keys.Y && e.Control)
             {
-                undoStack.Push(redoStack.Pop().Revert());
+                Redo();
 
                 var = REDRAW_PICKING;
             }

@@ -32,6 +32,7 @@
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.gL_ControlLegacy1 = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
             this.gL_ControlModern1 = new GL_EditorFramework.GL_Core.GL_ControlModern();
+            this.objectPropertyControl1 = new GL_EditorFramework.ObjectPropertyControl();
             this.SuspendLayout();
             // 
             // button1
@@ -52,7 +53,7 @@
             this.listBox1.Location = new System.Drawing.Point(13, 238);
             this.listBox1.Name = "listBox1";
             this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBox1.Size = new System.Drawing.Size(278, 498);
+            this.listBox1.Size = new System.Drawing.Size(278, 225);
             this.listBox1.TabIndex = 4;
             // 
             // gL_ControlLegacy1
@@ -72,6 +73,8 @@
             this.gL_ControlLegacy1.Stereoscopy = true;
             this.gL_ControlLegacy1.TabIndex = 2;
             this.gL_ControlLegacy1.VSync = false;
+            this.gL_ControlLegacy1.ZFar = 32000F;
+            this.gL_ControlLegacy1.ZNear = 0.32F;
             // 
             // gL_ControlModern1
             // 
@@ -82,6 +85,7 @@
             this.gL_ControlModern1.BackColor = System.Drawing.Color.Black;
             this.gL_ControlModern1.CamRotX = 0F;
             this.gL_ControlModern1.CamRotY = 0F;
+            this.gL_ControlModern1.CurrentShader = null;
             this.gL_ControlModern1.DragStartPos = new System.Drawing.Point(0, 0);
             this.gL_ControlModern1.Fov = 0.7853982F;
             this.gL_ControlModern1.Location = new System.Drawing.Point(297, 20);
@@ -93,12 +97,23 @@
             this.gL_ControlModern1.Stereoscopy = false;
             this.gL_ControlModern1.TabIndex = 1;
             this.gL_ControlModern1.VSync = false;
+            this.gL_ControlModern1.ZFar = 32000F;
+            this.gL_ControlModern1.ZNear = 0.32F;
+            // 
+            // objectPropertyControl1
+            // 
+            this.objectPropertyControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.objectPropertyControl1.Location = new System.Drawing.Point(13, 470);
+            this.objectPropertyControl1.Name = "objectPropertyControl1";
+            this.objectPropertyControl1.Size = new System.Drawing.Size(278, 265);
+            this.objectPropertyControl1.TabIndex = 5;
             // 
             // TestingForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(998, 747);
+            this.Controls.Add(this.objectPropertyControl1);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.gL_ControlLegacy1);
@@ -114,6 +129,7 @@
         private GL_EditorFramework.GL_Core.GL_ControlLegacy gL_ControlLegacy1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ListBox listBox1;
+        private GL_EditorFramework.ObjectPropertyControl objectPropertyControl1;
     }
 }
 

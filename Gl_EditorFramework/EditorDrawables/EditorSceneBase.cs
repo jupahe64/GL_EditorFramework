@@ -26,6 +26,7 @@ namespace GL_EditorFramework.EditorDrawables
         public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 
         public event EventHandler SelectionChanged;
+        public event EventHandler ObjectsMoved;
 
         protected float draggingDepth;
 
@@ -42,9 +43,9 @@ namespace GL_EditorFramework.EditorDrawables
             SCALE_EXCLUSIVE
         }
 
-        public AbstractTransformAction CurrentAction { get; protected set; } = NoAction;
+        public AbstractTransformAction CurrentAction = NoAction;
 
-        public AbstractTransformAction ExclusiveAction { get; protected set; } = NoAction;
+        public AbstractTransformAction ExclusiveAction = NoAction;
 
         public static NoTransformAction NoAction {get; private set;} = new NoTransformAction();
 
@@ -56,6 +57,20 @@ namespace GL_EditorFramework.EditorDrawables
                 control.Refresh();
             if ((var & REDRAW_PICKING) > 0)
                 control.DrawPicking();
+        }
+
+        public void ApplyCurrentTransformAction()
+        {
+            TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
+
+            foreach (EditableObject obj in selectedObjects)
+            {
+                obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
+            }
+
+            CurrentAction = NoAction;
+
+            AddTransformToUndo(transformChangeInfos);
         }
 
         public List<EditableObject> SelectedObjects
@@ -278,7 +293,7 @@ namespace GL_EditorFramework.EditorDrawables
             TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
             uint var = 0;
 
-            if (CurrentAction != NoAction)
+            if (CurrentAction != NoAction && CurrentAction.IsApplyOnRelease())
             {
                 foreach (EditableObject obj in selectedObjects)
                 {

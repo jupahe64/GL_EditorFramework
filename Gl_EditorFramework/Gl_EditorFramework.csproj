@@ -78,6 +78,13 @@
     <Compile Include="Interfaces\AbstractCamera.cs" />
     <Compile Include="Interfaces\AbstractEventHandlingObj.cs" />
     <Compile Include="Interfaces\AbstractGlDrawable.cs" />
+    <Compile Include="Interfaces\AbstractPropertyContainer.cs" />
+    <Compile Include="ObjectPropertyControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ObjectPropertyControl.Designer.cs">
+      <DependentUpon>ObjectPropertyControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -94,6 +101,9 @@
     <Content Include="GL_Core\Resources\TextureSheet.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ObjectPropertyControl.resx">
+      <DependentUpon>ObjectPropertyControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

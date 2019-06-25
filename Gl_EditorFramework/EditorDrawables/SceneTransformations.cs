@@ -23,7 +23,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             public virtual Vector3 NewPos(Vector3 pos) => pos;
 
-            public virtual Vector3 NewPos(Vector3 pos, out Vector3? prevPos)
+            public Vector3 NewPos(Vector3 pos, out Vector3? prevPos)
             {
                 Vector3 newPos = NewPos(pos);
                 if (newPos == pos)
@@ -35,7 +35,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public virtual Quaternion NewRot(Quaternion rot) => rot;
 
-            public virtual Quaternion NewRot(Quaternion rot, out Quaternion? prevRot)
+            public Quaternion NewRot(Quaternion rot, out Quaternion? prevRot)
             {
                 Quaternion newRot = NewRot(rot);
                 if (newRot == rot)
@@ -47,7 +47,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public virtual Vector3 NewScale(Vector3 scale) => scale;
 
-            public virtual Vector3 NewScale(Vector3 scale, out Vector3? prevScale)
+            public Vector3 NewScale(Vector3 scale, out Vector3? prevScale)
             {
                 Vector3 newScale = NewScale(scale);
                 if (newScale == scale)
@@ -67,6 +67,8 @@ namespace GL_EditorFramework.EditorDrawables
             {
 
             }
+
+            public virtual bool IsApplyOnRelease() => true;
 
             public virtual void Draw(GL_ControlModern controlModern)
             {
@@ -786,12 +788,39 @@ namespace GL_EditorFramework.EditorDrawables
             public override Vector3 NewScale(Vector3 rot) => Vector3.One;
         }
 
-        public class NoTransformAction : AbstractTransformAction
+        public class PropertyChanges : AbstractTransformAction
         {
+            public Vector3 translation = Vector3.Zero;
+            public Quaternion? rotOverride = null;
+            public Vector3? scaleOverride = null;
+
             public override Vector3 NewPos(Vector3 pos)
             {
-                return pos;
+                return pos+translation;
             }
+
+            public override Quaternion NewRot(Quaternion rot)
+            {
+                if (rotOverride.HasValue)
+                    return rotOverride.Value;
+                else
+                    return rot;
+            }
+
+            public override Vector3 NewScale(Vector3 scale)
+            {
+                if (scaleOverride.HasValue)
+                    return scaleOverride.Value;
+                else
+                    return scale;
+            }
+
+            public override bool IsApplyOnRelease() => false;
+        }
+
+        public class NoTransformAction : AbstractTransformAction
+        {
+
         }
     }
 }

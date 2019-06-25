@@ -10,6 +10,25 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
+        public void Undo()
+        {
+            if (undoStack.Count > 0)
+            {
+                redoStack.Push(undoStack.Pop().Revert());
+                ObjectsMoved.Invoke(this,null);
+            }
+
+        }
+
+        public void Redo()
+        {
+            if(redoStack.Count > 0)
+            {
+                undoStack.Push(redoStack.Pop().Revert());
+                ObjectsMoved.Invoke(this, null);
+            }
+        }
+
         public interface IRevertable
         {
             IRevertable Revert();
@@ -32,6 +51,9 @@ namespace GL_EditorFramework.EditorDrawables
                 undoStack.Push(new RevertablePosChange(transformChangeInfos));
                 redoStack.Clear();
             }
+
+            if(transformChangeInfos.changedPositions+transformChangeInfos.changedRotations+transformChangeInfos.changedScales>0)
+                ObjectsMoved.Invoke(this, null);
         }
 
         public struct RevertablePosChange : IRevertable

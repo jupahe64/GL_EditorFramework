@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GL_EditorFramework;
 using GL_EditorFramework.EditorDrawables;
 using OpenTK;
 
@@ -19,8 +20,12 @@ namespace Testing
             InitializeComponent();
         }
 
+        private TestContainer propertyContainer = new TestContainer();
+
         private EditorScene scene;
-        
+
+        private EditorSceneBase.PropertyChanges propertyChangesAction = new EditorSceneBase.PropertyChanges();
+
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -112,7 +117,36 @@ namespace Testing
             gL_ControlLegacy1.MainDrawable = new SingleObject(new Vector3());
             gL_ControlModern1.CameraDistance = 20;
             scene.SelectionChanged += Scene_SelectionChanged;
+            scene.ObjectsMoved += Scene_ObjectsMoved;
             listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
+            objectPropertyControl1.ValueChanged += ObjectPropertyControl1_ValueChanged;
+            objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueChanged;
+            objectPropertyControl1.ValueChangeStart += ObjectPropertyControl1_ValueChangeStart;
+            objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueSet;
+        }
+
+        private void ObjectPropertyControl1_ValueSet(object sender, EventArgs e)
+        {
+            scene.ApplyCurrentTransformAction();
+            propertyContainer.pCenter = propertyContainer.center;
+        }
+
+        private void ObjectPropertyControl1_ValueChangeStart(object sender, EventArgs e)
+        {
+            scene.CurrentAction = propertyChangesAction;
+        }
+
+        private void Scene_ObjectsMoved(object sender, EventArgs e)
+        {
+            propertyContainer.Setup(scene.SelectedObjects);
+            objectPropertyControl1.Refresh();
+        }
+
+        private void ObjectPropertyControl1_ValueChanged(object sender, EventArgs e)
+        {
+            propertyChangesAction.translation = propertyContainer.center - propertyContainer.pCenter;
+
+            gL_ControlModern1.Refresh();
         }
 
         private void Scene_SelectionChanged(object sender, EventArgs e)
@@ -128,6 +162,18 @@ namespace Testing
             }
 
             listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
+
+            if (listBox1.SelectedIndices.Count > 0)
+            {
+                propertyContainer.Setup(scene.SelectedObjects);
+
+                objectPropertyControl1.CurrentPropertyContainer = propertyContainer;
+            }
+            else
+            {
+                if (objectPropertyControl1.CurrentPropertyContainer != null)
+                    objectPropertyControl1.CurrentPropertyContainer = null;
+            }
         }
 
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -145,6 +191,30 @@ namespace Testing
         {
             listBox1.Items.Add("block"); //make sure to add the entry before you add an object because the SelectionChanged event will be fired
             scene.Add(new TransformableObject(new Vector3()));
+        }
+    }
+
+    public class TestContainer : AbstractPropertyContainer
+    {
+        public Vector3 pCenter;
+        public Vector3 center;
+
+        public void Setup(List<EditableObject> editableObjects)
+        {
+            EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
+            foreach (EditableObject obj in editableObjects)
+            {
+                box.Include(obj.GetSelectionBox());
+            }
+            center = box.GetCenter();
+            pCenter = center;
+        }
+
+        public override void DoUI(IObjectPropertyControl control)
+        {
+            center.X = control.NumberInput(center.X, "x", 0.125f);
+            center.Y = control.NumberInput(center.Y, "y", 0.125f);
+            center.Z = control.NumberInput(center.Z, "z", 0.125f);
         }
     }
 }
