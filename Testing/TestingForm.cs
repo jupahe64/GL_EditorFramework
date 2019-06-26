@@ -28,13 +28,13 @@ namespace Testing
 
         protected override void OnLoad(EventArgs e)
         {
+            EditableObject obj;
             base.OnLoad(e);
             scene = new EditorScene();
 
-            listBox1.Items.Add("moving platform");
-            scene.objects.Add(new AnimatedObject(new Vector3(0, -4, 0)));
+            listBox1.Items.Add(obj = new AnimatedObject(new Vector3(0, -4, 0)));
+            scene.objects.Add(obj);
 
-            listBox1.Items.Add("path");
             List<Path.PathPoint> pathPoints = new List<Path.PathPoint>
             {
                 new Path.PathPoint(
@@ -53,9 +53,10 @@ namespace Testing
                 new Vector3(0, 0, 0)
                 )
             };
-            scene.objects.Add(new Path(pathPoints));
 
-            listBox1.Items.Add("path");
+            listBox1.Items.Add(obj = new Path(pathPoints));
+            scene.objects.Add(obj);
+
             pathPoints = new List<Path.PathPoint>
             {
                 new Path.PathPoint(
@@ -79,36 +80,17 @@ namespace Testing
                 new Vector3(-1.75f, 0, 0)
                 )
             };
-            scene.objects.Add(new Path(pathPoints) { Closed = true });
 
-            listBox1.Items.Add("path");
-            /*pathPoints = new List<Path.PathPoint>();
-            pathPoints.Add(new Path.PathPoint(
-                new Vector3(-3, 6, 0),
-                new Vector3(0, 0, -1.75f),
-                new Vector3(0, 0, 1.75f)
-                ));
-            pathPoints.Add(new Path.PathPoint(
-                new Vector3(0, 6, 3),
-                new Vector3(-1.75f, 0, 0),
-                new Vector3(1.75f, 0, 0)
-                ));
-            pathPoints.Add(new Path.PathPoint(
-                new Vector3(3, 6, 0),
-                new Vector3(0, 0, 1.75f),
-                new Vector3(0, 0, -1.75f)
-                ));
-            pathPoints.Add(new Path.PathPoint(
-                new Vector3(0, 6, -3),
-                new Vector3(1.75f, 0, 0),
-                new Vector3(-1.75f, 0, 0)
-                ));*/
-            scene.objects.Add(new Path(pathPoints) { Closed = true });
+            listBox1.Items.Add(obj = new Path(pathPoints) { Closed = true });
+            scene.objects.Add(obj);
+
+            listBox1.Items.Add(obj = new Path(pathPoints) { Closed = true });
+            scene.objects.Add(obj);
 
             for (int i = 5; i<10000; i++)
             {
-                listBox1.Items.Add("block");
-                scene.objects.Add(new TransformableObject(new Vector3(i,0,0)));
+                listBox1.Items.Add(obj = new TransformableObject(new Vector3(i, 0, 0)));
+                scene.objects.Add(obj);
             }
 
             gL_ControlModern1.MainDrawable = scene;
@@ -129,7 +111,15 @@ namespace Testing
         private void GL_ControlModern1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Delete)
-                scene.Delete(scene.SelectedObjects.ToArray());
+            {
+                EditableObject[] objsToDelete = scene.SelectedObjects.ToArray();
+                foreach (EditableObject obj in scene.SelectedObjects)
+                    listBox1.Items.Remove(obj);
+
+                scene.Delete(objsToDelete);
+                gL_ControlModern1.Refresh();
+                Scene_SelectionChanged(this, null);
+            }
         }
 
         private void ObjectPropertyControl1_ValueSet(object sender, EventArgs e)

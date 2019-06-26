@@ -40,6 +40,8 @@ namespace GL_EditorFramework.EditorDrawables
             this.pathPoints = pathPoints;
         }
 
+        public override string ToString() => "path";
+
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)

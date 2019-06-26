@@ -22,6 +22,8 @@ namespace Testing
 
         }
 
+        public override string ToString() => "moving platforms";
+
         static new Vector4 Color = new Vector4(1f, 0f, 0f, 1f);
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)

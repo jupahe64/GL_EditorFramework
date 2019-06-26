@@ -20,6 +20,8 @@ namespace Testing
 
         }
 
+        public override string ToString() => "block";
+
         public Quaternion rotation = Quaternion.Identity;
 
         public Vector3 scale = new Vector3(1, 1, 1);
