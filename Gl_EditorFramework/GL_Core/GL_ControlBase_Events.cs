@@ -42,6 +42,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            base.OnMouseDown(e);
             if (DesignMode || mainDrawable == null) return;
 
             Focus();
@@ -73,6 +74,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            base.OnMouseMove(e);
             if (DesignMode || mainDrawable == null) return;
 
             shouldRedraw = false;
@@ -98,6 +100,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
+            base.OnMouseWheel(e);
             if (DesignMode || mainDrawable == null) return;
 
             shouldRedraw = false;
@@ -119,6 +122,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            base.OnMouseUp(e);
             if (DesignMode || mainDrawable == null) return;
 
             shouldRedraw = false;
@@ -182,6 +186,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnMouseEnter(EventArgs e)
         {
+            base.OnMouseEnter(e);
             if (DesignMode)
             {
                 base.OnMouseEnter(e);
@@ -197,6 +202,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnMouseLeave(EventArgs e)
         {
+            base.OnMouseLeave(e);
             if (DesignMode)
             {
                 base.OnMouseLeave(e);
@@ -213,6 +219,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            base.OnKeyDown(e);
             if (DesignMode || mainDrawable == null) return;
 
             shouldRedraw = false;
@@ -234,6 +241,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
+            base.OnKeyUp(e);
             if (DesignMode || mainDrawable == null) return;
 
             shouldRedraw = false;

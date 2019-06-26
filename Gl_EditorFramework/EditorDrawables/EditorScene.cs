@@ -67,10 +67,13 @@ namespace GL_EditorFramework.EditorDrawables
         {
             uint var = 0;
 
+            List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+
             bool selectionHasChanged = false;
 
             foreach (EditableObject obj in objs)
             {
+                infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
                 objects.Remove(obj);
                 if (selectedObjects.Contains(obj))
                 {
@@ -79,17 +82,11 @@ namespace GL_EditorFramework.EditorDrawables
                     selectionHasChanged = true;
                 }
             }
-            if (selectionHasChanged)
-                UpdateSelection(var);
-
-            List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
-
-            foreach (EditableObject obj in objs)
-            {
-                infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
-            }
 
             undoStack.Push(new RevertableDeletion(infos.ToArray(), this));
+
+            if (selectionHasChanged)
+                UpdateSelection(var);
         }
 
         public void InsertAfter(int index, params EditableObject[] objs)
@@ -426,15 +423,13 @@ namespace GL_EditorFramework.EditorDrawables
                 uint var = 0;
                 RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objects.Length];
 
-                for (int i = 0; i < objects.Length; i++)
-                    infos[i] = new RevertableDeletion.DeleteInfo(objects[i], scene.objects.IndexOf(objects[i]));
-
                 bool selectionHasChanged = false;
-                foreach (EditableObject obj in objects)
+                for (int i = 0; i < objects.Length; i++)
                 {
-                    scene.objects.Remove(obj);
-                    var |= obj.DeselectAll(scene.control);
-                    selectionHasChanged |= scene.selectedObjects.Remove(obj);
+                    infos[i] = new RevertableDeletion.DeleteInfo(objects[i], scene.objects.IndexOf(objects[i]));
+                    scene.objects.Remove(objects[i]);
+                    var |= objects[i].DeselectAll(scene.control);
+                    selectionHasChanged |= scene.selectedObjects.Remove(objects[i]);
                 }
 
                 if(selectionHasChanged)
@@ -457,8 +452,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             public IRevertable Revert()
             {
-                foreach (DeleteInfo info in infos)
-                    scene.objects.Insert(info.index, info.obj);
+                for (int i = infos.Length - 1; i >= 0; i--)
+                    scene.objects.Insert(infos[i].index, infos[i].obj);
 
                 EditableObject[] objects = new EditableObject[infos.Length];
 

@@ -123,6 +123,13 @@ namespace Testing
             objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueChanged;
             objectPropertyControl1.ValueChangeStart += ObjectPropertyControl1_ValueChangeStart;
             objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueSet;
+            gL_ControlModern1.KeyDown += GL_ControlModern1_KeyDown;
+        }
+
+        private void GL_ControlModern1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+                scene.Delete(scene.SelectedObjects.ToArray());
         }
 
         private void ObjectPropertyControl1_ValueSet(object sender, EventArgs e)
