@@ -57,6 +57,9 @@ namespace GL_EditorFramework.EditorDrawables
                 selectedObjects.Add(obj);
                 var |= obj.SelectDefault(control);
             }
+
+            undoStack.Push(new RevertableAddition(objs, this));
+
             UpdateSelection(var);
         }
 
@@ -78,6 +81,15 @@ namespace GL_EditorFramework.EditorDrawables
             }
             if (selectionHasChanged)
                 UpdateSelection(var);
+
+            List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+
+            foreach (EditableObject obj in objs)
+            {
+                infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
+            }
+
+            undoStack.Push(new RevertableDeletion(infos.ToArray(), this));
         }
 
         public void InsertAfter(int index, params EditableObject[] objs)
@@ -98,6 +110,9 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.SelectDefault(control);
                 index++;
             }
+
+            undoStack.Push(new RevertableAddition(objs, this));
+
             UpdateSelection(var);
         }
 
@@ -391,6 +406,80 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.KeyUp(e, control);
             }
             return var;
+        }
+
+
+
+        public struct RevertableAddition : IRevertable
+        {
+            EditableObject[] objects;
+            EditorScene scene;
+
+            public RevertableAddition(EditableObject[] objects, EditorScene scene)
+            {
+                this.objects = objects;
+                this.scene = scene;
+            }
+
+            public IRevertable Revert()
+            {
+                uint var = 0;
+                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objects.Length];
+
+                for (int i = 0; i < objects.Length; i++)
+                    infos[i] = new RevertableDeletion.DeleteInfo(objects[i], scene.objects.IndexOf(objects[i]));
+
+                bool selectionHasChanged = false;
+                foreach (EditableObject obj in objects)
+                {
+                    scene.objects.Remove(obj);
+                    var |= obj.DeselectAll(scene.control);
+                    selectionHasChanged |= scene.selectedObjects.Remove(obj);
+                }
+
+                if(selectionHasChanged)
+                    scene.UpdateSelection(var);
+
+                return new RevertableDeletion(infos, scene);
+            }
+        }
+
+        public struct RevertableDeletion : IRevertable
+        {
+            DeleteInfo[] infos;
+            EditorScene scene;
+
+            public RevertableDeletion(DeleteInfo[] infos, EditorScene scene)
+            {
+                this.infos = infos;
+                this.scene = scene;
+            }
+
+            public IRevertable Revert()
+            {
+                foreach (DeleteInfo info in infos)
+                    scene.objects.Insert(info.index, info.obj);
+
+                EditableObject[] objects = new EditableObject[infos.Length];
+
+                for (int i = 0; i < infos.Length; i++)
+                    objects[i] = infos[i].obj;
+
+                scene.control.Refresh();
+
+                return new RevertableAddition(objects, scene);
+            }
+
+            public struct DeleteInfo
+            {
+                public DeleteInfo(EditableObject obj, int index)
+                {
+                    this.obj = obj;
+                    this.index = index;
+                }
+                public EditableObject obj;
+                public int index;
+            }
         }
     }
 }
