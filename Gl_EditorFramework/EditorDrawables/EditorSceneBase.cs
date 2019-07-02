@@ -106,8 +106,6 @@ namespace GL_EditorFramework.EditorDrawables
 
                 if (selectionHasChanged)
                 {
-                    SelectionChanged?.Invoke(this, new EventArgs());
-
                     if ((var & AbstractGlDrawable.REDRAW) > 0)
                         control.Refresh();
                     if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)

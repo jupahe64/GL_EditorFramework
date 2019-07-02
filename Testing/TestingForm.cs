@@ -106,6 +106,13 @@ namespace Testing
             objectPropertyControl1.ValueChangeStart += ObjectPropertyControl1_ValueChangeStart;
             objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueSet;
             gL_ControlModern1.KeyDown += GL_ControlModern1_KeyDown;
+            
+            for(int i = 0; i<15; i++)
+                sceneListView1.lists.Add("Test"+i,scene.objects);
+
+
+            sceneListView1.SelectedItems = scene.SelectedObjects;
+            sceneListView1.CurrentCategory = "Test";
         }
 
         private void GL_ControlModern1_KeyDown(object sender, KeyEventArgs e)
@@ -113,9 +120,13 @@ namespace Testing
             if (e.KeyCode == Keys.Delete)
             {
                 EditableObject[] objsToDelete = scene.SelectedObjects.ToArray();
-                foreach (EditableObject obj in scene.SelectedObjects)
+                /*
+                foreach (EditableObject obj in objsToDelete)
+                {
                     listBox1.Items.Remove(obj);
-
+                    Console.WriteLine(obj.Position.X);
+                }
+                */
                 scene.Delete(objsToDelete);
                 gL_ControlModern1.Refresh();
                 Scene_SelectionChanged(this, null);
@@ -148,6 +159,8 @@ namespace Testing
 
         private void Scene_SelectionChanged(object sender, EventArgs e)
         {
+            sceneListView1.Refresh();
+            /*
             listBox1.SelectedIndexChanged -= ListBox1_SelectedIndexChanged;
             listBox1.SelectedIndices.Clear();
             int i = 0;
@@ -171,6 +184,7 @@ namespace Testing
                 if (objectPropertyControl1.CurrentPropertyContainer != null)
                     objectPropertyControl1.CurrentPropertyContainer = null;
             }
+            */
         }
 
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)

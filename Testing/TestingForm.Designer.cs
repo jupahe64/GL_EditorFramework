@@ -28,11 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TestingForm));
             this.button1 = new System.Windows.Forms.Button();
             this.listBox1 = new System.Windows.Forms.ListBox();
+            this.sceneListView1 = new GL_EditorFramework.SceneListView();
+            this.objectPropertyControl1 = new GL_EditorFramework.ObjectPropertyControl();
             this.gL_ControlLegacy1 = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
             this.gL_ControlModern1 = new GL_EditorFramework.GL_Core.GL_ControlModern();
-            this.objectPropertyControl1 = new GL_EditorFramework.ObjectPropertyControl();
             this.SuspendLayout();
             // 
             // button1
@@ -50,11 +52,31 @@
             this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(13, 238);
+            this.listBox1.Location = new System.Drawing.Point(708, 510);
             this.listBox1.Name = "listBox1";
             this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBox1.Size = new System.Drawing.Size(278, 225);
             this.listBox1.TabIndex = 4;
+            // 
+            // sceneListView1
+            // 
+            this.sceneListView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.sceneListView1.CurrentCategory = "None";
+            this.sceneListView1.Location = new System.Drawing.Point(12, 237);
+            this.sceneListView1.Name = "sceneListView1";
+            this.sceneListView1.SelectedItems = ((System.Collections.IList)(resources.GetObject("sceneListView1.SelectedItems")));
+            this.sceneListView1.Size = new System.Drawing.Size(279, 226);
+            this.sceneListView1.TabIndex = 6;
+            // 
+            // objectPropertyControl1
+            // 
+            this.objectPropertyControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.objectPropertyControl1.CurrentPropertyContainer = null;
+            this.objectPropertyControl1.Location = new System.Drawing.Point(13, 470);
+            this.objectPropertyControl1.Name = "objectPropertyControl1";
+            this.objectPropertyControl1.Size = new System.Drawing.Size(278, 265);
+            this.objectPropertyControl1.TabIndex = 5;
             // 
             // gL_ControlLegacy1
             // 
@@ -100,19 +122,12 @@
             this.gL_ControlModern1.ZFar = 32000F;
             this.gL_ControlModern1.ZNear = 0.32F;
             // 
-            // objectPropertyControl1
-            // 
-            this.objectPropertyControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.objectPropertyControl1.Location = new System.Drawing.Point(13, 470);
-            this.objectPropertyControl1.Name = "objectPropertyControl1";
-            this.objectPropertyControl1.Size = new System.Drawing.Size(278, 265);
-            this.objectPropertyControl1.TabIndex = 5;
-            // 
             // TestingForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(998, 747);
+            this.Controls.Add(this.sceneListView1);
             this.Controls.Add(this.objectPropertyControl1);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.button1);
@@ -130,6 +145,7 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ListBox listBox1;
         private GL_EditorFramework.ObjectPropertyControl objectPropertyControl1;
+        private GL_EditorFramework.SceneListView sceneListView1;
     }
 }
 
