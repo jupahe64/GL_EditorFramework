@@ -329,69 +329,67 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseClick(e, control);
             }
 
+            bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
+            bool hoveredIsSelected = Hovered != null && Hovered.IsSelected(HoveredPart);
+            bool nothingHovered = Hovered == null;
+
             if (e.Button == MouseButtons.Left)
             {
-                if (!(multiSelect && WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift)))
+                if (nothingHovered)
                 {
-                    if (multiSelect)
+                    selectedObjects.Clear();
+                    foreach (EditableObject selected in selectedObjects)
                     {
-                        if (!(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
-                        {
-                            foreach (EditableObject selected in selectedObjects)
-                            {
-                                selected.DeselectAll(control);
-                            }
-                        }
-
-                        if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
-                        {
-                            selectedObjects.Clear();
-                            if(!selectedObjects.Contains(Hovered))
-                                selectedObjects.Add(Hovered);
-                            Hovered.Select(HoveredPart, control);
-                            SelectionChanged?.Invoke(this, new EventArgs());
-                        }
-                        else if (Hovered == null)
-                        {
-                            selectedObjects.Clear();
-                            SelectionChanged?.Invoke(this, new EventArgs());
-                        }
+                        selected.DeselectAll(control);
                     }
-                    else 
+                }
+                else if (multiSelect)
+                {
+                    if (shift && hoveredIsSelected)
                     {
+                        //remove from selection
+                        selectedObjects.Remove(Hovered);
+                        Hovered.Deselect(HoveredPart, control);
+                        SelectionChanged?.Invoke(this, new EventArgs());
+                    }
+                    else if(shift)
+                    {
+                        //add to selection
+                        selectedObjects.Add(Hovered);
+                        Hovered.Select(HoveredPart, control);
+                        SelectionChanged?.Invoke(this, new EventArgs());
+                    }
+                    else if (!hoveredIsSelected)
+                    {
+                        //change selection
+                        selectedObjects.Clear();
                         foreach (EditableObject selected in selectedObjects)
                         {
                             selected.DeselectAll(control);
                         }
-
-                        if (Hovered != null && !(selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
-                        {
-                            selectedObjects.Clear();
-                            if (!selectedObjects.Contains(Hovered))
-                                selectedObjects.Add(Hovered);
-                            Hovered.Select(HoveredPart, control);
-                            SelectionChanged?.Invoke(this, new EventArgs());
-                        }
-                        else
-                        {
-                            selectedObjects.Clear();
-                            SelectionChanged?.Invoke(this, new EventArgs());
-                        }
+                        selectedObjects.Add(Hovered);
+                        Hovered.Select(HoveredPart, control);
+                        SelectionChanged?.Invoke(this, new EventArgs());
                     }
                 }
                 else
                 {
-                    if ((selectedObjects.Contains(Hovered) && Hovered.IsSelected(HoveredPart)))
+                    if (shift && hoveredIsSelected)
                     {
-                        if(!Hovered.IsSelected())
-                            selectedObjects.Remove(Hovered);
+                        //remove from selection
+                        selectedObjects.Remove(Hovered);
                         Hovered.Deselect(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
-                    else if (Hovered != null)
+                    else if (!hoveredIsSelected)
                     {
-                        if (!selectedObjects.Contains(Hovered))
-                            selectedObjects.Add(Hovered);
+                        //change selection
+                        selectedObjects.Clear();
+                        foreach (EditableObject selected in selectedObjects)
+                        {
+                            selected.DeselectAll(control);
+                        }
+                        selectedObjects.Add(Hovered);
                         Hovered.Select(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
