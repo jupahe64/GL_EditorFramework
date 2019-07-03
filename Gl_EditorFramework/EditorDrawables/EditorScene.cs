@@ -428,7 +428,9 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     infos[i] = new RevertableDeletion.DeleteInfo(objects[i], scene.objects.IndexOf(objects[i]));
                     scene.objects.Remove(objects[i]);
-                    var |= objects[i].DeselectAll(scene.control);
+                    if(objects[i].IsSelected())
+                        var |= objects[i].DeselectAll(scene.control);
+
                     selectionHasChanged |= scene.selectedObjects.Remove(objects[i]);
                 }
 
