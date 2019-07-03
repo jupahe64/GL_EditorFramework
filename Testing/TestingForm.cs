@@ -31,9 +31,8 @@ namespace Testing
             EditableObject obj;
             base.OnLoad(e);
             scene = new EditorScene();
-
-            listBox1.Items.Add(obj = new AnimatedObject(new Vector3(0, -4, 0)));
-            scene.objects.Add(obj);
+            
+            scene.objects.Add(obj = new AnimatedObject(new Vector3(0, -4, 0)));
 
             List<Path.PathPoint> pathPoints = new List<Path.PathPoint>
             {
@@ -53,9 +52,8 @@ namespace Testing
                 new Vector3(0, 0, 0)
                 )
             };
-
-            listBox1.Items.Add(obj = new Path(pathPoints));
-            scene.objects.Add(obj);
+            
+            scene.objects.Add(obj = new Path(pathPoints));
 
             pathPoints = new List<Path.PathPoint>
             {
@@ -80,17 +78,14 @@ namespace Testing
                 new Vector3(-1.75f, 0, 0)
                 )
             };
-
-            listBox1.Items.Add(obj = new Path(pathPoints) { Closed = true });
-            scene.objects.Add(obj);
-
-            listBox1.Items.Add(obj = new Path(pathPoints) { Closed = true });
-            scene.objects.Add(obj);
+            
+            scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
+            
+            scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
 
             for (int i = 5; i<10000; i++)
             {
-                listBox1.Items.Add(obj = new TransformableObject(new Vector3(i, 0, 0)));
-                scene.objects.Add(obj);
+                scene.objects.Add(obj = new TransformableObject(new Vector3(i, 0, 0)));
             }
 
             gL_ControlModern1.MainDrawable = scene;
@@ -100,7 +95,6 @@ namespace Testing
             gL_ControlModern1.CameraDistance = 20;
             scene.SelectionChanged += Scene_SelectionChanged;
             scene.ObjectsMoved += Scene_ObjectsMoved;
-            listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
             objectPropertyControl1.ValueChanged += ObjectPropertyControl1_ValueChanged;
             objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueChanged;
             objectPropertyControl1.ValueChangeStart += ObjectPropertyControl1_ValueChangeStart;
@@ -172,8 +166,9 @@ namespace Testing
             }
 
             listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
+            */
 
-            if (listBox1.SelectedIndices.Count > 0)
+            if (scene.SelectedObjects.Count > 0)
             {
                 propertyContainer.Setup(scene.SelectedObjects);
 
@@ -184,23 +179,10 @@ namespace Testing
                 if (objectPropertyControl1.CurrentPropertyContainer != null)
                     objectPropertyControl1.CurrentPropertyContainer = null;
             }
-            */
-        }
-
-        private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            List<EditableObject> newSelection = new List<EditableObject>();
-            foreach(int i in listBox1.SelectedIndices)
-            {
-                newSelection.Add(scene.objects[i]);
-            }
-
-            scene.SelectedObjects = newSelection;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            listBox1.Items.Add("block"); //make sure to add the entry before you add an object because the SelectionChanged event will be fired
             scene.Add(new TransformableObject(new Vector3()));
         }
     }

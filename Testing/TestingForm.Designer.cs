@@ -30,7 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TestingForm));
             this.button1 = new System.Windows.Forms.Button();
-            this.listBox1 = new System.Windows.Forms.ListBox();
             this.sceneListView1 = new GL_EditorFramework.SceneListView();
             this.objectPropertyControl1 = new GL_EditorFramework.ObjectPropertyControl();
             this.gL_ControlLegacy1 = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
@@ -46,17 +45,6 @@
             this.button1.Text = "Add Object";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // listBox1
-            // 
-            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(708, 510);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBox1.Size = new System.Drawing.Size(278, 225);
-            this.listBox1.TabIndex = 4;
             // 
             // sceneListView1
             // 
@@ -129,7 +117,6 @@
             this.ClientSize = new System.Drawing.Size(998, 747);
             this.Controls.Add(this.sceneListView1);
             this.Controls.Add(this.objectPropertyControl1);
-            this.Controls.Add(this.listBox1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.gL_ControlLegacy1);
             this.Controls.Add(this.gL_ControlModern1);
@@ -143,7 +130,6 @@
         private GL_EditorFramework.GL_Core.GL_ControlModern gL_ControlModern1;
         private GL_EditorFramework.GL_Core.GL_ControlLegacy gL_ControlLegacy1;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.ListBox listBox1;
         private GL_EditorFramework.ObjectPropertyControl objectPropertyControl1;
         private GL_EditorFramework.SceneListView sceneListView1;
     }

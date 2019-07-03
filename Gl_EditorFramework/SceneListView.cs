@@ -278,6 +278,17 @@ namespace GL_EditorFramework
             }
         }
 
+        public FastListView()
+        {
+            SetStyle(
+            ControlStyles.AllPaintingInWmPaint |
+            ControlStyles.UserPaint |
+            ControlStyles.OptimizedDoubleBuffer,
+            true);
+            Graphics g = CreateGraphics();
+            FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
