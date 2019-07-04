@@ -281,6 +281,10 @@ namespace GL_EditorFramework
 
         public event SelectionChangedEventHandler SelectionChanged;
 
+        private Timer marginScrollTimer = new Timer();
+
+        private int marginScrollSpeed = 0;
+
         public IList SelectedItems {
             get => selectedItems;
             set {
@@ -308,6 +312,18 @@ namespace GL_EditorFramework
             true);
             Graphics g = CreateGraphics();
             FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
+
+            marginScrollTimer.Interval = 1;
+            marginScrollTimer.Tick += Timer_Tick;
+        }
+
+        int mouseY = 0;
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            VerticalScroll.Value = Math.Max(VerticalScroll.Minimum, Math.Min(VerticalScroll.Value+marginScrollSpeed, VerticalScroll.Maximum));
+
+            selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -316,7 +332,7 @@ namespace GL_EditorFramework
             if (e.Button != MouseButtons.Left)
                 return;
 
-            selectStartIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
+            selectStartIndex = Math.Max(0,Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight),list.Count-1));
             selectEndIndex = selectStartIndex;
             addToSelection = false;
             Refresh();
@@ -325,10 +341,25 @@ namespace GL_EditorFramework
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            mouseY = e.Y;
             if (e.Button != MouseButtons.Left)
                 return;
 
-            selectEndIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
+            selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+
+            if (e.Y < 0)
+            {
+                marginScrollSpeed = e.Y;
+                marginScrollTimer.Start();
+            }
+            else if (e.Y > Height)
+            {
+                marginScrollSpeed = e.Y - Height;
+                marginScrollTimer.Start();
+            }
+            else
+                marginScrollTimer.Stop();
+
             Refresh();
         }
 
@@ -337,6 +368,8 @@ namespace GL_EditorFramework
             base.OnMouseUp(e);
             if (e.Button != MouseButtons.Left)
                 return;
+
+            marginScrollTimer.Stop();
 
             int min = Math.Min(selectStartIndex, selectEndIndex);
             int max = Math.Max(selectStartIndex, selectEndIndex);
@@ -412,6 +445,13 @@ namespace GL_EditorFramework
         protected override void OnScroll(ScrollEventArgs se)
         {
             base.OnScroll(se);
+            Refresh();
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
             Refresh();
         }
     }
