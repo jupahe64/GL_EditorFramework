@@ -212,8 +212,6 @@ namespace GL_EditorFramework
 
             public bool Expanded = false;
 
-            private int selectStartIndex;
-
             public Dictionary<string, IList> lists = new Dictionary<string, IList>();
 
             protected override void OnFontChanged(EventArgs e)
