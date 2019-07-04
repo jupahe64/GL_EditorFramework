@@ -117,6 +117,8 @@ namespace Testing
 
             foreach (object obj in e.ItemsToDeselect)
                 scene.ToogleSelected((EditableObject)obj, false);
+
+            gL_ControlModern1.Refresh();
         }
 
         private void GL_ControlModern1_KeyDown(object sender, KeyEventArgs e)

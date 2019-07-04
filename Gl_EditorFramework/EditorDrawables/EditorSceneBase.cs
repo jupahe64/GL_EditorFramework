@@ -77,32 +77,16 @@ namespace GL_EditorFramework.EditorDrawables
         {
             uint var = 0;
 
-            bool selectionHasChanged = false;
-
-            bool alreadySelected = SelectedObjects.Contains(obj);
+            bool alreadySelected = obj.IsSelected();
             if (alreadySelected && !isSelected)
             {
                 var |= obj.DeselectAll(control);
                 SelectedObjects.Remove(obj);
-
-                selectionHasChanged = true;
             }
             else if (!alreadySelected && isSelected)
             {
                 var |= obj.SelectDefault(control);
                 SelectedObjects.Add(obj);
-
-                selectionHasChanged = true;
-            }
-
-            if (selectionHasChanged)
-            {
-                SelectionChanged?.Invoke(this, new EventArgs());
-
-                if ((var & AbstractGlDrawable.REDRAW) > 0)
-                    control.Refresh();
-                if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
-                    control.DrawPicking();
             }
         }
 

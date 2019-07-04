@@ -313,6 +313,9 @@ namespace GL_EditorFramework
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+            if (e.Button != MouseButtons.Left)
+                return;
+
             selectStartIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
             selectEndIndex = selectStartIndex;
             addToSelection = false;
@@ -322,16 +325,19 @@ namespace GL_EditorFramework
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (e.Button == MouseButtons.Left)
-            {
-                selectEndIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
-                Refresh();
-            }
+            if (e.Button != MouseButtons.Left)
+                return;
+
+            selectEndIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
+            Refresh();
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+            if (e.Button != MouseButtons.Left)
+                return;
+
             int min = Math.Min(selectStartIndex, selectEndIndex);
             int max = Math.Max(selectStartIndex, selectEndIndex);
 
