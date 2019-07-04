@@ -14,7 +14,7 @@ namespace GL_EditorFramework
     public partial class SceneListView : UserControl
     {
         public Dictionary<string, IList> lists = new Dictionary<string, IList>();
-        public event EventHandler SelectionChanged;
+        public event SelectionChangedEventHandler SelectionChanged;
 
         private string currentCategory = "None";
         private FastListView objectPanel;
