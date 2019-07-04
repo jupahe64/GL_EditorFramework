@@ -46,6 +46,9 @@ namespace GL_EditorFramework
         public SceneListView()
         {
             InitializeComponent();
+
+            objectPanel.SelectionChanged += (x,y) => SelectionChanged?.Invoke(x,y);
+
             Graphics g = CreateGraphics();
 
             fontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
@@ -256,6 +259,19 @@ namespace GL_EditorFramework
         }
     }
 
+    public class SelectionChangedEventArgs : HandledEventArgs
+    {
+        public List<object> ItemsToSelect { get; private set; }
+        public List<object> ItemsToDeselect { get; private set; }
+        public SelectionChangedEventArgs(List<object> itemsToSelect, List<object> itemsToDeselect)
+        {
+            ItemsToSelect = itemsToSelect;
+            ItemsToDeselect = itemsToDeselect;
+        }
+    }
+
+    public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs e);
+
     public class FastListView : UserControl
     {
         private IList list;
@@ -263,6 +279,9 @@ namespace GL_EditorFramework
 
         private int selectStartIndex = -1;
         private int selectEndIndex = -1;
+        private bool addToSelection = true;
+
+        public event SelectionChangedEventHandler SelectionChanged;
 
         public IList SelectedItems {
             get => selectedItems;
@@ -298,6 +317,7 @@ namespace GL_EditorFramework
             base.OnMouseDown(e);
             selectStartIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
             selectEndIndex = selectStartIndex;
+            addToSelection = false;
             Refresh();
         }
 
@@ -317,11 +337,39 @@ namespace GL_EditorFramework
             int min = Math.Min(selectStartIndex, selectEndIndex);
             int max = Math.Max(selectStartIndex, selectEndIndex);
 
+            List<object> itemsToSelect = new List<object>();
+            List<object> itemsToDeselect = new List<object>();
+            
             for (int i = min; i <= max; i++)
-                selectedItems.Add(list[i]);
+                if(!selectedItems.Contains(list[i]))
+                    itemsToSelect.Add(list[i]);
+
+            if (!addToSelection)
+            {
+                foreach(object obj in selectedItems)
+                {
+                    int index = list.IndexOf(obj);
+                    if (index<min||max<index)
+                        itemsToDeselect.Add(obj);
+                }
+            }
+
+            SelectionChangedEventArgs eventArgs = new SelectionChangedEventArgs(itemsToSelect, itemsToDeselect);
+
+            SelectionChanged?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+            {
+                foreach (object obj in itemsToSelect)
+                    selectedItems.Add(obj);
+
+                foreach (object obj in itemsToDeselect)
+                    selectedItems.Remove(obj);
+            }
 
             selectStartIndex = -1;
             selectEndIndex = -1;
+            addToSelection = true;
             Refresh();
         }
 
@@ -342,7 +390,7 @@ namespace GL_EditorFramework
             {
                 if ((y = i * (FontHeight) + AutoScrollPosition.Y) > 2 - FontHeight)
                 {
-                    if ((min <= i && i <= max) || SelectedItems.Contains(obj))
+                    if ((min <= i && i <= max) || (addToSelection&&SelectedItems.Contains(obj)))
                     {
                         g.FillRectangle(SystemBrushes.Highlight, 0, y, Width, FontHeight);
                         g.DrawString(obj.ToString(), Font, SystemBrushes.HighlightText, 2, y);
