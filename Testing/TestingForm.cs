@@ -106,7 +106,7 @@ namespace Testing
 
 
             sceneListView1.SelectedItems = scene.SelectedObjects;
-            sceneListView1.CurrentCategory = "Test";
+            sceneListView1.CurrentCategory = "Test0";
         }
 
         private void GL_ControlModern1_KeyDown(object sender, KeyEventArgs e)
