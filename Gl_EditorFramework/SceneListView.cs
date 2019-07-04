@@ -261,6 +261,9 @@ namespace GL_EditorFramework
         private IList list;
         private IList selectedItems;
 
+        private int selectStartIndex = -1;
+        private int selectEndIndex = -1;
+
         public IList SelectedItems {
             get => selectedItems;
             set {
@@ -274,6 +277,7 @@ namespace GL_EditorFramework
             set
             {
                 list = value;
+                AutoScrollMinSize = new Size(0, FontHeight * list.Count);
                 Refresh();
             }
         }
@@ -289,6 +293,38 @@ namespace GL_EditorFramework
             FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
         }
 
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            selectStartIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
+            selectEndIndex = selectStartIndex;
+            Refresh();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            if (e.Button == MouseButtons.Left)
+            {
+                selectEndIndex = (e.Y - AutoScrollPosition.Y) / (FontHeight);
+                Refresh();
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            int min = Math.Min(selectStartIndex, selectEndIndex);
+            int max = Math.Max(selectStartIndex, selectEndIndex);
+
+            for (int i = min; i <= max; i++)
+                selectedItems.Add(list[i]);
+
+            selectStartIndex = -1;
+            selectEndIndex = -1;
+            Refresh();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -299,11 +335,14 @@ namespace GL_EditorFramework
 
             int i = 0;
             int y;
+            int min = Math.Min(selectStartIndex, selectEndIndex);
+            int max = Math.Max(selectStartIndex, selectEndIndex);
+
             foreach (object obj in List)
             {
                 if ((y = i * (FontHeight) + AutoScrollPosition.Y) > 2 - FontHeight)
                 {
-                    if (SelectedItems.Contains(obj))
+                    if ((min <= i && i <= max) || SelectedItems.Contains(obj))
                     {
                         g.FillRectangle(SystemBrushes.Highlight, 0, y, Width, FontHeight);
                         g.DrawString(obj.ToString(), Font, SystemBrushes.HighlightText, 2, y);

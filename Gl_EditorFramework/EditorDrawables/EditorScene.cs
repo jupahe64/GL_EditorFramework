@@ -44,17 +44,17 @@ namespace GL_EditorFramework.EditorDrawables
         {
             uint var = 0;
 
-            foreach (EditableObject selected in selectedObjects)
+            foreach (EditableObject selected in SelectedObjects)
             {
                 var |= selected.DeselectAll(control);
             }
-            selectedObjects.Clear();
+            SelectedObjects.Clear();
 
             foreach (EditableObject obj in objs)
             {
                 objects.Add(obj);
 
-                selectedObjects.Add(obj);
+                SelectedObjects.Add(obj);
                 var |= obj.SelectDefault(control);
             }
 
@@ -75,10 +75,10 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
                 objects.Remove(obj);
-                if (selectedObjects.Contains(obj))
+                if (SelectedObjects.Contains(obj))
                 {
                     var |= obj.DeselectAll(control);
-                    selectedObjects.Remove(obj);
+                    SelectedObjects.Remove(obj);
                     selectionHasChanged = true;
                 }
             }
@@ -93,17 +93,17 @@ namespace GL_EditorFramework.EditorDrawables
         {
             uint var = 0;
 
-            foreach (EditableObject selected in selectedObjects)
+            foreach (EditableObject selected in SelectedObjects)
             {
                 var |= selected.DeselectAll(control);
             }
-            selectedObjects.Clear();
+            SelectedObjects.Clear();
 
             foreach (EditableObject obj in objs)
             {
                 objects.Insert(index, obj);
 
-                selectedObjects.Add(obj);
+                SelectedObjects.Add(obj);
                 var |= obj.SelectDefault(control);
                 index++;
             }
@@ -299,11 +299,11 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Undo();
                 }
-                else if (selectedObjects.Count > 0)
+                else if (SelectedObjects.Count > 0)
                 {
                     EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
 
-                    foreach (EditableObject selected in selectedObjects)
+                    foreach (EditableObject selected in SelectedObjects)
                     {
                         box.Include(selected.GetSelectionBox());
                     }
@@ -318,36 +318,36 @@ namespace GL_EditorFramework.EditorDrawables
 
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.H && selectedObjects.Count > 0) //hide/show selected objects
+            else if (e.KeyCode == Keys.H && SelectedObjects.Count > 0) //hide/show selected objects
             {
-                foreach (EditableObject selected in selectedObjects)
+                foreach (EditableObject selected in SelectedObjects)
                 {
                     selected.Visible = e.Shift;
                 }
                 var = REDRAW_PICKING;
             }
-            else if(e.KeyCode == Keys.S && selectedObjects.Count > 0 && e.Shift) //auto snap selected objects
+            else if(e.KeyCode == Keys.S && SelectedObjects.Count > 0 && e.Shift) //auto snap selected objects
             {
                 SnapAction action = new SnapAction();
-                foreach (EditableObject selected in selectedObjects)
+                foreach (EditableObject selected in SelectedObjects)
                 {
                     selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.R && selectedObjects.Count > 0 && e.Shift && e.Control) //reset scale for selected objects
+            else if (e.KeyCode == Keys.R && SelectedObjects.Count > 0 && e.Shift && e.Control) //reset scale for selected objects
             {
                 ResetScale action = new ResetScale();
-                foreach (EditableObject selected in selectedObjects)
+                foreach (EditableObject selected in SelectedObjects)
                 {
                     selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.R && selectedObjects.Count > 0 && e.Shift) //reset rotation for selected objects
+            else if (e.KeyCode == Keys.R && SelectedObjects.Count > 0 && e.Shift) //reset rotation for selected objects
             {
                 ResetRot action = new ResetRot();
-                foreach (EditableObject selected in selectedObjects)
+                foreach (EditableObject selected in SelectedObjects)
                 {
                     selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
@@ -357,11 +357,11 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (e.Shift)
                 {
-                    foreach (EditableObject selected in selectedObjects)
+                    foreach (EditableObject selected in SelectedObjects)
                     {
                         selected.DeselectAll(control);
                     }
-                    selectedObjects.Clear();
+                    SelectedObjects.Clear();
                     selectionHasChanged = true;
                 }
 
@@ -370,7 +370,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (EditableObject obj in objects)
                     {
                         obj.SelectAll(control);
-                        selectedObjects.Add(obj);
+                        SelectedObjects.Add(obj);
                     }
                     selectionHasChanged = true;
                 }
@@ -431,7 +431,7 @@ namespace GL_EditorFramework.EditorDrawables
                     if(objects[i].IsSelected())
                         var |= objects[i].DeselectAll(scene.control);
 
-                    selectionHasChanged |= scene.selectedObjects.Remove(objects[i]);
+                    selectionHasChanged |= scene.SelectedObjects.Remove(objects[i]);
                 }
 
                 if(selectionHasChanged)

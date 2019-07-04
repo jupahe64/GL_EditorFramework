@@ -21,7 +21,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public int HoveredPart { get; protected set; } = 0;
 
-        protected List<EditableObject> selectedObjects = new List<EditableObject>();
+        public readonly List<EditableObject> SelectedObjects = new List<EditableObject>();
 
         public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 
@@ -63,7 +63,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
 
-            foreach (EditableObject obj in selectedObjects)
+            foreach (EditableObject obj in SelectedObjects)
             {
                 obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
             }
@@ -73,65 +73,24 @@ namespace GL_EditorFramework.EditorDrawables
             AddTransformToUndo(transformChangeInfos);
         }
 
-        public List<EditableObject> SelectedObjects
-        {
-            get => selectedObjects;
-            set
-            {
-                uint var = 0;
-
-                bool selectionHasChanged = false;
-
-                foreach (EditableObject obj in value)
-                {
-                    if (!selectedObjects.Contains(obj)) //object wasn't selected before
-                    {
-                        var |= obj.SelectDefault(control); //select it
-                        selectionHasChanged = true;
-                    }
-                    else //object stays selected 
-                    {
-                        selectedObjects.Remove(obj); //filter out these to find all objects which are not selected anymore
-                        selectionHasChanged = true;
-                    }
-                }
-
-                foreach (EditableObject obj in selectedObjects) //now the selected objects are a list of objects to deselect
-                                                                //which is fine because in the end they get overwriten anyway
-                {
-                    var |= obj.DeselectAll(control); //Deselect them all
-                    selectionHasChanged = true;
-                }
-                selectedObjects = value;
-
-                if (selectionHasChanged)
-                {
-                    if ((var & AbstractGlDrawable.REDRAW) > 0)
-                        control.Refresh();
-                    if ((var & AbstractGlDrawable.REDRAW_PICKING) > 0)
-                        control.DrawPicking();
-                }
-            }
-        }
-
         public void ToogleSelected(EditableObject obj, bool isSelected)
         {
             uint var = 0;
 
             bool selectionHasChanged = false;
 
-            bool alreadySelected = selectedObjects.Contains(obj);
+            bool alreadySelected = SelectedObjects.Contains(obj);
             if (alreadySelected && !isSelected)
             {
                 var |= obj.DeselectAll(control);
-                selectedObjects.Remove(obj);
+                SelectedObjects.Remove(obj);
 
                 selectionHasChanged = true;
             }
             else if (!alreadySelected && isSelected)
             {
                 var |= obj.SelectDefault(control);
-                selectedObjects.Add(obj);
+                SelectedObjects.Add(obj);
 
                 selectionHasChanged = true;
             }
@@ -165,7 +124,7 @@ namespace GL_EditorFramework.EditorDrawables
                         {
                             BoundingBox box = BoundingBox.Default;
 
-                            foreach (EditableObject selected in selectedObjects)
+                            foreach (EditableObject selected in SelectedObjects)
                             {
                                 box.Include(selected.GetSelectionBox());
                             }
@@ -185,7 +144,7 @@ namespace GL_EditorFramework.EditorDrawables
                         {
                             BoundingBox box = BoundingBox.Default;
 
-                            foreach (EditableObject selected in selectedObjects)
+                            foreach (EditableObject selected in SelectedObjects)
                             {
                                 box.Include(selected.GetSelectionBox());
                             }
@@ -211,7 +170,7 @@ namespace GL_EditorFramework.EditorDrawables
                         {
                             BoundingBox box = BoundingBox.Default;
 
-                            foreach (EditableObject selected in selectedObjects)
+                            foreach (EditableObject selected in SelectedObjects)
                             {
                                 box.Include(selected.GetSelectionBox());
                             }
@@ -293,7 +252,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (CurrentAction != NoAction && CurrentAction.IsApplyOnRelease())
             {
-                foreach (EditableObject obj in selectedObjects)
+                foreach (EditableObject obj in SelectedObjects)
                 {
                     obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
                 }
@@ -337,11 +296,11 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (nothingHovered && !shift)
                 {
-                    foreach (EditableObject selected in selectedObjects)
+                    foreach (EditableObject selected in SelectedObjects)
                     {
                         selected.DeselectAll(control);
                     }
-                    selectedObjects.Clear();
+                    SelectedObjects.Clear();
                     SelectionChanged?.Invoke(this, new EventArgs());
                 }
                 else if (multiSelect)
@@ -349,26 +308,26 @@ namespace GL_EditorFramework.EditorDrawables
                     if (shift && hoveredIsSelected)
                     {
                         //remove from selection
-                        selectedObjects.Remove(Hovered);
+                        SelectedObjects.Remove(Hovered);
                         Hovered.Deselect(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                     else if(shift)
                     {
                         //add to selection
-                        selectedObjects.Add(Hovered);
+                        SelectedObjects.Add(Hovered);
                         Hovered.Select(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                     else if (!hoveredIsSelected)
                     {
                         //change selection
-                        foreach (EditableObject selected in selectedObjects)
+                        foreach (EditableObject selected in SelectedObjects)
                         {
                             selected.DeselectAll(control);
                         }
-                        selectedObjects.Clear();
-                        selectedObjects.Add(Hovered);
+                        SelectedObjects.Clear();
+                        SelectedObjects.Add(Hovered);
                         Hovered.Select(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
@@ -378,19 +337,19 @@ namespace GL_EditorFramework.EditorDrawables
                     if (shift && hoveredIsSelected)
                     {
                         //remove from selection
-                        selectedObjects.Remove(Hovered);
+                        SelectedObjects.Remove(Hovered);
                         Hovered.Deselect(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                     else if (!hoveredIsSelected)
                     {
                         //change selection
-                        foreach (EditableObject selected in selectedObjects)
+                        foreach (EditableObject selected in SelectedObjects)
                         {
                             selected.DeselectAll(control);
                         }
-                        selectedObjects.Clear();
-                        selectedObjects.Add(Hovered);
+                        SelectedObjects.Clear();
+                        SelectedObjects.Add(Hovered);
                         Hovered.Select(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
