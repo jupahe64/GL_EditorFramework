@@ -107,6 +107,16 @@ namespace Testing
 
             sceneListView1.SelectedItems = scene.SelectedObjects;
             sceneListView1.CurrentCategory = "Test0";
+            sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
+        }
+
+        private void SceneListView1_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            foreach (object obj in e.ItemsToSelect)
+                scene.ToogleSelected((EditableObject)obj, true);
+
+            foreach (object obj in e.ItemsToDeselect)
+                scene.ToogleSelected((EditableObject)obj, false);
         }
 
         private void GL_ControlModern1_KeyDown(object sender, KeyEventArgs e)
