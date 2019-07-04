@@ -319,11 +319,15 @@ namespace GL_EditorFramework
 
         int mouseY = 0;
 
+        bool mouseDown = false;
+
         private void Timer_Tick(object sender, EventArgs e)
         {
             VerticalScroll.Value = Math.Max(VerticalScroll.Minimum, Math.Min(VerticalScroll.Value+marginScrollSpeed, VerticalScroll.Maximum));
 
             selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+
+            Refresh();
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -331,6 +335,8 @@ namespace GL_EditorFramework
             base.OnMouseDown(e);
             if (e.Button != MouseButtons.Left)
                 return;
+
+            mouseDown = true;
 
             selectStartIndex = Math.Max(0,Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight),list.Count-1));
             selectEndIndex = selectStartIndex;
@@ -369,6 +375,7 @@ namespace GL_EditorFramework
             if (e.Button != MouseButtons.Left)
                 return;
 
+            mouseDown = false;
             marginScrollTimer.Stop();
 
             int min = Math.Min(selectStartIndex, selectEndIndex);
@@ -425,7 +432,7 @@ namespace GL_EditorFramework
 
             foreach (object obj in List)
             {
-                if ((y = i * (FontHeight) + AutoScrollPosition.Y) > 2 - FontHeight)
+                if ((y = i * (FontHeight) + AutoScrollPosition.Y) > -FontHeight)
                 {
                     if ((min <= i && i <= max) || (addToSelection&&SelectedItems.Contains(obj)))
                     {
@@ -451,7 +458,8 @@ namespace GL_EditorFramework
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
-            selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+            if(mouseDown)
+                selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
             Refresh();
         }
     }
