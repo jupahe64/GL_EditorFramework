@@ -118,6 +118,7 @@ namespace Testing
             foreach (object obj in e.ItemsToDeselect)
                 scene.ToogleSelected((EditableObject)obj, false);
 
+            e.Handled = true;
             gL_ControlModern1.Refresh();
         }
 

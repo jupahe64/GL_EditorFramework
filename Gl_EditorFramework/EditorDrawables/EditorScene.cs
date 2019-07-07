@@ -355,7 +355,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
             else if (e.Control && e.KeyCode == Keys.A) //select/deselect all objects
             {
-                if (e.Shift)
+                if (e.Shift && SelectedObjects.Count > 0)
                 {
                     foreach (EditableObject selected in SelectedObjects)
                     {
@@ -369,8 +369,11 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     foreach (EditableObject obj in objects)
                     {
-                        obj.SelectAll(control);
-                        SelectedObjects.Add(obj);
+                        if (!obj.IsSelected())
+                        {
+                            obj.SelectAll(control);
+                            SelectedObjects.Add(obj);
+                        }
                     }
                     selectionHasChanged = true;
                 }

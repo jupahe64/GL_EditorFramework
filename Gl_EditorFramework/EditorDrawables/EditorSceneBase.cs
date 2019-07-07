@@ -278,14 +278,17 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (e.Button == MouseButtons.Left)
             {
-                if (nothingHovered && !shift)
+                if (nothingHovered)
                 {
-                    foreach (EditableObject selected in SelectedObjects)
+                    if (!shift)
                     {
-                        selected.DeselectAll(control);
+                        foreach (EditableObject selected in SelectedObjects)
+                        {
+                            selected.DeselectAll(control);
+                        }
+                        SelectedObjects.Clear();
+                        SelectionChanged?.Invoke(this, new EventArgs());
                     }
-                    SelectedObjects.Clear();
-                    SelectionChanged?.Invoke(this, new EventArgs());
                 }
                 else if (multiSelect)
                 {
@@ -296,7 +299,7 @@ namespace GL_EditorFramework.EditorDrawables
                         Hovered.Deselect(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
-                    else if(shift)
+                    else if (shift)
                     {
                         //add to selection
                         SelectedObjects.Add(Hovered);
