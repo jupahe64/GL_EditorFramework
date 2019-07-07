@@ -276,8 +276,26 @@ namespace GL_EditorFramework
         private IList selectedItems;
 
         private int selectStartIndex = -1;
+        private int prevSelectStartIndex = -1;
         private int selectEndIndex = -1;
-        private bool addToSelection = true;
+        private bool keepTheRest = true;
+        private bool subtract = false;
+
+        private int draggedStartIndex = -1;
+        private int draggedCount = 0;
+        private int draggedStartMouseOffset = 0;
+        private int dragOffset = 0;
+        private bool useDragRepresention = false;
+        private int dragGapSize = 0;
+
+        private enum Action
+        {
+            NONE,
+            SELECT,
+            DRAG
+        }
+
+        Action action = Action.NONE;
 
         public event SelectionChangedEventHandler SelectionChanged;
 
@@ -325,7 +343,13 @@ namespace GL_EditorFramework
         {
             VerticalScroll.Value = Math.Max(VerticalScroll.Minimum, Math.Min(VerticalScroll.Value+marginScrollSpeed, VerticalScroll.Maximum));
 
-            selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+            if(action == Action.SELECT)
+                selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+            else if(action == Action.DRAG)
+                dragOffset = Math.Max(
+                    -draggedStartIndex, 
+                    Math.Min((mouseY - AutoScrollPosition.Y - draggedStartMouseOffset) / FontHeight - draggedStartIndex, 
+                    list.Count - draggedCount - draggedStartIndex));
 
             Refresh();
         }
@@ -338,9 +362,53 @@ namespace GL_EditorFramework
 
             mouseDown = true;
 
-            selectStartIndex = Math.Max(0,Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight),list.Count-1));
-            selectEndIndex = selectStartIndex;
-            addToSelection = false;
+            int index = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+
+            if (ModifierKeys.HasFlag(Keys.Alt))
+            {
+                if (!selectedItems.Contains(list[index]))
+                    return;
+
+                int start = index;
+                while(start>=0 && selectedItems.Contains(list[start]))
+                    start--;
+
+                int end = index;
+                while (end < list.Count && selectedItems.Contains(list[end]))
+                    end++;
+
+                start++;
+
+                draggedStartIndex = start;
+                dragGapSize = draggedCount = end - start;
+                draggedStartMouseOffset = mouseY - (start * (FontHeight) + AutoScrollPosition.Y);
+
+                if (useDragRepresention = draggedCount > Width / 2 / FontHeight)
+                {
+                    dragGapSize = 1;
+                    draggedStartMouseOffset = 0;
+                    AutoScrollMinSize = new Size(0, FontHeight * (list.Count-draggedCount+1));
+                }
+
+                action = Action.DRAG;
+
+                return;
+            }
+
+            if (ModifierKeys.HasFlag(Keys.Shift) && prevSelectStartIndex != -1)
+            {
+                selectStartIndex = prevSelectStartIndex;
+                selectEndIndex = index;
+            }
+            else
+            {
+                selectStartIndex = index;
+                selectEndIndex = selectStartIndex;
+            }
+
+            keepTheRest = ModifierKeys.HasFlag(Keys.Control);
+            subtract = selectedItems.Contains(list[index]) && keepTheRest;
+            action = Action.SELECT;
             Refresh();
         }
 
@@ -351,7 +419,14 @@ namespace GL_EditorFramework
             if (e.Button != MouseButtons.Left)
                 return;
 
-            selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+            if (action == Action.DRAG)
+                dragOffset = Math.Max(
+                    -draggedStartIndex,
+                    Math.Min((e.Y - AutoScrollPosition.Y - draggedStartMouseOffset) / FontHeight - draggedStartIndex,
+                    list.Count-draggedCount-draggedStartIndex));
+
+            else if(action == Action.SELECT)
+                selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
 
             if (e.Y < 0)
             {
@@ -378,42 +453,77 @@ namespace GL_EditorFramework
             mouseDown = false;
             marginScrollTimer.Stop();
 
-            int min = Math.Min(selectStartIndex, selectEndIndex);
-            int max = Math.Max(selectStartIndex, selectEndIndex);
-
-            List<object> itemsToSelect = new List<object>();
-            List<object> itemsToDeselect = new List<object>();
-            
-            for (int i = min; i <= max; i++)
-                if(!selectedItems.Contains(list[i]))
-                    itemsToSelect.Add(list[i]);
-
-            if (!addToSelection)
+            if (action == Action.DRAG)
             {
-                foreach(object obj in selectedItems)
+                if(useDragRepresention)
+                    AutoScrollMinSize = new Size(0, FontHeight * list.Count);
+
+                List<object> objs = new List<object>();
+
+                for(int i = 0; i<draggedCount; i++)
                 {
-                    int index = list.IndexOf(obj);
-                    if (index<min||max<index)
-                        itemsToDeselect.Add(obj);
+                    objs.Add(list[draggedStartIndex]);
+                    list.RemoveAt(draggedStartIndex);
                 }
+                int index = draggedStartIndex + dragOffset;
+                foreach(object obj in objs)
+                {
+                    list.Insert(index, obj);
+                    index++;
+                }
+
+                draggedStartIndex = -1;
+                dragOffset = 0;
             }
-
-            SelectionChangedEventArgs eventArgs = new SelectionChangedEventArgs(itemsToSelect, itemsToDeselect);
-
-            SelectionChanged?.Invoke(this, eventArgs);
-
-            if (!eventArgs.Handled)
+            else if (action == Action.SELECT)
             {
-                foreach (object obj in itemsToSelect)
-                    selectedItems.Add(obj);
+                int min = Math.Min(selectStartIndex, selectEndIndex);
+                int max = Math.Max(selectStartIndex, selectEndIndex);
 
-                foreach (object obj in itemsToDeselect)
-                    selectedItems.Remove(obj);
+                List<object> itemsToSelect = new List<object>();
+                List<object> itemsToDeselect = new List<object>();
+
+                for (int i = min; i <= max; i++)
+                    if (!selectedItems.Contains(list[i]))
+                        itemsToSelect.Add(list[i]);
+
+                if (!keepTheRest)
+                {
+                    foreach (object obj in selectedItems)
+                    {
+                        int index = list.IndexOf(obj);
+                        if (index < min || max < index)
+                            itemsToDeselect.Add(obj);
+                    }
+                }
+
+                if (subtract)
+                {
+                    for (int i = min; i <= max; i++)
+                        if (selectedItems.Contains(list[i]))
+                            itemsToDeselect.Add(list[i]);
+                }
+
+                SelectionChangedEventArgs eventArgs = new SelectionChangedEventArgs(itemsToSelect, itemsToDeselect);
+
+                SelectionChanged?.Invoke(this, eventArgs);
+
+                if (!eventArgs.Handled)
+                {
+                    foreach (object obj in itemsToSelect)
+                        selectedItems.Add(obj);
+
+                    foreach (object obj in itemsToDeselect)
+                        selectedItems.Remove(obj);
+                }
+
+                prevSelectStartIndex = selectStartIndex;
+                selectStartIndex = -1;
+                selectEndIndex = -1;
+                keepTheRest = true;
             }
 
-            selectStartIndex = -1;
-            selectEndIndex = -1;
-            addToSelection = true;
+            action = Action.NONE;
             Refresh();
         }
 
@@ -426,26 +536,83 @@ namespace GL_EditorFramework
             Graphics g = e.Graphics;
 
             int i = 0;
+            int j = 0;
             int y;
             int min = Math.Min(selectStartIndex, selectEndIndex);
             int max = Math.Max(selectStartIndex, selectEndIndex);
 
-            foreach (object obj in List)
+            while(j<list.Count)
             {
+                if (i == draggedStartIndex + dragOffset)
+                    i += dragGapSize; //skip
+
+                if (j == draggedStartIndex)
+                {
+                    j += draggedCount; //skip
+                    if (j >= list.Count)
+                        break;
+                }
+
+                
                 if ((y = i * (FontHeight) + AutoScrollPosition.Y) > -FontHeight)
                 {
-                    if ((min <= i && i <= max) || (addToSelection&&SelectedItems.Contains(obj)))
+                    bool hightlighted;
+                    if (subtract)
+                        hightlighted = SelectedItems.Contains(list[j]) && !(min <= i && i <= max);
+                    else
+                        hightlighted = (min <= i && i <= max) || (keepTheRest && SelectedItems.Contains(list[j]));
+
+                    if (hightlighted)
                     {
                         g.FillRectangle(SystemBrushes.Highlight, 0, y, Width, FontHeight);
-                        g.DrawString(obj.ToString(), Font, SystemBrushes.HighlightText, 2, y);
+                        g.DrawString(list[j].ToString(), Font, SystemBrushes.HighlightText, 2, y);
                     }
                     else
-                        g.DrawString(obj.ToString(), Font, new SolidBrush(ForeColor), 2, y);
+                        g.DrawString(list[j].ToString(), Font, new SolidBrush(ForeColor), 2, y);
 
                 }
                 i++;
+                j++;
                 if (y > Height)
                     break;
+            }
+            if (action == Action.DRAG)
+            {
+                if (useDragRepresention)
+                {
+                    i = draggedStartIndex + dragOffset;
+                    y = i * (FontHeight) + AutoScrollPosition.Y;
+                    g.DrawString(draggedCount.ToString(), Font, new SolidBrush(ForeColor), 2, y);
+                    i++;
+                }
+                else
+                {
+                    i = draggedStartIndex + dragOffset;
+                    for (j = draggedStartIndex; j < draggedStartIndex + draggedCount; j++)
+                    {
+                        if ((y = i * (FontHeight) + AutoScrollPosition.Y) > -FontHeight)
+                        {
+                            bool hightlighted;
+                            if (subtract)
+                                hightlighted = SelectedItems.Contains(list[j]) && !(min <= i && i <= max);
+                            else
+                                hightlighted = (min <= i && i <= max) || (keepTheRest && SelectedItems.Contains(list[j]));
+
+                            if (hightlighted)
+                            {
+                                g.FillRectangle(SystemBrushes.Highlight, 0, y, Width, FontHeight);
+                                g.DrawString(list[j].ToString(), Font, SystemBrushes.HighlightText, 2, y);
+                            }
+                            else
+                                g.DrawString(list[j].ToString(), Font, new SolidBrush(ForeColor), 2, y);
+
+                        }
+                        i++;
+                    }
+                }
+
+                g.FillRectangle(SystemBrushes.MenuHighlight, 0, (draggedStartIndex + dragOffset) * (FontHeight) + AutoScrollPosition.Y, Width, 2);
+                g.FillRectangle(SystemBrushes.MenuHighlight, 0, i * (FontHeight) + AutoScrollPosition.Y-2, Width, 2);
             }
         }
 
@@ -458,9 +625,19 @@ namespace GL_EditorFramework
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
-            if(mouseDown)
-                selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
-            Refresh();
+            if (mouseDown)
+            {
+                if (action == Action.DRAG)
+                    dragOffset = Math.Max(
+                    -draggedStartIndex,
+                    Math.Min((mouseY - AutoScrollPosition.Y - draggedStartMouseOffset) / FontHeight - draggedStartIndex,
+                    list.Count - draggedCount - draggedStartIndex));
+
+                else if(action == Action.SELECT)
+                    selectEndIndex = Math.Max(0, Math.Min((mouseY - AutoScrollPosition.Y) / (FontHeight), list.Count - 1));
+
+                Refresh();
+            }
         }
     }
 }
