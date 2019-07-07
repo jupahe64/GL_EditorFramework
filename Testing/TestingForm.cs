@@ -126,15 +126,9 @@ namespace Testing
             if (e.KeyCode == Keys.Delete)
             {
                 EditableObject[] objsToDelete = scene.SelectedObjects.ToArray();
-                /*
-                foreach (EditableObject obj in objsToDelete)
-                {
-                    listBox1.Items.Remove(obj);
-                    Console.WriteLine(obj.Position.X);
-                }
-                */
                 scene.Delete(objsToDelete);
                 gL_ControlModern1.Refresh();
+                sceneListView1.UpdateAutoScroll();
                 Scene_SelectionChanged(this, null);
             }
         }
@@ -166,19 +160,6 @@ namespace Testing
         private void Scene_SelectionChanged(object sender, EventArgs e)
         {
             sceneListView1.Refresh();
-            /*
-            listBox1.SelectedIndexChanged -= ListBox1_SelectedIndexChanged;
-            listBox1.SelectedIndices.Clear();
-            int i = 0;
-            foreach(EditableObject o in scene.objects)
-            {
-                if(o.IsSelected())
-                    listBox1.SelectedIndices.Add(i);
-                i++;
-            }
-
-            listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
-            */
 
             if (scene.SelectedObjects.Count > 0)
             {
@@ -196,6 +177,7 @@ namespace Testing
         private void button1_Click(object sender, EventArgs e)
         {
             scene.Add(new TransformableObject(new Vector3()));
+            sceneListView1.UpdateAutoScroll();
         }
     }
 

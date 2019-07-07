@@ -43,6 +43,11 @@ namespace GL_EditorFramework
             }
         }
 
+        public void UpdateAutoScroll()
+        {
+            objectPanel.UpdateAutoScroll();
+        }
+
         public SceneListView()
         {
             InitializeComponent();
@@ -319,6 +324,11 @@ namespace GL_EditorFramework
                 AutoScrollMinSize = new Size(0, FontHeight * list.Count);
                 Refresh();
             }
+        }
+
+        public void UpdateAutoScroll()
+        {
+            AutoScrollMinSize = new Size(0, FontHeight * list.Count);
         }
 
         public FastListView()
