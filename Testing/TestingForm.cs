@@ -95,6 +95,7 @@ namespace Testing
             gL_ControlModern1.CameraDistance = 20;
             scene.SelectionChanged += Scene_SelectionChanged;
             scene.ObjectsMoved += Scene_ObjectsMoved;
+            scene.ListChanged += Scene_ObjectCountChanged;
             objectPropertyControl1.ValueChanged += ObjectPropertyControl1_ValueChanged;
             objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueChanged;
             objectPropertyControl1.ValueChangeStart += ObjectPropertyControl1_ValueChangeStart;
@@ -108,6 +109,20 @@ namespace Testing
             sceneListView1.SelectedItems = scene.SelectedObjects;
             sceneListView1.CurrentCategory = "Test0";
             sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
+            sceneListView1.ItemsMoved += SceneListView1_ItemsMoved;
+        }
+
+        private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
+        {
+            scene.MoveObjectsInList(e.OriginalIndex, e.Count, e.Offset);
+            e.Handled = true;
+            gL_ControlModern1.Refresh();
+        }
+
+        private void Scene_ObjectCountChanged(object sender, EventArgs e)
+        {
+            sceneListView1.UpdateAutoScroll();
+            sceneListView1.Refresh();
         }
 
         private void SceneListView1_SelectionChanged(object sender, SelectionChangedEventArgs e)

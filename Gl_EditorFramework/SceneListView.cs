@@ -14,7 +14,9 @@ namespace GL_EditorFramework
     public partial class SceneListView : UserControl
     {
         public Dictionary<string, IList> lists = new Dictionary<string, IList>();
+
         public event SelectionChangedEventHandler SelectionChanged;
+        public event ItemsMovedEventHandler ItemsMoved;
 
         private string currentCategory = "None";
         private FastListView objectPanel;
@@ -53,6 +55,7 @@ namespace GL_EditorFramework
             InitializeComponent();
 
             objectPanel.SelectionChanged += (x,y) => SelectionChanged?.Invoke(x,y);
+            objectPanel.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
 
             Graphics g = CreateGraphics();
 
@@ -273,7 +276,22 @@ namespace GL_EditorFramework
         }
     }
 
+    public class ItemsMovedEventArgs : HandledEventArgs
+    {
+        public int OriginalIndex { get; private set; }
+        public int Count { get; private set; }
+        public int Offset { get; private set; }
+        public ItemsMovedEventArgs(int originalIndex, int count, int offset)
+        {
+            OriginalIndex = originalIndex;
+            Count = count;
+            Offset = offset;
+        }
+    }
+
     public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs e);
+
+    public delegate void ItemsMovedEventHandler(object sender, ItemsMovedEventArgs e);
 
     public class FastListView : UserControl
     {
@@ -303,6 +321,8 @@ namespace GL_EditorFramework
         Action action = Action.NONE;
 
         public event SelectionChangedEventHandler SelectionChanged;
+
+        public event ItemsMovedEventHandler ItemsMoved;
 
         private Timer marginScrollTimer = new Timer();
 
@@ -467,19 +487,27 @@ namespace GL_EditorFramework
             {
                 if(useDragRepresention)
                     AutoScrollMinSize = new Size(0, FontHeight * list.Count);
+                
+                ItemsMovedEventArgs eventArgs = new ItemsMovedEventArgs(draggedStartIndex, draggedCount, dragOffset);
 
-                List<object> objs = new List<object>();
+                ItemsMoved?.Invoke(this, eventArgs);
 
-                for(int i = 0; i<draggedCount; i++)
+                if (!eventArgs.Handled)
                 {
-                    objs.Add(list[draggedStartIndex]);
-                    list.RemoveAt(draggedStartIndex);
-                }
-                int index = draggedStartIndex + dragOffset;
-                foreach(object obj in objs)
-                {
-                    list.Insert(index, obj);
-                    index++;
+                    List<object> objs = new List<object>();
+
+                    for (int i = 0; i < draggedCount; i++)
+                    {
+                        objs.Add(list[draggedStartIndex]);
+                        list.RemoveAt(draggedStartIndex);
+                    }
+
+                    int index = draggedStartIndex + dragOffset;
+                    foreach (object obj in objs)
+                    {
+                        list.Insert(index, obj);
+                        index++;
+                    }
                 }
 
                 draggedStartIndex = -1;

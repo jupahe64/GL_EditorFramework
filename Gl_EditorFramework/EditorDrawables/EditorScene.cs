@@ -13,6 +13,7 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public class EditorScene : EditorSceneBase
     {
+        public event EventHandler ListChanged;
         public List<EditableObject> objects = new List<EditableObject>();
 
         private float renderDistanceSquared = 1000000;
@@ -111,6 +112,26 @@ namespace GL_EditorFramework.EditorDrawables
             undoStack.Push(new RevertableAddition(objs, this));
 
             UpdateSelection(var);
+        }
+
+        public void MoveObjectsInList(int originalIndex, int count, int offset)
+        {
+            List<EditableObject> objs = new List<EditableObject>();
+
+            for (int i = 0; i < count; i++)
+            {
+                objs.Add(objects[originalIndex]);
+                objects.RemoveAt(originalIndex);
+            }
+
+            int index = originalIndex + offset;
+            foreach (EditableObject obj in objs)
+            {
+                objects.Insert(index, obj);
+                index++;
+            }
+
+            undoStack.Push(new RevertableMovement(originalIndex + offset, count, -offset, this));
         }
 
         public override void Draw(GL_ControlModern control, Pass pass)
@@ -440,7 +461,47 @@ namespace GL_EditorFramework.EditorDrawables
                 if(selectionHasChanged)
                     scene.UpdateSelection(var);
 
+                scene.ListChanged.Invoke(this, null);
+
                 return new RevertableDeletion(infos, scene);
+            }
+        }
+
+        public struct RevertableMovement : IRevertable
+        {
+            int originalIndex;
+            int count;
+            int offset;
+            EditorScene scene;
+
+            public RevertableMovement(int originalIndex, int count, int offset, EditorScene scene)
+            {
+                this.originalIndex = originalIndex;
+                this.count = count;
+                this.offset = offset;
+                this.scene = scene;
+            }
+
+            public IRevertable Revert()
+            {
+                List<EditableObject> objs = new List<EditableObject>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    objs.Add(scene.objects[originalIndex]);
+                    scene.objects.RemoveAt(originalIndex);
+                }
+
+                int index = originalIndex + offset;
+                foreach (EditableObject obj in objs)
+                {
+                    scene.objects.Insert(index, obj);
+                    index++;
+                }
+
+                scene.ListChanged.Invoke(this, null);
+
+                return new RevertableMovement(originalIndex+offset, count, -offset, scene);
             }
         }
 
@@ -466,6 +527,8 @@ namespace GL_EditorFramework.EditorDrawables
                     objects[i] = infos[i].obj;
 
                 scene.control.Refresh();
+
+                scene.ListChanged.Invoke(this, null);
 
                 return new RevertableAddition(objects, scene);
             }
