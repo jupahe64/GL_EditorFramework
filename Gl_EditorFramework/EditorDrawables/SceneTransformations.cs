@@ -592,7 +592,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override Vector3 NewScale(Vector3 _scale) => scale * _scale;
 
-            Vector3 scale;
+            Vector3 scale = Vector3.One;
 
             public ScaleAction(GL_ControlBase control, Point mousePos, Vector3 center)
             {
@@ -633,7 +633,7 @@ namespace GL_EditorFramework.EditorDrawables
                 WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Z * _scale.Z) : scale.Z * _scale.Z
                 );
 
-            Vector3 scale;
+            Vector3 scale = Vector3.One;
 
             EditableObject.LocalOrientation orientation;
 
