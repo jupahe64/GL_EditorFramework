@@ -21,7 +21,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public int HoveredPart { get; protected set; } = 0;
 
-        public readonly List<IEditableObject> SelectedObjects = new List<IEditableObject>();
+        public readonly HashSet<object> SelectedObjects = new HashSet<object>();
 
         public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 

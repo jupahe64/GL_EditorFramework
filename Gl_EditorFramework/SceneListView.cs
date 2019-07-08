@@ -23,7 +23,7 @@ namespace GL_EditorFramework
         private CategoryPanel categoryPanel;
         int fontHeight;
 
-        public IList SelectedItems {
+        public ISet<object> SelectedItems {
             get => objectPanel.SelectedItems;
             set
             {
@@ -296,7 +296,7 @@ namespace GL_EditorFramework
     public class FastListView : UserControl
     {
         private IList list;
-        private IList selectedItems;
+        private ISet<object> selectedItems;
 
         private int selectStartIndex = -1;
         private int prevSelectStartIndex = -1;
@@ -328,7 +328,7 @@ namespace GL_EditorFramework
 
         private int marginScrollSpeed = 0;
 
-        public IList SelectedItems {
+        public ISet<object> SelectedItems {
             get => selectedItems;
             set {
                 selectedItems = value;

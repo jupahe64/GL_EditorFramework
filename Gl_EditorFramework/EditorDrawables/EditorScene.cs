@@ -90,6 +90,32 @@ namespace GL_EditorFramework.EditorDrawables
                 UpdateSelection(var);
         }
 
+        public void Delete(IEnumerable<object> objs)
+        {
+            uint var = 0;
+
+            List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+
+            bool selectionHasChanged = false;
+
+            foreach (IEditableObject obj in objs)
+            {
+                infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
+                objects.Remove(obj);
+                if (SelectedObjects.Contains(obj))
+                {
+                    var |= obj.DeselectAll(control);
+                    SelectedObjects.Remove(obj);
+                    selectionHasChanged = true;
+                }
+            }
+
+            undoStack.Push(new RevertableDeletion(infos.ToArray(), this));
+
+            if (selectionHasChanged)
+                UpdateSelection(var);
+        }
+
         public void InsertAt(int index, params IEditableObject[] objs)
         {
             uint var = 0;

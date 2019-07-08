@@ -140,8 +140,7 @@ namespace Testing
         {
             if (e.KeyCode == Keys.Delete)
             {
-                IEditableObject[] objsToDelete = scene.SelectedObjects.ToArray();
-                scene.Delete(objsToDelete);
+                scene.Delete(scene.SelectedObjects.ToArray());
                 gL_ControlModern1.Refresh();
                 sceneListView1.UpdateAutoScroll();
                 Scene_SelectionChanged(this, null);
@@ -201,7 +200,7 @@ namespace Testing
         public Vector3 pCenter;
         public Vector3 center;
 
-        public void Setup(List<IEditableObject> editableObjects)
+        public void Setup(IEnumerable<object> editableObjects)
         {
             EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
             foreach (IEditableObject obj in editableObjects)

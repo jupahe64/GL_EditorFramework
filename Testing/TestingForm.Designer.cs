@@ -53,7 +53,6 @@
             this.sceneListView1.CurrentCategory = "None";
             this.sceneListView1.Location = new System.Drawing.Point(12, 237);
             this.sceneListView1.Name = "sceneListView1";
-            this.sceneListView1.SelectedItems = ((System.Collections.IList)(resources.GetObject("sceneListView1.SelectedItems")));
             this.sceneListView1.Size = new System.Drawing.Size(279, 226);
             this.sceneListView1.TabIndex = 6;
             // 
