@@ -18,7 +18,7 @@ namespace GL_EditorFramework.EditorDrawables
     //     An EditableObject that has only one selectable Part. It's represented by a blue block
     public class SingleObject : EditableObject
     {
-        protected Vector3 position = new Vector3(0, 0, 0);
+        public Vector3 position = new Vector3(0, 0, 0);
 
         protected bool Selected = false;
 
@@ -213,18 +213,6 @@ namespace GL_EditorFramework.EditorDrawables
         {
             position = transformAction.NewPos(position, out Vector3? prevPos);
             infos.Add(this, 0, prevPos, null, null);
-        }
-
-        public override Vector3 Position
-        {
-            get
-            {
-                return position;
-            }
-            set
-            {
-                position = value;
-            }
         }
     }
 }

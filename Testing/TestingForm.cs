@@ -84,7 +84,7 @@ namespace Testing
 
             for (int i = 5; i<10000; i++)
             {
-                scene.objects.Add(obj = new TransformableObject(new Vector3(i, 0, 0)));
+                scene.objects.Add(obj = new TransformableObject(new Vector3(i,0,0), Quaternion.Identity, Vector3.One));
             }
 
             gL_ControlModern1.MainDrawable = scene;
@@ -191,7 +191,7 @@ namespace Testing
 
         private void button1_Click(object sender, EventArgs e)
         {
-            scene.Add(new TransformableObject(new Vector3()));
+            scene.Add(new TransformableObject(Vector3.Zero,Quaternion.Identity,Vector3.One));
             sceneListView1.UpdateAutoScroll();
         }
     }

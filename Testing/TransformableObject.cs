@@ -14,10 +14,11 @@ namespace Testing
 {
     class TransformableObject : SingleObject
     {
-        public TransformableObject(Vector3 pos)
+        public TransformableObject(Vector3 pos, Quaternion rot, Vector3 scale)
             : base(pos)
         {
-
+            rotation = rot;
+            this.scale = scale;
         }
 
         public override string ToString() => "block";
@@ -25,10 +26,6 @@ namespace Testing
         public Quaternion rotation = Quaternion.Identity;
 
         public Vector3 scale = new Vector3(1, 1, 1);
-
-        public override Quaternion Rotation { get => rotation; set => rotation = value; }
-
-        public override Vector3 Scale { get => scale; set => scale = value; }
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {

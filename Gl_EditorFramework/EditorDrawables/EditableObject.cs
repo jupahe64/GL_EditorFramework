@@ -76,42 +76,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public virtual Vector3 Position
-        {
-            get
-            {
-                return Vector3.Zero;
-            }
-            set
-            {
-
-            }
-        }
-
-        public virtual Quaternion Rotation
-        {
-            get
-            {
-                return Quaternion.Identity;
-            }
-            set
-            {
-
-            }
-        }
-
-        public virtual Vector3 Scale
-        {
-            get
-            {
-                return Vector3.One;
-            }
-            set
-            {
-
-            }
-        }
-
         public struct BoundingBox
         {
             public float minX;
