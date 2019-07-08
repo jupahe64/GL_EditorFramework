@@ -94,14 +94,14 @@ namespace GL_EditorFramework.EditorDrawables
 
             struct PosInfo
             {
-                public PosInfo(EditableObject obj, int part, Vector3 pos)
+                public PosInfo(IEditableObject obj, int part, Vector3 pos)
                 {
                     this.obj = obj;
                     this.part = part;
                     this.pos = pos;
                 }
 
-                public readonly EditableObject obj;
+                public readonly IEditableObject obj;
                 public readonly int part;
                 public readonly Vector3 pos;
             }
@@ -145,7 +145,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             struct RotInfo
             {
-                public RotInfo(EditableObject obj, int part, Vector3? pos, Quaternion? rot)
+                public RotInfo(IEditableObject obj, int part, Vector3? pos, Quaternion? rot)
                 {
                     this.obj = obj;
                     this.part = part;
@@ -153,7 +153,7 @@ namespace GL_EditorFramework.EditorDrawables
                     this.rot = rot;
                 }
 
-                public readonly EditableObject obj;
+                public readonly IEditableObject obj;
                 public readonly int part;
                 public readonly Vector3? pos;
                 public readonly Quaternion? rot;
@@ -198,7 +198,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             struct ScaleInfo
             {
-                public ScaleInfo(EditableObject obj, int part, Vector3? pos, Vector3? scale)
+                public ScaleInfo(IEditableObject obj, int part, Vector3? pos, Vector3? scale)
                 {
                     this.obj = obj;
                     this.part = part;
@@ -206,7 +206,7 @@ namespace GL_EditorFramework.EditorDrawables
                     this.scale = scale;
                 }
 
-                public readonly EditableObject obj;
+                public readonly IEditableObject obj;
                 public readonly int part;
                 public readonly Vector3? pos;
                 public readonly Vector3? scale;
@@ -215,12 +215,12 @@ namespace GL_EditorFramework.EditorDrawables
 
         public struct TransformChangeInfo
         {
-            public readonly EditableObject obj;
+            public readonly IEditableObject obj;
             public readonly int part;
             public readonly Vector3? position;
             public readonly Quaternion? rotation;
             public readonly Vector3? scale;
-            public TransformChangeInfo(EditableObject obj, int part, Vector3? position, Quaternion? rotation, Vector3? scale)
+            public TransformChangeInfo(IEditableObject obj, int part, Vector3? position, Quaternion? rotation, Vector3? scale)
             {
                 this.obj = obj;
                 this.part = part;
@@ -245,7 +245,7 @@ namespace GL_EditorFramework.EditorDrawables
                 changedPosScales = 0;
             }
 
-            public void Add(EditableObject obj, int part, Vector3? position, Quaternion? rotation, Vector3? scale)
+            public void Add(IEditableObject obj, int part, Vector3? position, Quaternion? rotation, Vector3? scale)
             {
                 if (position.HasValue)
                     changedPositions++;

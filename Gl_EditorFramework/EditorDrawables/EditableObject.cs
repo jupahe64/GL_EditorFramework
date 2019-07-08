@@ -10,17 +10,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static GL_EditorFramework.EditorDrawables.EditableObject;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    public abstract class EditableObject : AbstractGlDrawable
+    public abstract class EditableObject : AbstractGlDrawable, IEditableObject
     {
         public static Vector4 hoverColor = new Vector4(1, 1, 0.925f,1);
         public static Vector4 selectColor = new Vector4(1, 1, 0.675f, 1);
-        
+
         [Browsable(false)]
-        public bool Visible = true;
+        public bool Visible { get; set; } = true;
         
         public EditableObject()
         {
@@ -190,5 +191,71 @@ namespace GL_EditorFramework.EditorDrawables
                 Rotation = Quaternion.Identity;
             }
         }
+    }
+
+    public interface IEditableObject
+    {
+        bool Visible { get; set; }
+
+        bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively);
+
+        bool IsSelected();
+
+        bool IsSelected(int partIndex);
+
+        BoundingBox GetSelectionBox();
+
+        LocalOrientation GetLocalOrientation(int partIndex);
+
+        bool IsInRange(float range, float rangeSquared, Vector3 pos);
+
+        uint SelectAll(GL_ControlBase control);
+
+        uint SelectDefault(GL_ControlBase control);
+
+        void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene);
+
+        void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene);
+
+        uint Select(int partIndex, GL_ControlBase control);
+
+        uint Deselect(int partIndex, GL_ControlBase control);
+        uint DeselectAll(GL_ControlBase control);
+
+        void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale);
+
+        void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos);
+
+        void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part, ref TransformChangeInfos transformChangeInfos);
+
+        void Prepare(GL_ControlModern control);
+
+        void Prepare(GL_ControlLegacy control);
+
+        void Draw(GL_ControlModern control, Pass pass);
+
+        void Draw(GL_ControlLegacy control, Pass pass);
+
+        int GetPickableSpan();
+
+        uint MouseEnter(int index, GL_ControlBase control);
+
+        uint MouseLeave(int index, GL_ControlBase control);
+
+        uint MouseLeaveEntirely(GL_ControlBase control);
+
+        uint MouseDown(MouseEventArgs e, GL_ControlBase control);
+
+        uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control);
+
+        uint MouseUp(MouseEventArgs e, GL_ControlBase control);
+
+        uint MouseWheel(MouseEventArgs e, GL_ControlBase control);
+
+        uint MouseClick(MouseEventArgs e, GL_ControlBase control);
+
+        uint KeyDown(KeyEventArgs e, GL_ControlBase control);
+
+        uint KeyUp(KeyEventArgs e, GL_ControlBase control);
     }
 }

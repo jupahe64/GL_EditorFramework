@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -141,7 +140,7 @@ namespace Testing
         {
             if (e.KeyCode == Keys.Delete)
             {
-                EditableObject[] objsToDelete = scene.SelectedObjects.ToArray();
+                IEditableObject[] objsToDelete = scene.SelectedObjects.ToArray();
                 scene.Delete(objsToDelete);
                 gL_ControlModern1.Refresh();
                 sceneListView1.UpdateAutoScroll();
@@ -202,10 +201,10 @@ namespace Testing
         public Vector3 pCenter;
         public Vector3 center;
 
-        public void Setup(List<EditableObject> editableObjects)
+        public void Setup(List<IEditableObject> editableObjects)
         {
             EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
-            foreach (EditableObject obj in editableObjects)
+            foreach (IEditableObject obj in editableObjects)
             {
                 box.Include(obj.GetSelectionBox());
             }

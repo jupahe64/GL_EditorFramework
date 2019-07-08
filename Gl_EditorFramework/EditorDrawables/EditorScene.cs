@@ -14,7 +14,7 @@ namespace GL_EditorFramework.EditorDrawables
     public class EditorScene : EditorSceneBase
     {
         public event EventHandler ListChanged;
-        public List<EditableObject> objects = new List<EditableObject>();
+        public List<IEditableObject> objects = new List<IEditableObject>();
 
         private float renderDistanceSquared = 1000000;
         private float renderDistance = 1000;
@@ -41,17 +41,17 @@ namespace GL_EditorFramework.EditorDrawables
             this.multiSelect = multiSelect;
         }
         
-        public void Add(params EditableObject[] objs)
+        public void Add(params IEditableObject[] objs)
         {
             uint var = 0;
 
-            foreach (EditableObject selected in SelectedObjects)
+            foreach (IEditableObject selected in SelectedObjects)
             {
                 var |= selected.DeselectAll(control);
             }
             SelectedObjects.Clear();
 
-            foreach (EditableObject obj in objs)
+            foreach (IEditableObject obj in objs)
             {
                 objects.Add(obj);
 
@@ -64,7 +64,7 @@ namespace GL_EditorFramework.EditorDrawables
             UpdateSelection(var);
         }
 
-        public void Delete(params EditableObject[] objs)
+        public void Delete(params IEditableObject[] objs)
         {
             uint var = 0;
 
@@ -72,7 +72,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool selectionHasChanged = false;
 
-            foreach (EditableObject obj in objs)
+            foreach (IEditableObject obj in objs)
             {
                 infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
                 objects.Remove(obj);
@@ -90,17 +90,17 @@ namespace GL_EditorFramework.EditorDrawables
                 UpdateSelection(var);
         }
 
-        public void InsertAt(int index, params EditableObject[] objs)
+        public void InsertAt(int index, params IEditableObject[] objs)
         {
             uint var = 0;
 
-            foreach (EditableObject selected in SelectedObjects)
+            foreach (IEditableObject selected in SelectedObjects)
             {
                 var |= selected.DeselectAll(control);
             }
             SelectedObjects.Clear();
 
-            foreach (EditableObject obj in objs)
+            foreach (IEditableObject obj in objs)
             {
                 objects.Insert(index, obj);
 
@@ -116,7 +116,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public void MoveObjectsInList(int originalIndex, int count, int offset)
         {
-            List<EditableObject> objs = new List<EditableObject>();
+            List<IEditableObject> objs = new List<IEditableObject>();
 
             for (int i = 0; i < count; i++)
             {
@@ -125,7 +125,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
 
             int index = originalIndex + offset;
-            foreach (EditableObject obj in objs)
+            foreach (IEditableObject obj in objs)
             {
                 objects.Insert(index, obj);
                 index++;
@@ -136,7 +136,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void Draw(GL_ControlModern control, Pass pass)
         {
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 if(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
                     obj.Draw(control, pass, this);
@@ -154,7 +154,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void Draw(GL_ControlLegacy control, Pass pass)
         {
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 if (obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
                     obj.Draw(control, pass, this);
@@ -173,7 +173,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override void Prepare(GL_ControlModern control)
         {
             this.control = control;
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
                 obj.Prepare(control);
             foreach (AbstractGlDrawable obj in staticObjects)
                 obj.Prepare(control);
@@ -182,7 +182,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override void Prepare(GL_ControlLegacy control)
         {
             this.control = control;
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
                 obj.Prepare(control);
             foreach (AbstractGlDrawable obj in staticObjects)
                 obj.Prepare(control);
@@ -192,7 +192,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             uint var = 0;
             var |= base.MouseDown(e, control);
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 var |= obj.MouseDown(e, control);
             }
@@ -203,7 +203,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             uint var = 0;
 
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 var |= obj.MouseMove(e, lastMousePos, control);
             }
@@ -216,7 +216,7 @@ namespace GL_EditorFramework.EditorDrawables
             uint var = 0;
 
             var |= base.MouseUp(e, control);
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 var |= obj.MouseUp(e, control);
             }
@@ -226,7 +226,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
         {
             uint var = 0;
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 var |= obj.MouseClick(e, control);
             }
@@ -239,7 +239,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
         {
             uint var = 0;
-            foreach (EditableObject obj in objects) {
+            foreach (IEditableObject obj in objects) {
                 var |= obj.MouseWheel(e, control);
             }
 
@@ -251,7 +251,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override int GetPickableSpan()
         {
             int var = 0;
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
                 if (obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
                     var += obj.GetPickableSpan();
             foreach (AbstractGlDrawable obj in staticObjects)
@@ -263,7 +263,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (CurrentAction != NoAction || ExclusiveAction != NoAction)
                 return 0;
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
                     continue;
@@ -285,7 +285,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (CurrentAction != NoAction || ExclusiveAction != NoAction)
                 return 0;
-            foreach (EditableObject obj in objects)
+            foreach (IEditableObject obj in objects)
             {
                 if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
                     continue;
@@ -324,7 +324,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
 
-                    foreach (EditableObject selected in SelectedObjects)
+                    foreach (IEditableObject selected in SelectedObjects)
                     {
                         box.Include(selected.GetSelectionBox());
                     }
@@ -341,7 +341,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
             else if (e.KeyCode == Keys.H && SelectedObjects.Count > 0) //hide/show selected objects
             {
-                foreach (EditableObject selected in SelectedObjects)
+                foreach (IEditableObject selected in SelectedObjects)
                 {
                     selected.Visible = e.Shift;
                 }
@@ -350,7 +350,7 @@ namespace GL_EditorFramework.EditorDrawables
             else if(e.KeyCode == Keys.S && SelectedObjects.Count > 0 && e.Shift) //auto snap selected objects
             {
                 SnapAction action = new SnapAction();
-                foreach (EditableObject selected in SelectedObjects)
+                foreach (IEditableObject selected in SelectedObjects)
                 {
                     selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
@@ -359,7 +359,7 @@ namespace GL_EditorFramework.EditorDrawables
             else if (e.KeyCode == Keys.R && SelectedObjects.Count > 0 && e.Shift && e.Control) //reset scale for selected objects
             {
                 ResetScale action = new ResetScale();
-                foreach (EditableObject selected in SelectedObjects)
+                foreach (IEditableObject selected in SelectedObjects)
                 {
                     selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
@@ -368,7 +368,7 @@ namespace GL_EditorFramework.EditorDrawables
             else if (e.KeyCode == Keys.R && SelectedObjects.Count > 0 && e.Shift) //reset rotation for selected objects
             {
                 ResetRot action = new ResetRot();
-                foreach (EditableObject selected in SelectedObjects)
+                foreach (IEditableObject selected in SelectedObjects)
                 {
                     selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
@@ -378,7 +378,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (e.Shift && SelectedObjects.Count > 0)
                 {
-                    foreach (EditableObject selected in SelectedObjects)
+                    foreach (IEditableObject selected in SelectedObjects)
                     {
                         selected.DeselectAll(control);
                     }
@@ -388,7 +388,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 if (!e.Shift && multiSelect)
                 {
-                    foreach (EditableObject obj in objects)
+                    foreach (IEditableObject obj in objects)
                     {
                         if (!obj.IsSelected())
                         {
@@ -401,7 +401,7 @@ namespace GL_EditorFramework.EditorDrawables
                 var = REDRAW;
             }
 
-            foreach (EditableObject obj in objects) {
+            foreach (IEditableObject obj in objects) {
                 var |= obj.KeyDown(e, control);
             }
             foreach (AbstractGlDrawable obj in staticObjects)
@@ -419,7 +419,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint KeyUp(KeyEventArgs e, GL_ControlBase control)
         {
             uint var = 0;
-            foreach (EditableObject obj in objects) {
+            foreach (IEditableObject obj in objects) {
                 var |= obj.KeyUp(e, control);
             }
             foreach (AbstractGlDrawable obj in staticObjects)
@@ -433,10 +433,10 @@ namespace GL_EditorFramework.EditorDrawables
 
         public struct RevertableAddition : IRevertable
         {
-            EditableObject[] objects;
+            IEditableObject[] objects;
             EditorScene scene;
 
-            public RevertableAddition(EditableObject[] objects, EditorScene scene)
+            public RevertableAddition(IEditableObject[] objects, EditorScene scene)
             {
                 this.objects = objects;
                 this.scene = scene;
@@ -484,7 +484,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public IRevertable Revert()
             {
-                List<EditableObject> objs = new List<EditableObject>();
+                List<IEditableObject> objs = new List<IEditableObject>();
 
                 for (int i = 0; i < count; i++)
                 {
@@ -493,7 +493,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
 
                 int index = originalIndex + offset;
-                foreach (EditableObject obj in objs)
+                foreach (IEditableObject obj in objs)
                 {
                     scene.objects.Insert(index, obj);
                     index++;
@@ -521,7 +521,7 @@ namespace GL_EditorFramework.EditorDrawables
                 for (int i = infos.Length - 1; i >= 0; i--)
                     scene.objects.Insert(infos[i].index, infos[i].obj);
 
-                EditableObject[] objects = new EditableObject[infos.Length];
+                IEditableObject[] objects = new IEditableObject[infos.Length];
 
                 for (int i = 0; i < infos.Length; i++)
                     objects[i] = infos[i].obj;
@@ -535,12 +535,12 @@ namespace GL_EditorFramework.EditorDrawables
 
             public struct DeleteInfo
             {
-                public DeleteInfo(EditableObject obj, int index)
+                public DeleteInfo(IEditableObject obj, int index)
                 {
                     this.obj = obj;
                     this.index = index;
                 }
-                public EditableObject obj;
+                public IEditableObject obj;
                 public int index;
             }
         }
