@@ -90,7 +90,7 @@ namespace GL_EditorFramework.EditorDrawables
                 UpdateSelection(var);
         }
 
-        public void InsertAfter(int index, params EditableObject[] objs)
+        public void InsertAt(int index, params EditableObject[] objs)
         {
             uint var = 0;
 
