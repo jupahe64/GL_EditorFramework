@@ -65,6 +65,9 @@ namespace GL_EditorFramework
         Point lastMousePos;
         Point dragStarPos;
 
+        Timer doubleClickTimer = new Timer();
+        bool acceptDoubleClick = false;
+
         float[] values = new float[3];
 
         int focusedIndex = -1;
@@ -75,12 +78,38 @@ namespace GL_EditorFramework
         int textBoxHeight;
         public ObjectPropertyControl()
         {
+            SetStyle(
+            ControlStyles.AllPaintingInWmPaint |
+            ControlStyles.UserPaint |
+            ControlStyles.OptimizedDoubleBuffer,
+            true);
+
             InitializeComponent();
+            doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
+            doubleClickTimer.Tick += DoubleClickTimer_Tick;
+
             textBox1.Visible = false;
             textBoxHeight = textBox1.Height;
             textBox1.KeyPress += TextBox1_KeyPress;
             textBox1.KeyDown += TextBox1_KeyDown;
             textBox1.LostFocus += TextBox1_LostFocus;
+            textBox1.MouseClick += TextBox1_MouseClick;
+        }
+
+        private void TextBox1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (acceptDoubleClick || e.Clicks==2)
+            {
+                textBox1.SelectAll();
+                acceptDoubleClick = false;
+            }
+
+        }
+
+        private void DoubleClickTimer_Tick(object sender, EventArgs e)
+        {
+            acceptDoubleClick = false;
+            doubleClickTimer.Stop();
         }
 
         private void TextBox1_LostFocus(object sender, EventArgs e)
@@ -280,6 +309,9 @@ namespace GL_EditorFramework
             textBox1.Select(Math.Max(0, num), 0);
             
             focusedIndex = index;
+
+            acceptDoubleClick = true;
+            doubleClickTimer.Start();
         }
 
 
@@ -300,9 +332,13 @@ namespace GL_EditorFramework
                     return number;
 
                 case EventType.CLICK:
-                    DrawField(10, currentY, 80, name, "", Brushes.LightBlue, Brushes.White);
                     if (new Rectangle(10, currentY, 80, textBoxHeight).Contains(mousePos))
+                    {
+                        DrawField(10, currentY, 80, name, "", Brushes.Turquoise, Brushes.White);
                         PrepareFieldForInput(10, currentY, 80, name, number.ToString());
+                    }
+                    else
+                        DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
 
                     currentY += 20;
                     index++;
@@ -389,16 +425,6 @@ namespace GL_EditorFramework
                     currentY += 20;
                     index++;
                     return number;
-            }
-        }
-
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
-                return cp;
             }
         }
     }
