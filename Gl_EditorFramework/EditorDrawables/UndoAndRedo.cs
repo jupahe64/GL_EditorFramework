@@ -41,7 +41,7 @@ namespace GL_EditorFramework.EditorDrawables
                 undoStack.Push(new RevertableRotChange(transformChangeInfos));
                 redoStack.Clear();
             }
-            if (transformChangeInfos.changedScales > 0)
+            else if (transformChangeInfos.changedScales > 0)
             {
                 undoStack.Push(new RevertableScaleChange(transformChangeInfos));
                 redoStack.Clear();
