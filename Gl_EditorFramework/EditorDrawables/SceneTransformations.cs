@@ -322,15 +322,45 @@ namespace GL_EditorFramework.EditorDrawables
                 if (axisRestriction == AxisRestriction.NONE)
                     return;
 
-                controlModern.CurrentShader = null;
+                controlModern.CurrentShader = Renderers.ColorBlockRenderer.SolidColorShaderProgram;
 
-                Draw();
+                control.ResetModelMatrix();
+
+                GL.LineWidth(1.0f);
+
+                if (axisRestriction == AxisRestriction.X || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.XZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorX);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(-planeOrigin + Vector3.UnitX * control.ZFar);
+                    GL.Vertex3(-planeOrigin - Vector3.UnitX * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Y || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.YZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorY);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(-planeOrigin + Vector3.UnitY * control.ZFar);
+                    GL.Vertex3(-planeOrigin - Vector3.UnitY * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Z || axisRestriction == AxisRestriction.XZ || axisRestriction == AxisRestriction.YZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorZ);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(-planeOrigin + Vector3.UnitZ * control.ZFar);
+                    GL.Vertex3(-planeOrigin - Vector3.UnitZ * control.ZFar);
+                    GL.End();
+                }
             }
 
-            public override void Draw(GL_ControlLegacy controlLegacy) => Draw();
-
-            private void Draw()
+            public override void Draw(GL_ControlLegacy controlLegacy)
             {
+                if (axisRestriction == AxisRestriction.NONE)
+                    return;
+
                 control.ResetModelMatrix();
 
                 GL.LineWidth(1.0f);
@@ -418,6 +448,7 @@ namespace GL_EditorFramework.EditorDrawables
                     case AxisRestriction.NONE:
                         angle = (Math.Atan2(mousePos.X      - centerPoint.X, mousePos.Y      - centerPoint.Y) -
                                  Math.Atan2(startMousePos.X - centerPoint.X, startMousePos.Y - centerPoint.Y));
+                        showRotationInicator = false;
                         break;
 
                     case AxisRestriction.X:
@@ -528,15 +559,58 @@ namespace GL_EditorFramework.EditorDrawables
                 if (axisRestriction == AxisRestriction.NONE)
                     return;
 
-                controlModern.CurrentShader = null;
+                controlModern.CurrentShader = Renderers.ColorBlockRenderer.SolidColorShaderProgram;
 
-                Draw();
+                control.ResetModelMatrix();
+
+                GL.LineWidth(1.0f);
+                Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", new Vector4(1, 1, 1, 1));
+
+                Vector3 vec = center;
+                if (axisRestriction == AxisRestriction.X)
+                    vec.X = -planeOrigin.X;
+                else if (axisRestriction == AxisRestriction.Y)
+                    vec.Y = -planeOrigin.Y;
+                else
+                    vec.Z = -planeOrigin.Z;
+
+                if (showRotationInicator)
+                {
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(vec);
+                    GL.Vertex3(lastIntersection);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.X)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorX);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(vec + Vector3.UnitX * control.ZFar);
+                    GL.Vertex3(vec - Vector3.UnitX * control.ZFar);
+                }
+                else if (axisRestriction == AxisRestriction.Y)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorY);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(vec + Vector3.UnitY * control.ZFar);
+                    GL.Vertex3(vec - Vector3.UnitY * control.ZFar);
+                }
+                else if (axisRestriction == AxisRestriction.Z)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorZ);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(vec + Vector3.UnitZ * control.ZFar);
+                    GL.Vertex3(vec - Vector3.UnitZ * control.ZFar);
+                }
+                GL.End();
             }
 
-            public override void Draw(GL_ControlLegacy controlLegacy) => Draw();
-
-            private void Draw()
+            public override void Draw(GL_ControlLegacy controlLegacy)
             {
+                if (axisRestriction == AxisRestriction.NONE)
+                    return;
+
                 control.ResetModelMatrix();
 
                 GL.LineWidth(1.0f);
@@ -564,14 +638,15 @@ namespace GL_EditorFramework.EditorDrawables
                     GL.Begin(PrimitiveType.Lines);
                     GL.Vertex3(vec + Vector3.UnitX * control.ZFar);
                     GL.Vertex3(vec - Vector3.UnitX * control.ZFar);
-                }else if (axisRestriction == AxisRestriction.Y)
+                }
+                else if (axisRestriction == AxisRestriction.Y)
                 {
                     GL.Color4(colorY);
                     GL.Begin(PrimitiveType.Lines);
                     GL.Vertex3(vec + Vector3.UnitY * control.ZFar);
                     GL.Vertex3(vec - Vector3.UnitY * control.ZFar);
                 }
-                else
+                else if (axisRestriction == AxisRestriction.Z)
                 {
                     GL.Color4(colorZ);
                     GL.Begin(PrimitiveType.Lines);
@@ -724,15 +799,45 @@ namespace GL_EditorFramework.EditorDrawables
                 if (axisRestriction == AxisRestriction.NONE)
                     return;
 
-                controlModern.CurrentShader = null;
+                controlModern.CurrentShader = Renderers.ColorBlockRenderer.SolidColorShaderProgram;
 
-                Draw();
+                control.ResetModelMatrix();
+
+                GL.LineWidth(1.0f);
+
+                if (axisRestriction == AxisRestriction.X || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.XZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorX);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(orientation.Origin + orientation.Rotation * Vector3.UnitX * control.ZFar);
+                    GL.Vertex3(orientation.Origin - orientation.Rotation * Vector3.UnitX * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Y || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.YZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorY);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(orientation.Origin + orientation.Rotation * Vector3.UnitY * control.ZFar);
+                    GL.Vertex3(orientation.Origin - orientation.Rotation * Vector3.UnitY * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Z || axisRestriction == AxisRestriction.XZ || axisRestriction == AxisRestriction.YZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorZ);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(orientation.Origin + orientation.Rotation * Vector3.UnitZ * control.ZFar);
+                    GL.Vertex3(orientation.Origin - orientation.Rotation * Vector3.UnitZ * control.ZFar);
+                    GL.End();
+                }
             }
 
-            public override void Draw(GL_ControlLegacy controlLegacy) => Draw();
-
-            private void Draw()
+            public override void Draw(GL_ControlLegacy controlLegacy)
             {
+                if (axisRestriction == AxisRestriction.NONE)
+                    return;
+
                 control.ResetModelMatrix();
 
                 GL.LineWidth(1.0f);

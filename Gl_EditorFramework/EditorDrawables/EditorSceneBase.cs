@@ -241,7 +241,7 @@ namespace GL_EditorFramework.EditorDrawables
                     obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
                 }
 
-                var |= REDRAW_PICKING;
+                var |= REDRAW_PICKING | FORCE_REENTER;
 
                 CurrentAction = NoAction;
             }
