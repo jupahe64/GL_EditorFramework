@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using GL_EditorFramework;
 using GL_EditorFramework.EditorDrawables;
 using OpenTK;
+using WinInput = System.Windows.Input;
 
 namespace Testing
 {
@@ -109,6 +110,9 @@ namespace Testing
             sceneListView1.CurrentCategory = "Test0";
             sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
             sceneListView1.ItemsMoved += SceneListView1_ItemsMoved;
+
+            scene.ToogleSelected(scene.objects[4], true);
+            Scene_SelectionChanged(this, null);
         }
 
         private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
@@ -213,9 +217,14 @@ namespace Testing
 
         public override void DoUI(IObjectPropertyControl control)
         {
-            center.X = control.NumberInput(center.X, "x", 0.125f);
-            center.Y = control.NumberInput(center.Y, "y", 0.125f);
-            center.Z = control.NumberInput(center.Z, "z", 0.125f);
+            center.X = control.NumberInput(center.X, "Position X", 0.125f, 2);
+            center.Y = control.NumberInput(center.Y, "Position Y", 0.125f, 2);
+            center.Z = control.NumberInput(center.Z, "Position Z", 0.125f, 2);
+
+            if(WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                center = control.Vector3Input(center, "Position");
+            else
+                center = control.Vector3Input(center, "Position", 0.125f, 2);
         }
     }
 }

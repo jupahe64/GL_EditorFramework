@@ -22,6 +22,8 @@ namespace GL_EditorFramework
         public event EventHandler ValueChanged;
         public event EventHandler ValueSet;
 
+        public Font HeaderFont;
+
         enum EventType
         {
             DRAW,
@@ -32,17 +34,14 @@ namespace GL_EditorFramework
             DRAG_ABORT,
             LOST_FOCUS
         }
+        
+        static uint VALUE_CHANGE_START = 1;
+        static uint VALUE_CHANGED = 2;
+        static uint VALUE_SET = 4;
 
-        enum ChangeType
-        {
-            NONE,
-            START,
-            CHANGED,
-            SET
-        }
+        uint changeTypes = 0;
 
         EventType eventType = EventType.DRAW;
-        ChangeType changeType = ChangeType.NONE;
 
         AbstractPropertyContainer propertyContainer;
 
@@ -85,6 +84,9 @@ namespace GL_EditorFramework
             true);
 
             InitializeComponent();
+
+            HeaderFont = new Font(textBox1.Font.FontFamily, 10);
+
             doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
             doubleClickTimer.Tick += DoubleClickTimer_Tick;
 
@@ -118,19 +120,20 @@ namespace GL_EditorFramework
                 return;
 
             eventType = EventType.LOST_FOCUS;
-            changeType = ChangeType.NONE;
+            changeTypes = 0;
 
             Refresh();
+
             textBox1.Visible = false;
             focusedIndex = -1;
 
             eventType = EventType.DRAW;
 
-            if (changeType == ChangeType.START)
+            if ((changeTypes & VALUE_CHANGE_START)>0)
                 ValueChangeStart.Invoke(this, e);
-            else if (changeType == ChangeType.CHANGED)
+            else if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if (changeType == ChangeType.SET)
+            else if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
@@ -171,8 +174,6 @@ namespace GL_EditorFramework
             propertyContainer.DoUI(this);
         }
 
-        bool nothingWasClicked = true;
-
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -180,29 +181,28 @@ namespace GL_EditorFramework
                 mouseWasDragged = false;
                 dragStarPos = e.Location;
                 eventType = EventType.DRAG_START;
-                changeType = ChangeType.NONE;
-                nothingWasClicked = true;
+                dragIndex = -1;
+                changeTypes = 0;
 
                 Refresh();
 
-                if (nothingWasClicked)
-                    Focus();
+                Focus();
 
                 eventType = EventType.DRAW;
             }
             else if (e.Button == MouseButtons.Right)
             {
                 eventType = EventType.DRAG_ABORT;
-                changeType = ChangeType.NONE;
+                changeTypes = 0;
                 Refresh();
                 eventType = EventType.DRAW;
             }
 
-            if (changeType == ChangeType.START)
+            if ((changeTypes & VALUE_CHANGE_START) > 0)
                 ValueChangeStart.Invoke(this, e);
-            else if (changeType == ChangeType.CHANGED)
+            else if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if (changeType == ChangeType.SET)
+            else if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
@@ -216,17 +216,17 @@ namespace GL_EditorFramework
             if(mouseWasDragged)
                 eventType = EventType.DRAG;
 
-            changeType = ChangeType.NONE;
+            changeTypes = 0;
             Refresh();
 
             eventType = EventType.DRAW;
             lastMousePos = e.Location;
 
-            if (changeType == ChangeType.START)
+            if ((changeTypes & VALUE_CHANGE_START) > 0)
                 ValueChangeStart.Invoke(this, e);
-            else if (changeType == ChangeType.CHANGED)
+            else if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if (changeType == ChangeType.SET)
+            else if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
@@ -238,7 +238,7 @@ namespace GL_EditorFramework
             if (mouseWasDragged)
             {
                 eventType = EventType.DRAG_END;
-                changeType = ChangeType.NONE;
+                changeTypes = 0;
                 Refresh();
             }
             else{
@@ -246,39 +246,37 @@ namespace GL_EditorFramework
                     return;
                 
                 eventType = EventType.CLICK;
-                changeType = ChangeType.NONE;
+                changeTypes = 0;
                 Refresh();
             }
 
             eventType = EventType.DRAW;
 
-            if (changeType == ChangeType.START)
+            if ((changeTypes & VALUE_CHANGE_START) > 0)
                 ValueChangeStart.Invoke(this, e);
-            else if (changeType == ChangeType.CHANGED)
+            else if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if (changeType == ChangeType.SET)
+            else if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
-        private void DrawField(int x, int y, int width, string name, string value, Brush outline, Brush background)
+        private void DrawField(int textX, int fieldX, int y, int width, string name, string value, Brush outline, Brush background)
         {
-            g.ResetClip();
-            g.FillRectangle(outline,    x+4, y,   width-8, textBoxHeight+2);
-            g.FillRectangle(outline,    x+2, y+1, width-4, textBoxHeight);
-            g.FillRectangle(outline,    x+1, y+2, width-2, textBoxHeight-2);
-            g.FillRectangle(outline,    x,   y+3, width,   textBoxHeight-4);
+            g.FillRectangle(outline, fieldX, y, width, textBoxHeight+2);
+            g.FillRectangle(background, fieldX + 1, y + 1,   width-2, textBoxHeight);
 
-            g.FillRectangle(background, x+4, y+1, width-8, textBoxHeight);
-            g.FillRectangle(background, x+2, y+2, width-4, textBoxHeight-2);
-            g.FillRectangle(background, x+1, y+4, width-2, textBoxHeight-6);
+            g.DrawString(name + ": ", textBox1.Font, SystemBrushes.ControlText, textX, y);
 
             g.SetClip(new Rectangle(
-                x + 4,
+                fieldX+1,
                 y + 1,
-                width - 8,
-                textBox1.Height));
+                width-2,
+                textBoxHeight));
+            
+            g.DrawString(value, textBox1.Font, SystemBrushes.ControlText, 
+                fieldX+1 + (width-(int)g.MeasureString(value,textBox1.Font).Width)/2, y);
 
-            g.DrawString(name + ": " + value, textBox1.Font, Brushes.Black, x+2, currentY);
+            g.ResetClip();
         }
 
         private void Unfocus()
@@ -295,11 +293,13 @@ namespace GL_EditorFramework
             }
         }
 
-        private void PrepareFieldForInput(int x, int y, int width, string name, string value)
+        private void PrepareFieldForInput(int fieldX, int y, int width, string name, string value)
         {
+            int stringWidth = (int)g.MeasureString(name, textBox1.Font).Width;
+
             textBox1.Text = value;
-            textBox1.Location = new Point(x + 4 + (int)g.MeasureString(name + ": ", textBox1.Font).Width, y+1);
-            textBox1.Width = width - 8 - (int)g.MeasureString(name + ": ", textBox1.Font).Width;
+            textBox1.Location = new Point(fieldX+1, y+1);
+            textBox1.Width = width - 2;
             textBox1.Visible = true;
             textBox1.Focus();
 
@@ -317,121 +317,294 @@ namespace GL_EditorFramework
 
 
         float valueBeforeDrag;
-        public float NumberInput(float number, string name, float increment=1)
+        public float NumberInput(float number, string name, float increment=1, int incrementDragDivider = 8)
         {
             switch (eventType)
             {
-                case EventType.DRAW:
-                    if(focusedIndex == index)
-                        DrawField(10, currentY, 80, name, "", Brushes.Turquoise, Brushes.White);
-                    else
-                        DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
-
-                    currentY += 20;
-                    index++;
-                    return number;
-
                 case EventType.CLICK:
-                    if (new Rectangle(10, currentY, 80, textBoxHeight).Contains(mousePos))
+                    if (new Rectangle(Width - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
                     {
-                        DrawField(10, currentY, 80, name, "", Brushes.Turquoise, Brushes.White);
-                        PrepareFieldForInput(10, currentY, 80, name, number.ToString());
+                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+                        PrepareFieldForInput(Width - 90, currentY, 80, name, number.ToString());
                     }
                     else
-                        DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
+                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
                     currentY += 20;
                     index++;
                     return number;
 
                 case EventType.DRAG_START:
-                    DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
-
-                    if (new Rectangle(10, currentY, 80, textBoxHeight).Contains(mousePos))
+                    if (focusedIndex == index)
+                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                    else
                     {
-                        dragIndex = index;
-                        valueBeforeDrag = number;
-                        nothingWasClicked = false;
+                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                        if (new Rectangle(Width - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
+                        {
+                            dragIndex = index;
+                            valueBeforeDrag = number;
+                            changeTypes |= VALUE_CHANGE_START;
+                        }
                     }
 
                     currentY += 20;
                     index++;
-                    changeType = ChangeType.START;
                     return number;
 
                 case EventType.DRAG:
                     if (dragIndex == index)
                     {
-                        DrawField(10, currentY, 80, name, (valueBeforeDrag + (mousePos.X - dragStarPos.X)/2*increment).ToString(), Brushes.LightGray, Brushes.White);
-
-                        currentY += 20;
-                        index++;
-                        changeType = ChangeType.CHANGED;
-                        return valueBeforeDrag + (mousePos.X - dragStarPos.X) / 2 * increment;
+                        changeTypes |= VALUE_CHANGED;
+                        number = valueBeforeDrag + (mousePos.X - dragStarPos.X) / incrementDragDivider * increment;
                     }
+                    if (focusedIndex == index)
+                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                    {
-                        DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
-
-                        currentY += 20;
-                        index++;
-                        return number;
-                    }
+                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                    
+                    currentY += 20;
+                    index++;
+                    return number;
 
                 case EventType.DRAG_END:
-                    DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
+                    if (dragIndex == index)
+                    {
+                        changeTypes |= VALUE_SET;
+                        dragIndex = -1;
+                    }
 
+                    if (focusedIndex == index)
+                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                    else
+                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                    
                     currentY += 20;
-                    dragIndex = -1;
                     index++;
-                    changeType = ChangeType.SET;
                     return number;
 
                 case EventType.LOST_FOCUS:
-                    DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
-
-                    currentY += 20;
                     if (focusedIndex == index && float.TryParse(textBox1.Text, out float parsed))
                     {
-                        index++;
-                        changeType = ChangeType.SET;
-                        return parsed;
+                        changeTypes |= VALUE_SET;
+                        number = parsed;
                     }
+
+                    if (focusedIndex == index)
+                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                    {
-                        index++;
-                        return number;
-                    }
+                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                    currentY += 20;
+                    index++;
+                    return number;
 
                 case EventType.DRAG_ABORT:
                     if (dragIndex == index)
                     {
-                        DrawField(10, currentY, 80, name, valueBeforeDrag.ToString(), Brushes.LightGray, Brushes.White);
-                        currentY += 20;
-                        index++;
+                        changeTypes |= VALUE_CHANGED;
+                        number = valueBeforeDrag;
                         dragIndex = -1;
-                        changeType = ChangeType.CHANGED;
-                        return valueBeforeDrag;
                     }
+                    if (focusedIndex == index)
+                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                    {
-                        DrawField(10, currentY, 80, name, number.ToString(), Brushes.LightGray, Brushes.White);
-                        currentY += 20;
-                        index++;
-                        return number;
-                    }
+                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
-                default:
                     currentY += 20;
                     index++;
                     return number;
+
+                default: //EventType.DRAW
+                    if (focusedIndex == index)
+                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                    else
+                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                    currentY += 20;
+                    index++;
+                    return number;
+            }
+        }
+
+        string[] coordNames = new string[]
+        {
+            "X",
+            "Y",
+            "Z"
+        };
+
+        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1, int incrementDragDivider = 8)
+        {
+            int width = (Width - 20) / 3;
+
+            float[] vector = new float[] { vec.X, vec.Y, vec.Z };
+
+            currentY += 5;
+            g.DrawString(name, HeaderFont, SystemBrushes.ControlText, 15, currentY);
+            currentY += 20;
+
+            switch (eventType)
+            {
+                case EventType.CLICK:
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (focusedIndex == index)
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], "",
+                                SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        else
+                        {
+                            if (new Rectangle(31 + width * i, currentY+1, width - 22, textBoxHeight-2).Contains(mousePos))
+                            {
+                                DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                                SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+
+                                PrepareFieldForInput(30 + width * i, currentY, width - 20, name, vector[i].ToString());
+                            }
+                            else
+                                DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                                SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        }
+                        index++;
+                    }
+
+                    currentY += 30;
+                    return vec;
+
+                case EventType.DRAG_START:
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (focusedIndex == index)
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], "",
+                                SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        else
+                        {
+                            if (new Rectangle(31 + width * i, currentY+1, width - 22, textBoxHeight-2).Contains(mousePos))
+                            {
+                                dragIndex = index;
+                                changeTypes |= VALUE_CHANGE_START;
+                                valueBeforeDrag = vector[i];
+                            }
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                                (focusedIndex == index) ? SystemBrushes.ActiveCaption : SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        }
+                        index++;
+                    }
+
+                    currentY += 30;
+                    return vec;
+
+                case EventType.DRAG:
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (dragIndex == index)
+                        {
+                            changeTypes |= VALUE_CHANGED;
+
+                            vector[i] = valueBeforeDrag + (mousePos.X - dragStarPos.X) / incrementDragDivider * increment;
+                        }
+
+                        if (focusedIndex == index)
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], "",
+                                SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        else
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                                SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                        index++;
+                    }
+                    currentY += 30;
+
+                    return new OpenTK.Vector3(vector[0], vector[1], vector[2]);
+
+                case EventType.DRAG_END:
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (dragIndex == index)
+                        {
+                            changeTypes |= VALUE_SET;
+                            dragIndex = -1;
+                        }
+
+                        if (focusedIndex == index)
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], "",
+                                SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        else
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                                SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                        index++;
+                    }
+
+                    currentY += 30;
+                    return vec;
+
+                case EventType.LOST_FOCUS:
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (focusedIndex == index && float.TryParse(textBox1.Text, out float parsed))
+                        {
+                            changeTypes |= VALUE_SET;
+                            vector[i] = parsed;
+                        }
+                        DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                            (focusedIndex == index) ? SystemBrushes.ActiveCaption : SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                        index++;
+                    }
+
+                    currentY += 30;
+                    return new OpenTK.Vector3(vector[0], vector[1], vector[2]);
+
+                case EventType.DRAG_ABORT:
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (dragIndex == index)
+                        {
+                            changeTypes |= VALUE_SET;
+
+                            vector[i] = valueBeforeDrag;
+
+                            dragIndex = -1;
+                        }
+
+                        if (focusedIndex == index)
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], "",
+                                SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        else
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                                SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                        index++;
+                    }
+                    currentY += 30;
+
+                    return new OpenTK.Vector3(vector[0], vector[1], vector[2]);
+
+                default: //EventType.DRAW
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (focusedIndex == index)
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], "",
+                                SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        else
+                            DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
+                                SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+
+                        index++;
+                    }
+
+                    currentY += 30;
+                    return vec;
             }
         }
     }
 
     public interface IObjectPropertyControl
     {
-        float NumberInput(float number, string name, float increment);
+        float NumberInput(float number, string name, float increment = 1f, int incrementDragDivider = 8);
+        OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1f, int incrementDragDivider = 8);
     }
 
     public abstract class AbstractPropertyContainer
