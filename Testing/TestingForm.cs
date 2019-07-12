@@ -138,6 +138,8 @@ namespace Testing
 
             e.Handled = true;
             gL_ControlModern1.Refresh();
+
+            Scene_SelectionChanged(this, null);
         }
 
         private void GL_ControlModern1_KeyDown(object sender, KeyEventArgs e)
