@@ -23,6 +23,7 @@ namespace GL_EditorFramework
         public event EventHandler ValueSet;
 
         public Font HeaderFont;
+        public Font LinkFont;
 
         enum EventType
         {
@@ -64,6 +65,8 @@ namespace GL_EditorFramework
         Point lastMousePos;
         Point dragStarPos;
 
+        int usableWidth;
+
         Brush buttonHighlight = new SolidBrush(MixedColor(SystemColors.GradientInactiveCaption,SystemColors.ControlLightLight));
 
         Timer doubleClickTimer = new Timer();
@@ -90,6 +93,8 @@ namespace GL_EditorFramework
             InitializeComponent();
 
             HeaderFont = new Font(textBox1.Font.FontFamily, 10);
+
+            LinkFont = new Font(textBox1.Font, FontStyle.Underline);
 
             doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
             doubleClickTimer.Tick += DoubleClickTimer_Tick;
@@ -162,6 +167,12 @@ namespace GL_EditorFramework
             }
         }
 
+        protected override void OnScroll(ScrollEventArgs se)
+        {
+            base.OnScroll(se);
+            Refresh();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -171,11 +182,15 @@ namespace GL_EditorFramework
 
             g = e.Graphics;
 
-            currentY = 10;
+            currentY = 10 + AutoScrollPosition.Y;
 
             index = 0;
 
+            usableWidth = Width - 10;
+
             propertyContainer.DoUI(this);
+
+            AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -330,13 +345,13 @@ namespace GL_EditorFramework
             switch (eventType)
             {
                 case EventType.CLICK:
-                    if (new Rectangle(Width - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
+                    if (new Rectangle(usableWidth - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
                     {
-                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
-                        PrepareFieldForInput(Width - 90, currentY, 80, name, number.ToString());
+                        DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+                        PrepareFieldForInput(usableWidth - 90, currentY, 80, name, number.ToString());
                     }
                     else
-                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
                     currentY += 20;
                     index++;
@@ -344,12 +359,12 @@ namespace GL_EditorFramework
 
                 case EventType.DRAG_START:
                     if (focusedIndex == index)
-                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
                     {
-                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
-                        if (new Rectangle(Width - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
+                        if (new Rectangle(usableWidth - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
                         {
                             dragIndex = index;
                             valueBeforeDrag = number;
@@ -368,9 +383,9 @@ namespace GL_EditorFramework
                         number = valueBeforeDrag + (mousePos.X - dragStarPos.X) / incrementDragDivider * increment;
                     }
                     if (focusedIndex == index)
-                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
                     
                     currentY += 20;
                     index++;
@@ -384,9 +399,9 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
                     
                     currentY += 20;
                     index++;
@@ -400,9 +415,9 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
                     currentY += 20;
                     index++;
@@ -416,9 +431,9 @@ namespace GL_EditorFramework
                         dragIndex = -1;
                     }
                     if (focusedIndex == index)
-                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
                     currentY += 20;
                     index++;
@@ -426,9 +441,9 @@ namespace GL_EditorFramework
 
                 default: //EventType.DRAW
                     if (focusedIndex == index)
-                        DrawField(15, Width - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
-                        DrawField(15, Width - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
+                        DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
                     currentY += 20;
                     index++;
@@ -445,7 +460,7 @@ namespace GL_EditorFramework
 
         public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1, int incrementDragDivider = 8)
         {
-            int width = (Width - 20) / 3;
+            int width = (usableWidth - 20) / 3;
 
             float[] vector = new float[] { vec.X, vec.Y, vec.Z };
 
@@ -612,31 +627,57 @@ namespace GL_EditorFramework
         {
             bool clicked = false;
 
-            if (new Rectangle(15, currentY, Width - 25, textBoxHeight + 6).Contains(mousePos))
+            if (new Rectangle(15, currentY, usableWidth - 25, textBoxHeight + 6).Contains(mousePos))
             {
                 if (mouseDown)
                 {
-                    g.FillRectangle(SystemBrushes.HotTrack, 15, currentY, Width - 25, textBoxHeight + 6);
-                    g.FillRectangle(SystemBrushes.GradientInactiveCaption, 16, currentY + 1, Width - 27, textBoxHeight + 4);
+                    g.FillRectangle(SystemBrushes.HotTrack, 15, currentY, usableWidth - 25, textBoxHeight + 6);
+                    g.FillRectangle(SystemBrushes.GradientInactiveCaption, 16, currentY + 1, usableWidth - 27, textBoxHeight + 4);
                 }
                 else
                 {
-                    g.FillRectangle(SystemBrushes.Highlight, 15, currentY, Width - 25, textBoxHeight + 6);
-                    g.FillRectangle(buttonHighlight, 16, currentY + 1, Width - 27, textBoxHeight + 4);
+                    g.FillRectangle(SystemBrushes.Highlight, 15, currentY, usableWidth - 25, textBoxHeight + 6);
+                    g.FillRectangle(buttonHighlight, 16, currentY + 1, usableWidth - 27, textBoxHeight + 4);
                 }
 
                 clicked = eventType == EventType.CLICK;
             }
             else
             {
-                g.FillRectangle(SystemBrushes.ControlDark, 15, currentY, Width - 25, textBoxHeight + 6);
-                g.FillRectangle(SystemBrushes.ControlLight, 16, currentY + 1, Width - 27, textBoxHeight + 4);
+                g.FillRectangle(SystemBrushes.ControlDark, 15, currentY, usableWidth - 25, textBoxHeight + 6);
+                g.FillRectangle(SystemBrushes.ControlLight, 16, currentY + 1, usableWidth - 27, textBoxHeight + 4);
                 
                 
             }
 
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText,
-                (Width - 25 - (int)g.MeasureString(name, textBox1.Font).Width) / 2, currentY + 3);
+                (usableWidth - 25 - (int)g.MeasureString(name, textBox1.Font).Width) / 2, currentY + 3);
+
+            currentY += 20;
+            index++;
+
+            return clicked;
+        }
+
+        public bool Link(string name)
+        {
+            bool clicked = false;
+
+            if (new Rectangle(15, currentY, (int)g.MeasureString(name, textBox1.Font).Width, textBoxHeight).Contains(mousePos))
+            {
+                if(mouseDown)
+                    g.DrawString(name, LinkFont, Brushes.Red, 15, currentY);
+                else
+                    g.DrawString(name, LinkFont, Brushes.Blue, 15, currentY);
+                
+                clicked = eventType == EventType.CLICK;
+            }
+            else
+            {
+                g.DrawString(name, LinkFont, Brushes.Blue, 15, currentY);
+
+
+            }
 
             currentY += 20;
             index++;
@@ -670,6 +711,7 @@ namespace GL_EditorFramework
         float NumberInput(float number, string name, float increment = 1f, int incrementDragDivider = 8);
         OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1f, int incrementDragDivider = 8);
         bool Button(string name);
+        bool Link(string name);
     }
 
     public abstract class AbstractPropertyContainer

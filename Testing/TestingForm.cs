@@ -206,6 +206,8 @@ namespace Testing
         public Vector3 pCenter;
         public Vector3 center;
 
+        bool showMore = false;
+
         public void Setup(IEnumerable<object> editableObjects)
         {
             EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
@@ -228,8 +230,24 @@ namespace Testing
             else
                 center = control.Vector3Input(center, "Position", 0.125f, 2);
 
-            if (control.Button("Click Me!"))
-                MessageBox.Show("Thx for clicking.");
+            
+            if (showMore)
+            {
+                if (control.Button("Hide Links"))
+                    showMore = false;
+
+                if (control.Link("Link 1"))
+                    MessageBox.Show("Thx for clicking.");
+                if (control.Link("Link 2"))
+                    MessageBox.Show("Thx for clicking.");
+                if (control.Link("Link 3"))
+                    MessageBox.Show("Thx for clicking.");
+            }
+            else
+            {
+                if (control.Button("Show Links"))
+                    showMore = true;
+            }
         }
     }
 }
