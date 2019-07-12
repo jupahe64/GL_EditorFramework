@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TestingForm));
             this.button1 = new System.Windows.Forms.Button();
             this.sceneListView1 = new GL_EditorFramework.SceneListView();
             this.objectPropertyControl1 = new GL_EditorFramework.ObjectPropertyControl();
@@ -53,6 +52,7 @@
             this.sceneListView1.CurrentCategory = "None";
             this.sceneListView1.Location = new System.Drawing.Point(12, 237);
             this.sceneListView1.Name = "sceneListView1";
+            this.sceneListView1.SelectedItems = null;
             this.sceneListView1.Size = new System.Drawing.Size(279, 226);
             this.sceneListView1.TabIndex = 6;
             // 

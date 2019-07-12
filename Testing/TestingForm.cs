@@ -225,6 +225,9 @@ namespace Testing
                 center = control.Vector3Input(center, "Position");
             else
                 center = control.Vector3Input(center, "Position", 0.125f, 2);
+
+            if (control.Button("Click Me!"))
+                MessageBox.Show("Thx for clicking.");
         }
     }
 }

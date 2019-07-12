@@ -64,10 +64,14 @@ namespace GL_EditorFramework
         Point lastMousePos;
         Point dragStarPos;
 
+        Brush buttonHighlight = new SolidBrush(MixedColor(SystemColors.GradientInactiveCaption,SystemColors.ControlLightLight));
+
         Timer doubleClickTimer = new Timer();
         bool acceptDoubleClick = false;
 
         float[] values = new float[3];
+
+        bool mouseDown = false;
 
         int focusedIndex = -1;
         int dragIndex = -1;
@@ -178,6 +182,8 @@ namespace GL_EditorFramework
         {
             if (e.Button == MouseButtons.Left)
             {
+                mouseDown = true;
+
                 mouseWasDragged = false;
                 dragStarPos = e.Location;
                 eventType = EventType.DRAG_START;
@@ -234,6 +240,8 @@ namespace GL_EditorFramework
         {
             if (e.Button != MouseButtons.Left)
                 return;
+
+            mouseDown = false;
 
             if (mouseWasDragged)
             {
@@ -599,12 +607,69 @@ namespace GL_EditorFramework
                     return vec;
             }
         }
+
+        public bool Button(string name)
+        {
+            bool clicked = false;
+
+            if (new Rectangle(15, currentY, Width - 25, textBoxHeight + 6).Contains(mousePos))
+            {
+                if (mouseDown)
+                {
+                    g.FillRectangle(SystemBrushes.HotTrack, 15, currentY, Width - 25, textBoxHeight + 6);
+                    g.FillRectangle(SystemBrushes.GradientInactiveCaption, 16, currentY + 1, Width - 27, textBoxHeight + 4);
+                }
+                else
+                {
+                    g.FillRectangle(SystemBrushes.Highlight, 15, currentY, Width - 25, textBoxHeight + 6);
+                    g.FillRectangle(buttonHighlight, 16, currentY + 1, Width - 27, textBoxHeight + 4);
+                }
+
+                clicked = eventType == EventType.CLICK;
+            }
+            else
+            {
+                g.FillRectangle(SystemBrushes.ControlDark, 15, currentY, Width - 25, textBoxHeight + 6);
+                g.FillRectangle(SystemBrushes.ControlLight, 16, currentY + 1, Width - 27, textBoxHeight + 4);
+                
+                
+            }
+
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText,
+                (Width - 25 - (int)g.MeasureString(name, textBox1.Font).Width) / 2, currentY + 3);
+
+            currentY += 20;
+            index++;
+
+            return clicked;
+        }
+
+        static Color MixedColor(Color color1, Color color2)
+        {
+            byte a1 = color1.A;
+            byte r1 = color1.R;
+            byte g1 = color1.G;
+            byte b1 = color1.B;
+
+            byte a2 = color2.A;
+            byte r2 = color2.R;
+            byte g2 = color2.G;
+            byte b2 = color2.B;
+
+            int a3 = (a1 + a2) / 2;
+            int r3 = (r1 + r2) / 2;
+            int g3 = (g1 + g2) / 2;
+            int b3 = (b1 + b2) / 2;
+
+            return Color.FromArgb(a3, r3, g3, b3);
+        }
     }
 
     public interface IObjectPropertyControl
     {
         float NumberInput(float number, string name, float increment = 1f, int incrementDragDivider = 8);
         OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1f, int incrementDragDivider = 8);
+        bool Button(string name);
     }
 
     public abstract class AbstractPropertyContainer
