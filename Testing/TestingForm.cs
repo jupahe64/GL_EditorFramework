@@ -117,7 +117,7 @@ namespace Testing
 
         private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
         {
-            scene.MoveObjectsInList(e.OriginalIndex, e.Count, e.Offset);
+            scene.ReorderObjects(e.OriginalIndex, e.Count, e.Offset);
             e.Handled = true;
             gL_ControlModern1.Refresh();
         }

@@ -139,7 +139,7 @@ namespace GL_EditorFramework.EditorDrawables
             UpdateSelection(var);
         }
 
-        public void MoveObjectsInList(int originalIndex, int count, int offset)
+        public void ReorderObjects(int originalIndex, int count, int offset)
         {
             List<IEditableObject> objs = new List<IEditableObject>();
 
@@ -156,7 +156,7 @@ namespace GL_EditorFramework.EditorDrawables
                 index++;
             }
 
-            undoStack.Push(new RevertableMovement(originalIndex + offset, count, -offset, this, objects));
+            undoStack.Push(new RevertableReordering(originalIndex + offset, count, -offset, this, objects));
         }
 
         public override void Draw(GL_ControlModern control, Pass pass)

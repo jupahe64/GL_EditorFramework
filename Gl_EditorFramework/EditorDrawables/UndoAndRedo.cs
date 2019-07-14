@@ -302,7 +302,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableMovement : IRevertable
+        public struct RevertableReordering : IRevertable
         {
             int originalIndex;
             int count;
@@ -310,7 +310,7 @@ namespace GL_EditorFramework.EditorDrawables
             EditorSceneBase scene;
             IList list;
 
-            public RevertableMovement(int originalIndex, int count, int offset, EditorSceneBase scene, IList list)
+            public RevertableReordering(int originalIndex, int count, int offset, EditorSceneBase scene, IList list)
             {
                 this.originalIndex = originalIndex;
                 this.count = count;
@@ -338,7 +338,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 scene.ListChanged.Invoke(this, null);
 
-                return new RevertableMovement(originalIndex + offset, count, -offset, scene, list);
+                return new RevertableReordering(originalIndex + offset, count, -offset, scene, list);
             }
         }
 
