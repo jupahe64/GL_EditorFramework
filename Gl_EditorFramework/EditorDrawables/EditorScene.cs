@@ -58,7 +58,7 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.SelectDefault(control);
             }
 
-            undoStack.Push(new RevertableAddition(objs, this, objects));
+            undoStack.Push(new RevertableAddition(objs, objects));
 
             UpdateSelection(var);
         }
@@ -83,7 +83,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            undoStack.Push(new RevertableDeletion(infos.ToArray(), this, objects));
+            undoStack.Push(new RevertableDeletion(infos.ToArray(), objects));
 
             if (selectionHasChanged)
                 UpdateSelection(var);
@@ -109,7 +109,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            undoStack.Push(new RevertableDeletion(infos.ToArray(), this, objects));
+            undoStack.Push(new RevertableDeletion(infos.ToArray(), objects));
 
             if (selectionHasChanged)
                 UpdateSelection(var);
@@ -134,7 +134,7 @@ namespace GL_EditorFramework.EditorDrawables
                 index++;
             }
 
-            undoStack.Push(new RevertableAddition(objs, this, objects));
+            undoStack.Push(new RevertableAddition(objs, objects));
 
             UpdateSelection(var);
         }
@@ -156,7 +156,7 @@ namespace GL_EditorFramework.EditorDrawables
                 index++;
             }
 
-            undoStack.Push(new RevertableReordering(originalIndex + offset, count, -offset, this, objects));
+            undoStack.Push(new RevertableReordering(originalIndex + offset, count, -offset, objects));
         }
 
         public override void Draw(GL_ControlModern control, Pass pass)

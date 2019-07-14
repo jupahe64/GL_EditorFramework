@@ -15,7 +15,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (undoStack.Count > 0)
             {
-                redoStack.Push(undoStack.Pop().Revert());
+                redoStack.Push(undoStack.Pop().Revert(this));
                 ObjectsMoved.Invoke(this,null);
             }
 
@@ -25,14 +25,14 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if(redoStack.Count > 0)
             {
-                undoStack.Push(redoStack.Pop().Revert());
+                undoStack.Push(redoStack.Pop().Revert(this));
                 ObjectsMoved.Invoke(this, null);
             }
         }
 
         public interface IRevertable
         {
-            IRevertable Revert();
+            IRevertable Revert(EditorSceneBase scene);
         }
         
         public void AddTransformToUndo(TransformChangeInfos transformChangeInfos)
@@ -72,7 +72,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            public IRevertable Revert()
+            public IRevertable Revert(EditorSceneBase scene)
             {
                 RevertablePosChange revertable = new RevertablePosChange
                 {
@@ -123,7 +123,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            public IRevertable Revert()
+            public IRevertable Revert(EditorSceneBase scene)
             {
                 RevertableRotChange revertable = new RevertableRotChange
                 {
@@ -176,7 +176,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            public IRevertable Revert()
+            public IRevertable Revert(EditorSceneBase scene)
             {
                 RevertableScaleChange revertable = new RevertableScaleChange
                 {
@@ -267,17 +267,15 @@ namespace GL_EditorFramework.EditorDrawables
         public struct RevertableAddition : IRevertable
         {
             IEditableObject[] objects;
-            EditorSceneBase scene;
             IList list;
 
-            public RevertableAddition(IEditableObject[] objects, EditorSceneBase scene, IList list)
+            public RevertableAddition(IEditableObject[] objects, IList list)
             {
                 this.objects = objects;
-                this.scene = scene;
                 this.list = list;
             }
 
-            public IRevertable Revert()
+            public IRevertable Revert(EditorSceneBase scene)
             {
                 uint var = 0;
                 RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objects.Length];
@@ -298,7 +296,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 scene.ListChanged.Invoke(this, new ListChangedEventArgs(list));
 
-                return new RevertableDeletion(infos, scene, list);
+                return new RevertableDeletion(infos, list);
             }
         }
 
@@ -307,19 +305,17 @@ namespace GL_EditorFramework.EditorDrawables
             int originalIndex;
             int count;
             int offset;
-            EditorSceneBase scene;
             IList list;
 
-            public RevertableReordering(int originalIndex, int count, int offset, EditorSceneBase scene, IList list)
+            public RevertableReordering(int originalIndex, int count, int offset, IList list)
             {
                 this.originalIndex = originalIndex;
                 this.count = count;
                 this.offset = offset;
-                this.scene = scene;
                 this.list = list;
             }
 
-            public IRevertable Revert()
+            public IRevertable Revert(EditorSceneBase scene)
             {
                 List<object> objs = new List<object>();
 
@@ -338,24 +334,22 @@ namespace GL_EditorFramework.EditorDrawables
 
                 scene.ListChanged.Invoke(this, null);
 
-                return new RevertableReordering(originalIndex + offset, count, -offset, scene, list);
+                return new RevertableReordering(originalIndex + offset, count, -offset, list);
             }
         }
 
         public struct RevertableDeletion : IRevertable
         {
             DeleteInfo[] infos;
-            EditorSceneBase scene;
             IList list;
 
-            public RevertableDeletion(DeleteInfo[] infos, EditorSceneBase scene, IList list)
+            public RevertableDeletion(DeleteInfo[] infos, IList list)
             {
                 this.infos = infos;
-                this.scene = scene;
                 this.list = list;
             }
 
-            public IRevertable Revert()
+            public IRevertable Revert(EditorSceneBase scene)
             {
                 for (int i = infos.Length - 1; i >= 0; i--)
                     list.Insert(infos[i].index, infos[i].obj);
@@ -369,7 +363,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 scene.ListChanged.Invoke(this, new ListChangedEventArgs(list));
 
-                return new RevertableAddition(objects, scene, list);
+                return new RevertableAddition(objects, list);
             }
 
             public struct DeleteInfo
