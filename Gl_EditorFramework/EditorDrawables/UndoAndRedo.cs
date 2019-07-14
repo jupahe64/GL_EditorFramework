@@ -1,6 +1,7 @@
 ﻿using GL_EditorFramework.Interfaces;
 using OpenTK;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -260,6 +261,126 @@ namespace GL_EditorFramework.EditorDrawables
 
                 if (position.HasValue || rotation.HasValue || scale.HasValue)
                     infos.Add(new TransformChangeInfo(obj, part, position, rotation, scale));
+            }
+        }
+
+        public struct RevertableAddition : IRevertable
+        {
+            IEditableObject[] objects;
+            EditorSceneBase scene;
+            IList list;
+
+            public RevertableAddition(IEditableObject[] objects, EditorSceneBase scene, IList list)
+            {
+                this.objects = objects;
+                this.scene = scene;
+                this.list = list;
+            }
+
+            public IRevertable Revert()
+            {
+                uint var = 0;
+                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objects.Length];
+
+                bool selectionHasChanged = false;
+                for (int i = 0; i < objects.Length; i++)
+                {
+                    infos[i] = new RevertableDeletion.DeleteInfo(objects[i], list.IndexOf(objects[i]));
+                    list.Remove(objects[i]);
+                    if (objects[i].IsSelected())
+                        var |= objects[i].DeselectAll(scene.control);
+
+                    selectionHasChanged |= scene.SelectedObjects.Remove(objects[i]);
+                }
+
+                if (selectionHasChanged)
+                    scene.UpdateSelection(var);
+
+                scene.ListChanged.Invoke(this, new ListChangedEventArgs(list));
+
+                return new RevertableDeletion(infos, scene, list);
+            }
+        }
+
+        public struct RevertableMovement : IRevertable
+        {
+            int originalIndex;
+            int count;
+            int offset;
+            EditorSceneBase scene;
+            IList list;
+
+            public RevertableMovement(int originalIndex, int count, int offset, EditorSceneBase scene, IList list)
+            {
+                this.originalIndex = originalIndex;
+                this.count = count;
+                this.offset = offset;
+                this.scene = scene;
+                this.list = list;
+            }
+
+            public IRevertable Revert()
+            {
+                List<object> objs = new List<object>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    objs.Add(list[originalIndex]);
+                    list.RemoveAt(originalIndex);
+                }
+
+                int index = originalIndex + offset;
+                foreach (IEditableObject obj in objs)
+                {
+                    list.Insert(index, obj);
+                    index++;
+                }
+
+                scene.ListChanged.Invoke(this, null);
+
+                return new RevertableMovement(originalIndex + offset, count, -offset, scene, list);
+            }
+        }
+
+        public struct RevertableDeletion : IRevertable
+        {
+            DeleteInfo[] infos;
+            EditorSceneBase scene;
+            IList list;
+
+            public RevertableDeletion(DeleteInfo[] infos, EditorSceneBase scene, IList list)
+            {
+                this.infos = infos;
+                this.scene = scene;
+                this.list = list;
+            }
+
+            public IRevertable Revert()
+            {
+                for (int i = infos.Length - 1; i >= 0; i--)
+                    list.Insert(infos[i].index, infos[i].obj);
+
+                IEditableObject[] objects = new IEditableObject[infos.Length];
+
+                for (int i = 0; i < infos.Length; i++)
+                    objects[i] = infos[i].obj;
+
+                scene.control.Refresh();
+
+                scene.ListChanged.Invoke(this, new ListChangedEventArgs(list));
+
+                return new RevertableAddition(objects, scene, list);
+            }
+
+            public struct DeleteInfo
+            {
+                public DeleteInfo(IEditableObject obj, int index)
+                {
+                    this.obj = obj;
+                    this.index = index;
+                }
+                public IEditableObject obj;
+                public int index;
             }
         }
     }

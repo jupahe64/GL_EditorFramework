@@ -10,9 +10,21 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditableObject;
+using System.Collections;
 
 namespace GL_EditorFramework.EditorDrawables
 {
+    public delegate void ListChangedEventHandler(object sender, ListChangedEventArgs e);
+
+    public class ListChangedEventArgs : EventArgs
+    {
+        public IList List;
+        public ListChangedEventArgs(IList list)
+        {
+            List = list;
+        }
+    }
+
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
         protected bool multiSelect;
@@ -27,7 +39,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public event EventHandler SelectionChanged;
         public event EventHandler ObjectsMoved;
-
+        public event ListChangedEventHandler ListChanged;
+        
         protected float draggingDepth;
 
         protected GL_ControlBase control;

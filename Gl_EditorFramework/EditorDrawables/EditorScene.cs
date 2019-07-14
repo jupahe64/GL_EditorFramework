@@ -13,7 +13,6 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public class EditorScene : EditorSceneBase
     {
-        public event EventHandler ListChanged;
         public List<IEditableObject> objects = new List<IEditableObject>();
 
         private float renderDistanceSquared = 1000000;
@@ -59,7 +58,7 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.SelectDefault(control);
             }
 
-            undoStack.Push(new RevertableAddition(objs, this));
+            undoStack.Push(new RevertableAddition(objs, this, objects));
 
             UpdateSelection(var);
         }
@@ -84,7 +83,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            undoStack.Push(new RevertableDeletion(infos.ToArray(), this));
+            undoStack.Push(new RevertableDeletion(infos.ToArray(), this, objects));
 
             if (selectionHasChanged)
                 UpdateSelection(var);
@@ -110,7 +109,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            undoStack.Push(new RevertableDeletion(infos.ToArray(), this));
+            undoStack.Push(new RevertableDeletion(infos.ToArray(), this, objects));
 
             if (selectionHasChanged)
                 UpdateSelection(var);
@@ -135,7 +134,7 @@ namespace GL_EditorFramework.EditorDrawables
                 index++;
             }
 
-            undoStack.Push(new RevertableAddition(objs, this));
+            undoStack.Push(new RevertableAddition(objs, this, objects));
 
             UpdateSelection(var);
         }
@@ -157,7 +156,7 @@ namespace GL_EditorFramework.EditorDrawables
                 index++;
             }
 
-            undoStack.Push(new RevertableMovement(originalIndex + offset, count, -offset, this));
+            undoStack.Push(new RevertableMovement(originalIndex + offset, count, -offset, this, objects));
         }
 
         public override void Draw(GL_ControlModern control, Pass pass)
@@ -453,122 +452,6 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.KeyUp(e, control);
             }
             return var;
-        }
-
-
-
-        public struct RevertableAddition : IRevertable
-        {
-            IEditableObject[] objects;
-            EditorScene scene;
-
-            public RevertableAddition(IEditableObject[] objects, EditorScene scene)
-            {
-                this.objects = objects;
-                this.scene = scene;
-            }
-
-            public IRevertable Revert()
-            {
-                uint var = 0;
-                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objects.Length];
-
-                bool selectionHasChanged = false;
-                for (int i = 0; i < objects.Length; i++)
-                {
-                    infos[i] = new RevertableDeletion.DeleteInfo(objects[i], scene.objects.IndexOf(objects[i]));
-                    scene.objects.Remove(objects[i]);
-                    if(objects[i].IsSelected())
-                        var |= objects[i].DeselectAll(scene.control);
-
-                    selectionHasChanged |= scene.SelectedObjects.Remove(objects[i]);
-                }
-
-                if(selectionHasChanged)
-                    scene.UpdateSelection(var);
-
-                scene.ListChanged.Invoke(this, null);
-
-                return new RevertableDeletion(infos, scene);
-            }
-        }
-
-        public struct RevertableMovement : IRevertable
-        {
-            int originalIndex;
-            int count;
-            int offset;
-            EditorScene scene;
-
-            public RevertableMovement(int originalIndex, int count, int offset, EditorScene scene)
-            {
-                this.originalIndex = originalIndex;
-                this.count = count;
-                this.offset = offset;
-                this.scene = scene;
-            }
-
-            public IRevertable Revert()
-            {
-                List<IEditableObject> objs = new List<IEditableObject>();
-
-                for (int i = 0; i < count; i++)
-                {
-                    objs.Add(scene.objects[originalIndex]);
-                    scene.objects.RemoveAt(originalIndex);
-                }
-
-                int index = originalIndex + offset;
-                foreach (IEditableObject obj in objs)
-                {
-                    scene.objects.Insert(index, obj);
-                    index++;
-                }
-
-                scene.ListChanged.Invoke(this, null);
-
-                return new RevertableMovement(originalIndex+offset, count, -offset, scene);
-            }
-        }
-
-        public struct RevertableDeletion : IRevertable
-        {
-            DeleteInfo[] infos;
-            EditorScene scene;
-
-            public RevertableDeletion(DeleteInfo[] infos, EditorScene scene)
-            {
-                this.infos = infos;
-                this.scene = scene;
-            }
-
-            public IRevertable Revert()
-            {
-                for (int i = infos.Length - 1; i >= 0; i--)
-                    scene.objects.Insert(infos[i].index, infos[i].obj);
-
-                IEditableObject[] objects = new IEditableObject[infos.Length];
-
-                for (int i = 0; i < infos.Length; i++)
-                    objects[i] = infos[i].obj;
-
-                scene.control.Refresh();
-
-                scene.ListChanged.Invoke(this, null);
-
-                return new RevertableAddition(objects, scene);
-            }
-
-            public struct DeleteInfo
-            {
-                public DeleteInfo(IEditableObject obj, int index)
-                {
-                    this.obj = obj;
-                    this.index = index;
-                }
-                public IEditableObject obj;
-                public int index;
-            }
         }
     }
 }
