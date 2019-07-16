@@ -17,6 +17,7 @@ namespace GL_EditorFramework
 
         public event SelectionChangedEventHandler SelectionChanged;
         public event ItemsMovedEventHandler ItemsMoved;
+        public event EventHandler CategoryChanged;
 
         private string currentCategory = "None";
         private FastListView objectPanel;
@@ -44,6 +45,8 @@ namespace GL_EditorFramework
                 }
             }
         }
+
+        public IList CurrentList => lists[currentCategory];
 
         public void UpdateAutoScroll()
         {
@@ -82,6 +85,7 @@ namespace GL_EditorFramework
                 categoryPanel.Expanded = false;
                 currentCategory = lists.Keys.ElementAt(categoryPanel.HoveredCategoryIndex);
                 objectPanel.List = lists[currentCategory];
+                CategoryChanged?.Invoke(this, null);
                 categoryPanel.Refresh();
             }
             else

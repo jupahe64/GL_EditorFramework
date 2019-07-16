@@ -2,6 +2,7 @@
 using GL_EditorFramework.Interfaces;
 using OpenTK;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -39,124 +40,25 @@ namespace GL_EditorFramework.EditorDrawables
         {
             this.multiSelect = multiSelect;
         }
-        
-        public void Add(params IEditableObject[] objs)
+
+        public void Add(IList list, params IEditableObject[] objs)
         {
-            uint var = 0;
-
-            foreach (IEditableObject selected in SelectedObjects)
-            {
-                var |= selected.DeselectAll(control);
-            }
-            SelectedObjects.Clear();
-
-            foreach (IEditableObject obj in objs)
-            {
-                objects.Add(obj);
-
-                SelectedObjects.Add(obj);
-                var |= obj.SelectDefault(control);
-            }
-
-            undoStack.Push(new RevertableAddition(objs, objects));
-
-            UpdateSelection(var);
+            Add(list, list == objects, objs);
         }
 
-        public void Delete(params IEditableObject[] objs)
+        public void Delete(IList list, params IEditableObject[] objs)
         {
-            uint var = 0;
-
-            List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
-
-            bool selectionHasChanged = false;
-
-            foreach (IEditableObject obj in objs)
-            {
-                infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
-                objects.Remove(obj);
-                if (SelectedObjects.Contains(obj))
-                {
-                    var |= obj.DeselectAll(control);
-                    SelectedObjects.Remove(obj);
-                    selectionHasChanged = true;
-                }
-            }
-
-            undoStack.Push(new RevertableDeletion(infos.ToArray(), objects));
-
-            if (selectionHasChanged)
-                UpdateSelection(var);
+            Delete(list, list == objects, objs);
         }
 
-        public void Delete(IEnumerable<object> objs)
+        public void Delete(IList list, IEnumerable<object> objs)
         {
-            uint var = 0;
-
-            List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
-
-            bool selectionHasChanged = false;
-
-            foreach (IEditableObject obj in objs)
-            {
-                infos.Add(new RevertableDeletion.DeleteInfo(obj, objects.IndexOf(obj)));
-                objects.Remove(obj);
-                if (SelectedObjects.Contains(obj))
-                {
-                    var |= obj.DeselectAll(control);
-                    SelectedObjects.Remove(obj);
-                    selectionHasChanged = true;
-                }
-            }
-
-            undoStack.Push(new RevertableDeletion(infos.ToArray(), objects));
-
-            if (selectionHasChanged)
-                UpdateSelection(var);
+            Delete(list, list == objects, objs);
         }
 
-        public void InsertAt(int index, params IEditableObject[] objs)
+        public void InsertAt(IList list, int index, params IEditableObject[] objs)
         {
-            uint var = 0;
-
-            foreach (IEditableObject selected in SelectedObjects)
-            {
-                var |= selected.DeselectAll(control);
-            }
-            SelectedObjects.Clear();
-
-            foreach (IEditableObject obj in objs)
-            {
-                objects.Insert(index, obj);
-
-                SelectedObjects.Add(obj);
-                var |= obj.SelectDefault(control);
-                index++;
-            }
-
-            undoStack.Push(new RevertableAddition(objs, objects));
-
-            UpdateSelection(var);
-        }
-
-        public void ReorderObjects(int originalIndex, int count, int offset)
-        {
-            List<IEditableObject> objs = new List<IEditableObject>();
-
-            for (int i = 0; i < count; i++)
-            {
-                objs.Add(objects[originalIndex]);
-                objects.RemoveAt(originalIndex);
-            }
-
-            int index = originalIndex + offset;
-            foreach (IEditableObject obj in objs)
-            {
-                objects.Insert(index, obj);
-                index++;
-            }
-
-            undoStack.Push(new RevertableReordering(originalIndex + offset, count, -offset, objects));
+            InsertAt(list, list == objects, index, objs);
         }
 
         public override void Draw(GL_ControlModern control, Pass pass)

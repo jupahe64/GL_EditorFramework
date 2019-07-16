@@ -72,6 +72,178 @@ namespace GL_EditorFramework.EditorDrawables
                 control.DrawPicking();
         }
 
+        public void Add(IList list, bool updateSelection, params IEditableObject[] objs)
+        {
+            if (updateSelection)
+            {
+                uint var = 0;
+
+                foreach (IEditableObject selected in SelectedObjects)
+                {
+                    var |= selected.DeselectAll(control);
+                }
+                SelectedObjects.Clear();
+
+                foreach (IEditableObject obj in objs)
+                {
+                    list.Add(obj);
+
+                    SelectedObjects.Add(obj);
+                    var |= obj.SelectDefault(control);
+                }
+
+                undoStack.Push(new RevertableAddition(objs, list));
+
+                UpdateSelection(var);
+            }
+            else
+            {
+                foreach (IEditableObject obj in objs)
+                    list.Add(obj);
+
+                undoStack.Push(new RevertableAddition(objs, list));
+            }
+        }
+
+        public void Delete(IList list, bool updateSelection, params IEditableObject[] objs)
+        {
+            if (updateSelection)
+            {
+                uint var = 0;
+
+                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+
+                bool selectionHasChanged = false;
+
+                foreach (IEditableObject obj in objs)
+                {
+                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
+                    list.Remove(obj);
+                    if (SelectedObjects.Contains(obj))
+                    {
+                        var |= obj.DeselectAll(control);
+                        SelectedObjects.Remove(obj);
+                        selectionHasChanged = true;
+                    }
+                }
+
+                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
+
+                if (selectionHasChanged)
+                    UpdateSelection(var);
+            }
+            else
+            {
+                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+
+                foreach (IEditableObject obj in objs)
+                {
+                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
+                    list.Remove(obj);
+                }
+
+                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
+            }
+        }
+
+        public void Delete(IList list, bool updateSelection, IEnumerable<object> objs)
+        {
+            if (updateSelection)
+            {
+                uint var = 0;
+
+                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+
+                bool selectionHasChanged = false;
+
+                foreach (IEditableObject obj in objs)
+                {
+                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
+                    list.Remove(obj);
+                    if (SelectedObjects.Contains(obj))
+                    {
+                        var |= obj.DeselectAll(control);
+                        SelectedObjects.Remove(obj);
+                        selectionHasChanged = true;
+                    }
+                }
+
+                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
+
+                if (selectionHasChanged)
+                    UpdateSelection(var);
+            }
+            else
+            {
+                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+
+                foreach (IEditableObject obj in objs)
+                {
+                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
+                    list.Remove(obj);
+                }
+
+                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
+            }
+        }
+
+        public void InsertAt(IList list, bool updateSelection, int index, params IEditableObject[] objs)
+        {
+            if (updateSelection)
+            {
+                uint var = 0;
+
+                foreach (IEditableObject selected in SelectedObjects)
+                {
+                    var |= selected.DeselectAll(control);
+                }
+                SelectedObjects.Clear();
+
+                foreach (IEditableObject obj in objs)
+                {
+                    list.Insert(index, obj);
+
+                    SelectedObjects.Add(obj);
+                    var |= obj.SelectDefault(control);
+                    index++;
+                }
+
+                undoStack.Push(new RevertableAddition(objs, list));
+
+                UpdateSelection(var);
+            }
+            else
+            {
+                foreach (IEditableObject obj in objs)
+                {
+                    list.Insert(index, obj);
+                    index++;
+                }
+
+                undoStack.Push(new RevertableAddition(objs, list));
+            }
+        }
+
+        public void ReorderObjects(IList list, int originalIndex, int count, int offset)
+        {
+            List<object> objs = new List<object>();
+
+            for (int i = 0; i < count; i++)
+            {
+                objs.Add(list[originalIndex]);
+                list.RemoveAt(originalIndex);
+            }
+
+            int index = originalIndex + offset;
+            foreach (object obj in objs)
+            {
+                list.Insert(index, obj);
+                index++;
+            }
+
+            undoStack.Push(new RevertableReordering(originalIndex + offset, count, -offset, list));
+        }
+
         public void ApplyCurrentTransformAction()
         {
             TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());

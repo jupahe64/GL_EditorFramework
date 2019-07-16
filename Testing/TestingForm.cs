@@ -117,14 +117,14 @@ namespace Testing
 
         private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
         {
-            scene.ReorderObjects(e.OriginalIndex, e.Count, e.Offset);
+            scene.ReorderObjects(sceneListView1.CurrentList, e.OriginalIndex, e.Count, e.Offset);
             e.Handled = true;
             gL_ControlModern1.Refresh();
         }
 
         private void Scene_ListChanged(object sender, ListChangedEventArgs e)
         {
-            if (sceneListView1.lists[sceneListView1.CurrentCategory] == e.List)
+            if (sceneListView1.CurrentList == e.List)
             {
                 sceneListView1.UpdateAutoScroll();
                 sceneListView1.Refresh();
@@ -149,7 +149,7 @@ namespace Testing
         {
             if (e.KeyCode == Keys.Delete)
             {
-                scene.Delete(scene.SelectedObjects.ToArray());
+                scene.Delete(sceneListView1.CurrentList, scene.SelectedObjects.ToArray());
                 gL_ControlModern1.Refresh();
                 sceneListView1.UpdateAutoScroll();
                 Scene_SelectionChanged(this, null);
@@ -199,7 +199,7 @@ namespace Testing
 
         private void button1_Click(object sender, EventArgs e)
         {
-            scene.Add(new TransformableObject(Vector3.Zero,Quaternion.Identity,Vector3.One));
+            scene.Add(sceneListView1.CurrentList, new TransformableObject(Vector3.Zero,Quaternion.Identity,Vector3.One));
             sceneListView1.UpdateAutoScroll();
         }
     }
