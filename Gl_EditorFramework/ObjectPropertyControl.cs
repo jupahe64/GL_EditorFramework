@@ -140,9 +140,9 @@ namespace GL_EditorFramework
 
             if ((changeTypes & VALUE_CHANGE_START)>0)
                 ValueChangeStart.Invoke(this, e);
-            else if ((changeTypes & VALUE_CHANGED) > 0)
+            if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if ((changeTypes & VALUE_SET) > 0)
+            if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
@@ -221,9 +221,9 @@ namespace GL_EditorFramework
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
                 ValueChangeStart.Invoke(this, e);
-            else if ((changeTypes & VALUE_CHANGED) > 0)
+            if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if ((changeTypes & VALUE_SET) > 0)
+            if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
@@ -245,9 +245,9 @@ namespace GL_EditorFramework
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
                 ValueChangeStart.Invoke(this, e);
-            else if ((changeTypes & VALUE_CHANGED) > 0)
+            if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if ((changeTypes & VALUE_SET) > 0)
+            if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
@@ -277,9 +277,9 @@ namespace GL_EditorFramework
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
                 ValueChangeStart.Invoke(this, e);
-            else if ((changeTypes & VALUE_CHANGED) > 0)
+            if ((changeTypes & VALUE_CHANGED) > 0)
                 ValueChanged.Invoke(this, e);
-            else if ((changeTypes & VALUE_SET) > 0)
+            if ((changeTypes & VALUE_SET) > 0)
                 ValueSet.Invoke(this, e);
         }
 
@@ -300,20 +300,6 @@ namespace GL_EditorFramework
                 fieldX+1 + (width-(int)g.MeasureString(value,textBox1.Font).Width)/2, y);
 
             g.ResetClip();
-        }
-
-        private void Unfocus()
-        {
-            if (focusedIndex != -1)
-            {
-                int iKeep = index;
-                int yKeep = currentY;
-                Graphics gKeep = g;
-                Focus();
-                index = iKeep;
-                currentY = yKeep;
-                g = gKeep;
-            }
         }
 
         private void PrepareFieldForInput(int fieldX, int y, int width, string name, string value)

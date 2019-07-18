@@ -160,6 +160,9 @@ namespace Testing
         {
             scene.ApplyCurrentTransformAction();
             propertyContainer.pCenter = propertyContainer.center;
+
+            propertyChangesAction.translation = new Vector3();
+            scene.CurrentAction = propertyChangesAction;
         }
 
         private void ObjectPropertyControl1_ValueChangeStart(object sender, EventArgs e)
