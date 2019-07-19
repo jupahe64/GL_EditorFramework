@@ -279,20 +279,15 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 uint var = 0;
                 RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objects.Length];
-
-                bool selectionHasChanged = false;
+                
                 for (int i = 0; i < objects.Length; i++)
                 {
                     infos[i] = new RevertableDeletion.DeleteInfo(objects[i], list.IndexOf(objects[i]));
                     list.Remove(objects[i]);
-                    if (objects[i].IsSelected())
-                        var |= objects[i].DeselectAll(scene.control);
-
-                    selectionHasChanged |= scene.SelectedObjects.Remove(objects[i]);
+                    var |= objects[i].DeselectAll(scene.control, scene.SelectedObjects);
                 }
 
-                if (selectionHasChanged)
-                    scene.UpdateSelection(var);
+                scene.UpdateSelection(var);
 
                 scene.ListChanged.Invoke(this, new ListChangedEventArgs(list));
 

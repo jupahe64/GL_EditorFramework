@@ -307,7 +307,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     foreach (IEditableObject selected in SelectedObjects)
                     {
-                        selected.DeselectAll(control);
+                        selected.DeselectAll(control, null);
                     }
                     SelectedObjects.Clear();
                     selectionHasChanged = true;
@@ -317,11 +317,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     foreach (IEditableObject obj in objects)
                     {
-                        if (!obj.IsSelected())
-                        {
-                            obj.SelectAll(control);
-                            SelectedObjects.Add(obj);
-                        }
+                        obj.SelectAll(control, SelectedObjects);
                     }
                     selectionHasChanged = true;
                 }

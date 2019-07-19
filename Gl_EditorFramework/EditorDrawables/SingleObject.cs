@@ -166,33 +166,38 @@ namespace GL_EditorFramework.EditorDrawables
             return (pos - position).LengthSquared < rangeSquared;
         }
         
-        public override uint SelectAll(GL_ControlBase control)
+        public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
             Selected = true;
+            selectedObjects?.Add(this);
             return REDRAW;
         }
 
-        public override uint SelectDefault(GL_ControlBase control)
+        public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
         {
             Selected = true;
+            selectedObjects?.Add(this);
             return REDRAW;
         }
 
-        public override uint Select(int partIndex, GL_ControlBase control)
+        public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
         {
             Selected = true;
+            selectedObjects?.Add(this);
             return REDRAW;
         }
 
-        public override uint Deselect(int partIndex, GL_ControlBase control)
+        public override uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
         {
             Selected = false;
+            selectedObjects?.Remove(this);
             return REDRAW;
         }
 
-        public override uint DeselectAll(GL_ControlBase control)
+        public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
             Selected = false;
+            selectedObjects?.Remove(this);
             return REDRAW;
         }
 

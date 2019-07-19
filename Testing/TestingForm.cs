@@ -80,7 +80,31 @@ namespace Testing
             };
             
             scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
-            
+
+            pathPoints = new List<Path.PathPoint>
+            {
+                new Path.PathPoint(
+                new Vector3(-3, 6, 0),
+                new Vector3(0, 0, -1.75f),
+                new Vector3(0, 0, 1.75f)
+                ),
+                new Path.PathPoint(
+                new Vector3(0, 6, 3),
+                new Vector3(-1.75f, 0, 0),
+                new Vector3(1.75f, 0, 0)
+                ),
+                new Path.PathPoint(
+                new Vector3(3, 6, 0),
+                new Vector3(0, 0, 1.75f),
+                new Vector3(0, 0, -1.75f)
+                ),
+                new Path.PathPoint(
+                new Vector3(0, 6, -3),
+                new Vector3(1.75f, 0, 0),
+                new Vector3(-1.75f, 0, 0)
+                )
+            };
+
             scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
 
             for (int i = 5; i<10000; i++)

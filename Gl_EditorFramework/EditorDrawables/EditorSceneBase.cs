@@ -80,16 +80,14 @@ namespace GL_EditorFramework.EditorDrawables
 
                 foreach (IEditableObject selected in SelectedObjects)
                 {
-                    var |= selected.DeselectAll(control);
+                    var |= selected.DeselectAll(control, null);
                 }
                 SelectedObjects.Clear();
 
                 foreach (IEditableObject obj in objs)
                 {
                     list.Add(obj);
-
-                    SelectedObjects.Add(obj);
-                    var |= obj.SelectDefault(control);
+                    var |= obj.SelectDefault(control, SelectedObjects);
                 }
 
                 undoStack.Push(new RevertableAddition(objs, list));
@@ -113,24 +111,16 @@ namespace GL_EditorFramework.EditorDrawables
 
                 List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
 
-                bool selectionHasChanged = false;
-
                 foreach (IEditableObject obj in objs)
                 {
                     infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
                     list.Remove(obj);
-                    if (SelectedObjects.Contains(obj))
-                    {
-                        var |= obj.DeselectAll(control);
-                        SelectedObjects.Remove(obj);
-                        selectionHasChanged = true;
-                    }
+                    var |= obj.DeselectAll(control, SelectedObjects);
                 }
 
                 undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
 
-                if (selectionHasChanged)
-                    UpdateSelection(var);
+                UpdateSelection(var);
             }
             else
             {
@@ -154,24 +144,16 @@ namespace GL_EditorFramework.EditorDrawables
 
                 List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
 
-                bool selectionHasChanged = false;
-
                 foreach (IEditableObject obj in objs)
                 {
                     infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
                     list.Remove(obj);
-                    if (SelectedObjects.Contains(obj))
-                    {
-                        var |= obj.DeselectAll(control);
-                        SelectedObjects.Remove(obj);
-                        selectionHasChanged = true;
-                    }
+                    var |= obj.DeselectAll(control, SelectedObjects);
                 }
 
                 undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
 
-                if (selectionHasChanged)
-                    UpdateSelection(var);
+                UpdateSelection(var);
             }
             else
             {
@@ -195,16 +177,15 @@ namespace GL_EditorFramework.EditorDrawables
 
                 foreach (IEditableObject selected in SelectedObjects)
                 {
-                    var |= selected.DeselectAll(control);
+                    var |= selected.DeselectAll(control, null);
                 }
                 SelectedObjects.Clear();
 
                 foreach (IEditableObject obj in objs)
                 {
                     list.Insert(index, obj);
-
-                    SelectedObjects.Add(obj);
-                    var |= obj.SelectDefault(control);
+                    
+                    var |= obj.SelectDefault(control, SelectedObjects);
                     index++;
                 }
 
@@ -265,13 +246,11 @@ namespace GL_EditorFramework.EditorDrawables
             bool alreadySelected = obj.IsSelected();
             if (alreadySelected && !isSelected)
             {
-                var |= obj.DeselectAll(control);
-                SelectedObjects.Remove(obj);
+                var |= obj.DeselectAll(control, SelectedObjects);
             }
             else if (!alreadySelected && isSelected)
             {
-                var |= obj.SelectDefault(control);
-                SelectedObjects.Add(obj);
+                var |= obj.SelectDefault(control, SelectedObjects);
             }
         }
 
@@ -469,7 +448,7 @@ namespace GL_EditorFramework.EditorDrawables
                     {
                         foreach (IEditableObject selected in SelectedObjects)
                         {
-                            selected.DeselectAll(control);
+                            selected.DeselectAll(control,null);
                         }
                         SelectedObjects.Clear();
                         SelectionChanged?.Invoke(this, new EventArgs());
@@ -480,15 +459,13 @@ namespace GL_EditorFramework.EditorDrawables
                     if (shift && hoveredIsSelected)
                     {
                         //remove from selection
-                        SelectedObjects.Remove(Hovered);
-                        Hovered.Deselect(HoveredPart, control);
+                        Hovered.Deselect(HoveredPart, control, SelectedObjects);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                     else if (shift)
                     {
                         //add to selection
-                        SelectedObjects.Add(Hovered);
-                        Hovered.Select(HoveredPart, control);
+                        Hovered.Select(HoveredPart, control, SelectedObjects);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                     else if (!hoveredIsSelected)
@@ -496,11 +473,10 @@ namespace GL_EditorFramework.EditorDrawables
                         //change selection
                         foreach (IEditableObject selected in SelectedObjects)
                         {
-                            selected.DeselectAll(control);
+                            selected.DeselectAll(control, null);
                         }
                         SelectedObjects.Clear();
-                        SelectedObjects.Add(Hovered);
-                        Hovered.Select(HoveredPart, control);
+                        Hovered.Select(HoveredPart, control, SelectedObjects);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                 }
@@ -509,8 +485,7 @@ namespace GL_EditorFramework.EditorDrawables
                     if (shift && hoveredIsSelected)
                     {
                         //remove from selection
-                        SelectedObjects.Remove(Hovered);
-                        Hovered.Deselect(HoveredPart, control);
+                        Hovered.Deselect(HoveredPart, control, SelectedObjects);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                     else if (!hoveredIsSelected)
@@ -518,11 +493,10 @@ namespace GL_EditorFramework.EditorDrawables
                         //change selection
                         foreach (IEditableObject selected in SelectedObjects)
                         {
-                            selected.DeselectAll(control);
+                            selected.DeselectAll(control, null);
                         }
                         SelectedObjects.Clear();
-                        SelectedObjects.Add(Hovered);
-                        Hovered.Select(HoveredPart, control);
+                        Hovered.Select(HoveredPart, control, SelectedObjects);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                 }

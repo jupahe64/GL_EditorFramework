@@ -954,8 +954,9 @@ namespace GL_EditorFramework.EditorDrawables
             return selectedIndices.Count!=0;
         }
 
-        public override uint SelectAll(GL_ControlBase control)
+        public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
+            selectedObjects?.Add(this);
             int i = 0;
             foreach (PathPoint point in pathPoints)
                 selectedIndices.Add(i++);
@@ -963,8 +964,9 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override uint SelectDefault(GL_ControlBase control)
+        public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
         {
+            selectedObjects?.Add(this);
             int i = 0;
             foreach (PathPoint point in pathPoints)
                 selectedIndices.Add(i++);
@@ -1008,8 +1010,9 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public override uint Select(int partIndex, GL_ControlBase control)
+        public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
         {
+            selectedObjects?.Add(this);
             if (partIndex == 0)
             {
                 int i = 0;
@@ -1043,8 +1046,9 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override uint Deselect(int partIndex, GL_ControlBase control)
+        public override uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
         {
+            selectedObjects?.Remove(this);
             if (partIndex == 0)
                 selectedIndices.Clear();
             else
@@ -1208,8 +1212,9 @@ namespace GL_EditorFramework.EditorDrawables
             pathPoints = points.ToList();
         }
 
-        public override uint DeselectAll(GL_ControlBase control)
+        public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
+            selectedObjects?.Remove(this);
             selectedIndices.Clear();
             return REDRAW;
         }
@@ -1336,8 +1341,10 @@ namespace GL_EditorFramework.EditorDrawables
             return false;
         }
 
-        public struct PathPoint
+        public class PathPoint : EditableObject
         {
+            protected bool Selected = false;
+
             public PathPoint(Vector3 position, Vector3 controlPoint1, Vector3 controlPoint2)
             {
                 this.position = position;
@@ -1347,6 +1354,109 @@ namespace GL_EditorFramework.EditorDrawables
             public Vector3 position;
             public Vector3 controlPoint1;
             public Vector3 controlPoint2;
+
+            public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override bool IsSelected() => Selected;
+
+            public override bool IsSelected(int partIndex) => Selected;
+
+            public override BoundingBox GetSelectionBox() => new BoundingBox(
+            position.X - 0.5f,
+            position.X + 0.5f,
+            position.Y - 0.5f,
+            position.Y + 0.5f,
+            position.Z - 0.5f,
+            position.Z + 0.5f
+            );
+
+            public override LocalOrientation GetLocalOrientation(int partIndex)
+            {
+                return new LocalOrientation(position);
+            }
+
+            public override bool IsInRange(float range, float rangeSquared, Vector3 pos) => true; //probably never gets called
+
+            public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
+            {
+                Selected = true;
+                selectedObjects?.Add(this);
+                return REDRAW;
+            }
+
+            public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
+            {
+                Selected = true;
+                selectedObjects?.Add(this);
+                return REDRAW;
+            }
+
+            public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+            {
+                Selected = true;
+                selectedObjects?.Add(this);
+                return REDRAW;
+            }
+
+            public override uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+            {
+                Selected = false;
+                selectedObjects?.Remove(this);
+                return REDRAW;
+            }
+
+            public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
+            {
+                Selected = false;
+                selectedObjects?.Remove(this);
+                return REDRAW;
+            }
+
+            public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
+            {
+                prevPos = null;
+                prevRot = null;
+                prevScale = null;
+
+                if (pos.HasValue)
+                {
+                    prevPos = position;
+                    position = pos.Value;
+                }
+            }
+
+            public override void Prepare(GL_ControlModern control)
+            {
+                //probably never gets called
+            }
+
+            public override void Prepare(GL_ControlLegacy control)
+            {
+                //probably never gets called
+            }
+
+            public override void Draw(GL_ControlModern control, Pass pass)
+            {
+                //probably never gets called
+            }
+
+            public override void Draw(GL_ControlLegacy control, Pass pass)
+            {
+                //probably never gets called
+            }
+
+            public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
+            {
+
+            }
+
+            public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part, ref TransformChangeInfos transformChangeInfos)
+            {
+
+            }
         }
     }
 }

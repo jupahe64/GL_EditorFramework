@@ -156,38 +156,58 @@ namespace Testing
             base.Prepare(control);
         }
 
-        public override uint Select(int index, GL_ControlBase control)
+        public override uint Select(int index, GL_ControlBase control, ISet<object> selectedObjects)
         {
-            Selected = true;
-            control.AttachPickingRedrawer();
+            selectedObjects?.Add(this);
+            if (!Selected)
+            {
+                Selected = true;
+                control.AttachPickingRedrawer();
+            }
             return 0;
         }
 
-        public override uint SelectDefault(GL_ControlBase control)
+        public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
         {
-            Selected = true;
-            control.AttachPickingRedrawer();
+            selectedObjects?.Add(this);
+            if (!Selected)
+            {
+                Selected = true;
+                control.AttachPickingRedrawer();
+            }
             return 0;
         }
 
-        public override uint SelectAll(GL_ControlBase control)
+        public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
-            Selected = true;
-            control.AttachPickingRedrawer();
+            selectedObjects?.Add(this);
+            if (!Selected)
+            {
+                Selected = true;
+                control.AttachPickingRedrawer();
+            }
             return 0;
         }
 
-        public override uint Deselect(int index, GL_ControlBase control)
+        public override uint Deselect(int index, GL_ControlBase control, ISet<object> selectedObjects)
         {
-            Selected = false;
-            control.DetachPickingRedrawer();
+            selectedObjects?.Remove(this);
+            if (Selected)
+            {
+                Selected = false;
+                control.DetachPickingRedrawer();
+            }
             return 0;
         }
 
-        public override uint DeselectAll(GL_ControlBase control)
+        public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
-            Selected = false;
-            control.DetachPickingRedrawer();
+            selectedObjects?.Remove(this);
+            if (Selected)
+            {
+                Selected = false;
+                control.DetachPickingRedrawer();
+            }
             return 0;
         }
     }
