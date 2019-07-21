@@ -33,6 +33,18 @@ namespace GL_EditorFramework.EditorDrawables
                 return newPos;
             }
 
+            public virtual Vector3 NewIndividualPos(Vector3 pos) => pos;
+
+            public Vector3 NewIndividualPos(Vector3 pos, out Vector3? prevPos)
+            {
+                Vector3 newPos = NewIndividualPos(pos);
+                if (newPos == pos)
+                    prevPos = null;
+                else
+                    prevPos = pos;
+                return newPos;
+            }
+
             public virtual Quaternion NewRot(Quaternion rot) => rot;
 
             public Quaternion NewRot(Quaternion rot, out Quaternion? prevRot)
@@ -408,6 +420,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override Quaternion NewRot(Quaternion rot) => deltaRotation * rot;
 
+            public override Vector3 NewIndividualPos(Vector3 pos) => Vector3.Transform(pos, deltaRotation);
+
             static readonly double halfPI = Math.PI / 2d;
 
             static readonly double eighthPI = Math.PI / 8d;
@@ -667,6 +681,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override Vector3 NewScale(Vector3 _scale) => scale * _scale;
 
+            public override Vector3 NewIndividualPos(Vector3 pos) => pos * scale;
+
             Vector3 scale = Vector3.One;
 
             public ScaleAction(GL_ControlBase control, Point mousePos, Vector3 center)
@@ -706,6 +722,12 @@ namespace GL_EditorFramework.EditorDrawables
                 WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.X * _scale.X) : scale.X * _scale.X,
                 WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Y * _scale.Y) : scale.Y * _scale.Y,
                 WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Z * _scale.Z) : scale.Z * _scale.Z
+                );
+
+            public override Vector3 NewIndividualPos(Vector3 pos) => new Vector3(
+                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.X) : scale.X) * pos.X,
+                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Y) : scale.Y) * pos.Y,
+                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Z) : scale.Z) * pos.Z
                 );
 
             Vector3 scale = Vector3.One;

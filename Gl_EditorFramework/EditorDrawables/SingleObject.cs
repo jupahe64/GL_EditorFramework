@@ -147,14 +147,20 @@ namespace GL_EditorFramework.EditorDrawables
             return Selected;
         }
 
-        public override BoundingBox GetSelectionBox() => new BoundingBox(
-            position.X - 0.5f,
-            position.X + 0.5f,
-            position.Y - 0.5f,
-            position.Y + 0.5f,
-            position.Z - 0.5f,
-            position.Z + 0.5f
-            );
+        public override void GetSelectionBox(ref BoundingBox boundingBox)
+        {
+            if (!Selected)
+                return;
+
+            boundingBox.Include(new BoundingBox(
+                position.X - 0.5f,
+                position.X + 0.5f,
+                position.Y - 0.5f,
+                position.Y + 0.5f,
+                position.Z - 0.5f,
+                position.Z + 0.5f
+            ));
+        }
 
         public override LocalOrientation GetLocalOrientation(int partIndex)
         {

@@ -242,15 +242,13 @@ namespace GL_EditorFramework.EditorDrawables
         public void ToogleSelected(IEditableObject obj, bool isSelected)
         {
             uint var = 0;
-
-            bool alreadySelected = obj.IsSelected();
-            if (alreadySelected && !isSelected)
-            {
-                var |= obj.DeselectAll(control, SelectedObjects);
-            }
-            else if (!alreadySelected && isSelected)
+            if (isSelected)
             {
                 var |= obj.SelectDefault(control, SelectedObjects);
+            }
+            else
+            {
+                var |= obj.DeselectAll(control, SelectedObjects);
             }
         }
 
@@ -273,9 +271,7 @@ namespace GL_EditorFramework.EditorDrawables
                             BoundingBox box = BoundingBox.Default;
 
                             foreach (IEditableObject selected in SelectedObjects)
-                            {
-                                box.Include(selected.GetSelectionBox());
-                            }
+                                selected.GetSelectionBox(ref box);
 
                             CurrentAction = new TranslateAction(control, e.Location, box.GetCenter(), draggingDepth);
                         }
@@ -293,9 +289,7 @@ namespace GL_EditorFramework.EditorDrawables
                             BoundingBox box = BoundingBox.Default;
 
                             foreach (IEditableObject selected in SelectedObjects)
-                            {
-                                box.Include(selected.GetSelectionBox());
-                            }
+                                selected.GetSelectionBox(ref box);
 
                             CurrentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
                         }
@@ -319,9 +313,8 @@ namespace GL_EditorFramework.EditorDrawables
                             BoundingBox box = BoundingBox.Default;
 
                             foreach (IEditableObject selected in SelectedObjects)
-                            {
-                                box.Include(selected.GetSelectionBox());
-                            }
+                                selected.GetSelectionBox(ref box);
+
                             if (shift)
                                 CurrentAction = new ScaleAction(control, e.Location, box.GetCenter());
                             else

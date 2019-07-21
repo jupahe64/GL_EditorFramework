@@ -30,8 +30,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         public bool Closed = false;
 
-        private HashSet<int> selectedIndices = new HashSet<int>();
-
         public new static Vector4 hoverColor = new Vector4(1, 1, 0.925f, 1);
         public new static Vector4 selectColor = new Vector4(1, 1f, 0.5f, 1);
 
@@ -86,7 +84,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 foreach (PathPoint point in pathPoints)
                 {
-                    if (selectedIndices.Contains(index))
+                    if (point.Selected)
                         pos = editorScene.CurrentAction.NewPos(point.position);
                     else
                         pos = point.position;
@@ -95,7 +93,7 @@ namespace GL_EditorFramework.EditorDrawables
                     data[i + 1] = pos.Y;
                     data[i + 2] = pos.Z;
 
-                    if (selectedIndices.Contains(index))
+                    if (point.Selected)
                         col = selectColor;
                     else
                         col = color;
@@ -114,7 +112,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                         pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint1);
 
-                    else if (selectedIndices.Contains(index))
+                    else if (point.Selected)
                         pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint1 * scale);
                     else
                         pos = point.position + point.controlPoint1;
@@ -137,7 +135,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                         pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint2);
 
-                    else if (selectedIndices.Contains(index))
+                    else if (point.Selected)
                         pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint2 * scale);
                     else
                         pos = point.position + point.controlPoint2;
@@ -264,11 +262,10 @@ namespace GL_EditorFramework.EditorDrawables
             int posIndex = 0;
             if (pass == Pass.OPAQUE)
             {
-                int index = 0;
                 foreach (PathPoint point in pathPoints)
                 {
                     Vector3 pos;
-                    if (selectedIndices.Contains(index))
+                    if (point.Selected)
                         positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.position);
                     else
                         positions[posIndex] = pos = point.position;
@@ -277,7 +274,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     GL.CallList(drawLists + 1); //white lines
 
-                    if (selectedIndices.Contains(index))
+                    if (point.Selected)
                         GL.Color4(selectColor);
                     else
                         GL.Color4(color);
@@ -294,7 +291,7 @@ namespace GL_EditorFramework.EditorDrawables
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
                                 positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint1)));
-                        else if (selectedIndices.Contains(index))
+                        else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
                                 positions[posIndex + 1] = pos + rotation * (scale * point.controlPoint1)));
@@ -305,7 +302,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                         GL.CallList(drawLists + 1); //white lines
 
-                        if (selectedIndices.Contains(index))
+                        if (point.Selected)
                             GL.Color4(selectColor);
                         else
                             GL.Color4(color);
@@ -324,7 +321,7 @@ namespace GL_EditorFramework.EditorDrawables
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
                                 positions[posIndex+2] = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint2)));
-                        else if (selectedIndices.Contains(index))
+                        else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
                                 positions[posIndex + 2] = pos + rotation * (scale * point.controlPoint2)));
@@ -335,7 +332,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                         GL.CallList(drawLists + 1); //white lines
 
-                        if (selectedIndices.Contains(index))
+                        if (point.Selected)
                             GL.Color4(selectColor);
                         else
                             GL.Color4(color);
@@ -345,8 +342,7 @@ namespace GL_EditorFramework.EditorDrawables
                     }
                     else
                         positions[posIndex + 2] = pos;
-
-                    index++;
+                    
                     posIndex += 3;
                 }
             }
@@ -853,113 +849,65 @@ namespace GL_EditorFramework.EditorDrawables
         {
             int i = 1;
             foreach (PathPoint point in pathPoints)
-            {
-                i++;
-                if (point.controlPoint1 != Vector3.Zero)
-                    i++;
-                if (point.controlPoint2 != Vector3.Zero)
-                    i++;
-            }
+                i += point.GetPickableSpan();
 
             return i;
         }
 
         public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
         {
-            int part = 1;
-            int index = 0;
-            foreach(PathPoint point in pathPoints)
+            if(hoveredPart == 0)
             {
-                if (part == hoveredPart)
+                BoundingBox box = BoundingBox.Default;
+                bool allPointsSelected = true;
+                foreach (PathPoint point in pathPoints)
                 {
-                    localOrientation = new LocalOrientation(point.position);
-                    dragExclusively = false;
-                    return selectedIndices.Contains(index);
+                    if (point.Selected)
+                        box.Include(new BoundingBox(
+                            point.position.X - 0.5f,
+                            point.position.X + 0.5f,
+                            point.position.Y - 0.5f,
+                            point.position.Y + 0.5f,
+                            point.position.Z - 0.5f,
+                            point.position.Z + 0.5f
+                        ));
+                    allPointsSelected &= point.Selected;
                 }
-                part++;
 
-                if (point.controlPoint1 != Vector3.Zero)
+                localOrientation = new LocalOrientation(box.GetCenter());
+                dragExclusively = false;
+
+                return allPointsSelected;
+            }
+            else
+            {
+                hoveredPart--;
+                foreach (PathPoint point in pathPoints)
                 {
-                    if (part == hoveredPart)
+                    int span = point.GetPickableSpan();
+                    if (hoveredPart >= 0 && hoveredPart < span)
                     {
-                        if (actionType == DragActionType.TRANSLATE)
-                        {
-                            localOrientation = new LocalOrientation(point.position + point.controlPoint1);
-                            dragExclusively = true; //controlPoints can be moved exclusively
-                            return true;
-                        }
-                        else
-                        {
-                            localOrientation = new LocalOrientation(point.position);
-                            dragExclusively = false;
-                            return selectedIndices.Contains(index);
-                        }
+                        return point.TryStartDragging(actionType, hoveredPart, out localOrientation, out dragExclusively);
                     }
-                    part++;
+                    hoveredPart -= span;
                 }
-
-                if (point.controlPoint2 != Vector3.Zero)
-                {
-                    if (part == hoveredPart)
-                    {
-                        if (actionType == DragActionType.TRANSLATE)
-                        {
-                            localOrientation = new LocalOrientation(point.position + point.controlPoint2);
-                            dragExclusively = true; //controlPoints can be moved exclusively
-                            return true;
-                        }
-                        else
-                        {
-                            localOrientation = new LocalOrientation(point.position);
-                            dragExclusively = false;
-                            return selectedIndices.Contains(index);
-                        }
-                    }
-                    part++;
-                }
-                index++;
             }
-
-            BoundingBox box = BoundingBox.Default;
-            int segmentIndex = 0;
-            foreach (PathPoint point in pathPoints)
-            {
-                if (selectedIndices.Contains(segmentIndex))
-                    box.Include(new BoundingBox(
-                        point.position.X - 0.5f,
-                        point.position.X + 0.5f,
-                        point.position.Y - 0.5f,
-                        point.position.Y + 0.5f,
-                        point.position.Z - 0.5f,
-                        point.position.Z + 0.5f
-                    ));
-                segmentIndex++;
-            }
-
-            localOrientation = new LocalOrientation(box.GetCenter());
-            dragExclusively = false;
-
-            //all points have to be selected
-            
-            for (int i = 0; i<pathPoints.Count; i++)
-            {
-                if (!selectedIndices.Contains(i))
-                    return false;
-            }
-            return true;
+            throw new Exception("Invalid partIndex");
         }
 
         public override bool IsSelected()
         {
-            return selectedIndices.Count!=0;
+            return false;
         }
 
         public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
             selectedObjects?.Add(this);
-            int i = 0;
             foreach (PathPoint point in pathPoints)
-                selectedIndices.Add(i++);
+            {
+                point.DeselectAll(control, selectedObjects);
+                point.Selected = true;
+            }
 
             return REDRAW;
         }
@@ -967,9 +915,11 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
         {
             selectedObjects?.Add(this);
-            int i = 0;
             foreach (PathPoint point in pathPoints)
-                selectedIndices.Add(i++);
+            {
+                point.DeselectAll(control, selectedObjects);
+                point.Selected = true;
+            }
 
             return REDRAW;
         }
@@ -978,33 +928,25 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (partIndex == 0)
             {
-                int i = 0;
+                bool allPointsSelected = true;
                 foreach (PathPoint point in pathPoints)
                 {
-                    if (!selectedIndices.Contains(i++))
-                        return false;
+                   allPointsSelected &= point.Selected;
                 }
-                return true;
+                return allPointsSelected;
             }
             else
             {
-                int part = 1;
-                int i = 0;
+                partIndex--;
                 foreach (PathPoint point in pathPoints)
                 {
-                    if (partIndex == part) //this point was selected
+                    int span = point.GetPickableSpan();
+                    if (partIndex >= 0 && partIndex < span)
                     {
-                        if (selectedIndices.Contains(i))
+                        if (point.IsSelected(partIndex))
                             return true;
                     }
-                    part++;
-                    if (point.controlPoint1 != Vector3.Zero)
-                        part++;
-
-                    if (point.controlPoint2 != Vector3.Zero)
-                        part++;
-
-                    i++;
+                    partIndex -= span;
                 }
                 return false;
             }
@@ -1012,37 +954,42 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
         {
-            selectedObjects?.Add(this);
             if (partIndex == 0)
             {
-                int i = 0;
+                selectedObjects?.Add(this);
                 foreach (PathPoint point in pathPoints)
                 {
-                    selectedIndices.Add(i++);
+                    point.DeselectAll(control, selectedObjects);
+                    point.Selected = true;
                 }
             }
             else
             {
-                int part = 1;
-                int i = 0;
+                bool allPointsSelected = true;
+                partIndex--;
                 foreach (PathPoint point in pathPoints)
                 {
-                    if(partIndex == part) //this point was selected
+                    int span = point.GetPickableSpan();
+                    if (partIndex >= 0 && partIndex < span)
                     {
-                        selectedIndices.Add(i); //select segment 
-                        part++;
-                        break;
+                        point.Select(partIndex, control, selectedObjects);
                     }
-                    part++;
-                    if (point.controlPoint1 != Vector3.Zero)
-                        part++;
+                    partIndex -= span;
 
-                    if (point.controlPoint2 != Vector3.Zero)
-                        part++;
+                    allPointsSelected &= point.Selected;
+                }
 
-                    i++;
+                if (allPointsSelected)
+                {
+                    selectedObjects?.Add(this);
+                    foreach (PathPoint point in pathPoints)
+                    {
+                        point.DeselectAll(control, selectedObjects);
+                        point.Selected = true;
+                    }
                 }
             }
+
             return REDRAW;
         }
 
@@ -1050,27 +997,22 @@ namespace GL_EditorFramework.EditorDrawables
         {
             selectedObjects?.Remove(this);
             if (partIndex == 0)
-                selectedIndices.Clear();
+            {
+                selectedObjects?.Remove(this);
+                foreach (PathPoint point in pathPoints)
+                    point.DeselectAll(control, selectedObjects);
+            }
             else
             {
-                int part = 1;
-                int i = 0;
+                partIndex--;
                 foreach (PathPoint point in pathPoints)
                 {
-                    if (partIndex == part) //this point was selected
+                    int span = point.GetPickableSpan();
+                    if (partIndex >= 0 && partIndex < span)
                     {
-                        if(selectedIndices.Contains(i))
-                            selectedIndices.Remove(i);
-                        break;
+                        point.Deselect(partIndex, control, selectedObjects);
                     }
-                    part++;
-                    if (point.controlPoint1 != Vector3.Zero)
-                        part++;
-
-                    if (point.controlPoint2 != Vector3.Zero)
-                        part++;
-
-                    i++;
+                    partIndex -= span;
                 }
             }
             return REDRAW;
@@ -1078,144 +1020,47 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int _part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
         {
-            prevPos = null;
-            prevRot = null;
-            prevScale = null;
-
-            if (!pos.HasValue)
-                return;
-
-            int part = 1;
-
-            PathPoint[] points = pathPoints.ToArray();
-
-            for (int i = 0; i < pathPoints.Count; i++)
+            _part--;
+            foreach (PathPoint point in pathPoints)
             {
-                if (part == _part)
+                int span = point.GetPickableSpan();
+                if (_part >= 0 && _part < span)
                 {
-                    prevPos = points[i].position;
-                    points[i].position = pos.Value;
-                    break;
+                    point.SetTransform(pos, rot, scale, _part, out prevPos, out prevRot, out prevScale);
+                    return;
                 }
-                part++;
-
-                if (points[i].controlPoint1 != Vector3.Zero)
-                {
-                    if (part == _part)
-                    {
-                        prevPos = points[i].controlPoint1;
-                        points[i].controlPoint1 = pos.Value;
-                        break;
-                    }
-                    part++;
-                }
-
-                if (points[i].controlPoint2 != Vector3.Zero)
-                {
-                    if (part == _part)
-                    {
-                        prevPos = points[i].controlPoint2;
-                        points[i].controlPoint2 = pos.Value;
-                        break;
-                    }
-                    part++;
-                }
+                _part -= span;
             }
-            pathPoints = points.ToList();
+            throw new Exception("Invalid partIndex");
         }
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
         {
-            int part = 1;
-
-            Quaternion rotation = transformAction.NewRot(Quaternion.Identity, out Quaternion? prevRot);
-
-            Vector3 scale = transformAction.NewScale(Vector3.One, out Vector3? prevScale);
-
-            PathPoint[] points = pathPoints.ToArray();
-
-            for(int i = 0; i < pathPoints.Count; i++)
-            {
-                if (selectedIndices.Contains(i))
-                {
-                    points[i].position = transformAction.NewPos(pathPoints[i].position, out Vector3? prevPos);
-                    transformChangeInfos.Add(this, part, prevPos, null, null);
-                    part++;
-
-                    if (points[i].controlPoint1 != Vector3.Zero)
-                    {
-                        
-                        Vector3 prevCP1 = points[i].controlPoint1;
-                        points[i].controlPoint1 = Vector3.Transform(points[i].controlPoint1, rotation) * scale;
-                        if(prevCP1!= points[i].controlPoint1)
-                            transformChangeInfos.Add(this, part, points[i].controlPoint1, null, null);
-                        part++;
-                    }
-
-                    if (points[i].controlPoint2 != Vector3.Zero)
-                    {
-                        Vector3 prevCP2 = points[i].controlPoint2;
-                        points[i].controlPoint2 = Vector3.Transform(points[i].controlPoint2, rotation) * scale;
-                        if (prevCP2 != points[i].controlPoint2)
-                            transformChangeInfos.Add(this, part, points[i].controlPoint2, null, null);
-                        part++;
-                    }
-                }
-                else
-                {
-                    part++;
-                    if (points[i].controlPoint1 != Vector3.Zero)
-                        part++;
-                    if (points[i].controlPoint1 != Vector3.Zero)
-                        part++;
-                }
-            }
-            pathPoints = points.ToList();
+            foreach (PathPoint point in pathPoints)
+                point.ApplyTransformActionToSelection(transformAction, ref transformChangeInfos);
         }
 
         public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
         {
-            int part = 1;
-
-            PathPoint[] points = pathPoints.ToArray();
-
-            for (int i = 0; i < pathPoints.Count; i++)
+            _part--;
+            foreach (PathPoint point in pathPoints)
             {
-                part++;
-
-                if (points[i].controlPoint1 != Vector3.Zero)
+                int span = point.GetPickableSpan();
+                if (_part >= 0 && _part < span)
                 {
-                    if (part == _part)
-                    {
-                        Vector3 prevCP1 = points[i].controlPoint1;
-                        points[i].controlPoint1 = transformAction.NewPos(points[i].position + points[i].controlPoint1, out Vector3? prevPos) - points[i].position;
-                        if (prevCP1 != points[i].controlPoint1)
-                            transformChangeInfos.Add(this, part, points[i].controlPoint1, null, null);
-                        break;
-                    }
-                    part++;
+                    point.ApplyTransformActionToPart(transformAction, _part, ref transformChangeInfos);
+                    return;
                 }
-
-                if (points[i].controlPoint2 != Vector3.Zero)
-                {
-                    if (part == _part)
-                    {
-                        Vector3 prevCP2 = points[i].controlPoint2;
-                        points[i].controlPoint2 = transformAction.NewPos(points[i].position + points[i].controlPoint2, out Vector3? prevPos) - points[i].position;
-                        if (prevCP2 != points[i].controlPoint2)
-                            transformChangeInfos.Add(this, part, points[i].controlPoint2, null, null);
-                        break;
-                    }
-                    part++;
-                }
+                _part -= span;
             }
-            pathPoints = points.ToList();
+            throw new Exception("Invalid partIndex");
         }
 
         public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
             selectedObjects?.Remove(this);
-            selectedIndices.Clear();
+            foreach (PathPoint point in pathPoints)
+                point.DeselectAll(control, selectedObjects);
             return REDRAW;
         }
 
@@ -1229,56 +1074,10 @@ namespace GL_EditorFramework.EditorDrawables
             throw new NotImplementedException();
         }
 
-        public override BoundingBox GetSelectionBox()
+        public override void GetSelectionBox(ref BoundingBox boundingBox)
         {
-            BoundingBox box = BoundingBox.Default;
-            int segmentIndex = 0;
             foreach (PathPoint point in pathPoints)
-            {
-                if(selectedIndices.Contains(segmentIndex))
-                    box.Include(new BoundingBox(
-                        point.position.X - 0.5f,
-                        point.position.X + 0.5f,
-                        point.position.Y - 0.5f,
-                        point.position.Y + 0.5f,
-                        point.position.Z - 0.5f,
-                        point.position.Z + 0.5f
-                    ));
-                segmentIndex++;
-            }
-            return box;
-        }
-
-        public override uint KeyDown(KeyEventArgs e, GL_ControlBase control)
-        {
-            Vector3 newCP1, newCP2;
-            if (e.KeyCode == Keys.R && e.Shift && e.Control)
-            {
-                newCP1 = new Vector3(-1, 0, 0);
-                newCP2 = new Vector3(1, 0, 0);
-            }
-            else if (e.KeyCode == Keys.R && e.Shift)
-            {
-                newCP1 = new Vector3();
-                newCP2 = new Vector3();
-            }
-            else
-                return base.KeyDown(e, control);
-            
-
-            PathPoint[] points = pathPoints.ToArray();
-
-            for (int i = 0; i < pathPoints.Count; i++)
-            {
-                if (selectedIndices.Contains(i))
-                {
-                    points[i].controlPoint1 = newCP1;
-                    points[i].controlPoint2 = newCP2;
-                }
-            }
-            pathPoints = points.ToList();
-
-            return REDRAW;
+                point.GetSelectionBox(ref boundingBox);
         }
 
         public override LocalOrientation GetLocalOrientation(int partIndex)
@@ -1294,29 +1093,13 @@ namespace GL_EditorFramework.EditorDrawables
             }
             else
             {
-                int part = 1;
-                int i = 0;
+                partIndex--;
                 foreach (PathPoint point in pathPoints)
                 {
-                    if (partIndex == part) //this point was selected
-                        return new LocalOrientation(point.position);
-
-                    part++;
-                    if (point.controlPoint1 != Vector3.Zero)
-                    {
-                        if (partIndex == part) //this point was selected
-                            return new LocalOrientation(point.position);
-                        part++;
-                    }
-
-                    if (point.controlPoint2 != Vector3.Zero)
-                    {
-                        if (partIndex == part) //this point was selected
-                            return new LocalOrientation(point.position);
-                        part++;
-                    }
-
-                    i++;
+                    int span = point.GetPickableSpan();
+                    if (partIndex >= 0 && partIndex < span)
+                        return point.GetLocalOrientation(partIndex);
+                    partIndex -= span;
                 }
                 throw new Exception("Invalid partIndex");
             }
@@ -1343,7 +1126,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public class PathPoint : EditableObject
         {
-            protected bool Selected = false;
+            public bool Selected = false;
 
             public PathPoint(Vector3 position, Vector3 controlPoint1, Vector3 controlPoint2)
             {
@@ -1357,21 +1140,75 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
             {
-                throw new NotImplementedException();
+
+                if (hoveredPart == 0)
+                {
+                    localOrientation = new LocalOrientation(position);
+                    dragExclusively = false;
+                    return Selected;
+                }
+
+                int part = 1;
+
+                if (controlPoint1 != Vector3.Zero)
+                {
+                    if (hoveredPart == part)
+                    {
+                        if (actionType == DragActionType.TRANSLATE)
+                        {
+                            localOrientation = new LocalOrientation(position + controlPoint1);
+                            dragExclusively = true; //controlPoints can be moved exclusively
+                            return true;
+                        }
+                        else
+                        {
+                            localOrientation = new LocalOrientation(position);
+                            dragExclusively = false;
+                            return Selected;
+                        }
+                    }
+                    part++;
+                }
+
+                if (controlPoint2 != Vector3.Zero)
+                {
+                    if (hoveredPart == part)
+                    {
+                        if (actionType == DragActionType.TRANSLATE)
+                        {
+                            localOrientation = new LocalOrientation(position + controlPoint2);
+                            dragExclusively = true; //controlPoints can be moved exclusively
+                            return true;
+                        }
+                        else
+                        {
+                            localOrientation = new LocalOrientation(position);
+                            dragExclusively = false;
+                            return Selected;
+                        }
+                    }
+                }
+                throw new Exception("Invalid partIndex");
             }
 
             public override bool IsSelected() => Selected;
 
             public override bool IsSelected(int partIndex) => Selected;
 
-            public override BoundingBox GetSelectionBox() => new BoundingBox(
-            position.X - 0.5f,
-            position.X + 0.5f,
-            position.Y - 0.5f,
-            position.Y + 0.5f,
-            position.Z - 0.5f,
-            position.Z + 0.5f
-            );
+            public override void GetSelectionBox(ref BoundingBox boundingBox)
+            {
+                if (!Selected)
+                    return;
+
+                boundingBox.Include(new BoundingBox(
+                    position.X - 0.5f,
+                    position.X + 0.5f,
+                    position.Y - 0.5f,
+                    position.Y + 0.5f,
+                    position.Z - 0.5f,
+                    position.Z + 0.5f
+                ));
+            }
 
             public override LocalOrientation GetLocalOrientation(int partIndex)
             {
@@ -1396,15 +1233,21 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
             {
-                Selected = true;
-                selectedObjects?.Add(this);
+                if (partIndex == 0)
+                {
+                    Selected = true;
+                    selectedObjects?.Add(this);
+                }
                 return REDRAW;
             }
 
             public override uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
             {
-                Selected = false;
-                selectedObjects?.Remove(this);
+                if (partIndex == 0)
+                {
+                    Selected = false;
+                    selectedObjects?.Remove(this);
+                }
                 return REDRAW;
             }
 
@@ -1415,19 +1258,47 @@ namespace GL_EditorFramework.EditorDrawables
                 return REDRAW;
             }
 
-            public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
+            public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int _part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
             {
                 prevPos = null;
                 prevRot = null;
                 prevScale = null;
 
-                if (pos.HasValue)
+                if (!pos.HasValue)
+                    return;
+
+                if (_part == 0)
                 {
                     prevPos = position;
                     position = pos.Value;
+                    return;
+                }
+
+                int part = 1;
+
+                if (controlPoint1 != Vector3.Zero)
+                {
+                    if (_part == part)
+                    {
+                        prevPos = controlPoint1;
+                        controlPoint1 = pos.Value;
+                        return;
+                    }
+                    part++;
+                }
+
+                if (controlPoint2 != Vector3.Zero)
+                {
+                    if (_part == part)
+                    {
+                        prevPos = controlPoint2;
+                        controlPoint2 = pos.Value;
+                        return;
+                    }
+                    part++;
                 }
             }
-
+            
             public override void Prepare(GL_ControlModern control)
             {
                 //probably never gets called
@@ -1450,12 +1321,70 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
             {
+                if (Selected)
+                {
+                    int part = 1;
 
+                    Vector3? prevPos;
+
+                    if (controlPoint1 != Vector3.Zero)
+                    {
+                        controlPoint1 = transformAction.NewIndividualPos(controlPoint1, out prevPos);
+                        if (prevPos.HasValue)
+                            transformChangeInfos.Add(this, part, prevPos, null, null);
+                        part++;
+                    }
+
+                    if (controlPoint2 != Vector3.Zero)
+                    {
+                        controlPoint2 = transformAction.NewIndividualPos(controlPoint2, out prevPos);
+                        if (prevPos.HasValue)
+                            transformChangeInfos.Add(this, part, prevPos, null, null);
+                    }
+
+                    position = transformAction.NewPos(position, out prevPos);
+                    if (prevPos.HasValue)
+                        transformChangeInfos.Add(this, 0, prevPos, null, null);
+                }
             }
 
-            public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part, ref TransformChangeInfos transformChangeInfos)
+            public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
             {
+                int part = 1;
+                if (controlPoint1 != Vector3.Zero)
+                {
+                    if (part == _part)
+                    {
+                        controlPoint1 = transformAction.NewPos(position + controlPoint1, out Vector3? prevPos) - position;
+                        if (prevPos.HasValue)
+                            transformChangeInfos.Add(this, part, prevPos - position, null, null);
 
+                        return;
+                    }
+                    part++;
+                }
+
+                if (controlPoint2 != Vector3.Zero)
+                {
+                    if (part == _part)
+                    {
+                        controlPoint2 = transformAction.NewPos(position + controlPoint2, out Vector3? prevPos) - position;
+                        if (prevPos.HasValue)
+                            transformChangeInfos.Add(this, part, prevPos - position, null, null);
+                        return;
+                    }
+                }
+            }
+
+            public override int GetPickableSpan()
+            {
+                int i = 1;
+                if (controlPoint1 != Vector3.Zero)
+                    i++;
+                if (controlPoint2 != Vector3.Zero)
+                    i++;
+
+                return i;
             }
         }
     }

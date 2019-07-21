@@ -243,7 +243,7 @@ namespace Testing
             EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
             foreach (IEditableObject obj in editableObjects)
             {
-                box.Include(obj.GetSelectionBox());
+                obj.GetSelectionBox(ref box);
             }
             center = box.GetCenter();
             pCenter = center;

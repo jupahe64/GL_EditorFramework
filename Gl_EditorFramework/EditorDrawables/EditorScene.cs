@@ -253,7 +253,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     foreach (IEditableObject selected in SelectedObjects)
                     {
-                        box.Include(selected.GetSelectionBox());
+                        selected.GetSelectionBox(ref box);
                     }
                     control.CameraTarget = box.GetCenter();
                 }

@@ -35,7 +35,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public abstract bool IsSelected(int partIndex);
 
-        public abstract BoundingBox GetSelectionBox();
+        public abstract void GetSelectionBox(ref BoundingBox boundingBox);
 
         public abstract LocalOrientation GetLocalOrientation(int partIndex);
 
@@ -168,7 +168,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         bool IsSelected(int partIndex);
 
-        BoundingBox GetSelectionBox();
+        void GetSelectionBox(ref BoundingBox boundingBox);
 
         LocalOrientation GetLocalOrientation(int partIndex);
 
