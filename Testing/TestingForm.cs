@@ -148,7 +148,7 @@ namespace Testing
 
         private void Scene_ListChanged(object sender, ListChangedEventArgs e)
         {
-            if (sceneListView1.CurrentList == e.List)
+            if (e.Lists.Contains(sceneListView1.CurrentList))
             {
                 sceneListView1.UpdateAutoScroll();
                 sceneListView1.Refresh();
@@ -173,7 +173,7 @@ namespace Testing
         {
             if (e.KeyCode == Keys.Delete)
             {
-                scene.Delete(sceneListView1.CurrentList, scene.SelectedObjects.ToArray());
+                scene.DeleteSelected();
                 gL_ControlModern1.Refresh();
                 sceneListView1.UpdateAutoScroll();
                 Scene_SelectionChanged(this, null);

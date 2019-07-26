@@ -51,9 +51,14 @@ namespace GL_EditorFramework.EditorDrawables
             Delete(list, list == objects, objs);
         }
 
-        public void Delete(IList list, IEnumerable<object> objs)
+        public void DeleteSelected()
         {
-            Delete(list, list == objects, objs);
+            DeletionManager manager = new DeletionManager();
+
+            foreach (IEditableObject obj in objects)
+                obj.DeleteSelected(manager, objects);
+
+            _ExecuteDeletion(manager);
         }
 
         public void InsertAt(IList list, int index, params IEditableObject[] objs)

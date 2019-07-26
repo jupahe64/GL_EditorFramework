@@ -266,32 +266,79 @@ namespace GL_EditorFramework.EditorDrawables
 
         public struct RevertableAddition : IRevertable
         {
-            IEditableObject[] objects;
-            IList list;
+            AddInListInfo[] infos;
+            SingleAddInListInfo[] singleInfos;
 
-            public RevertableAddition(IEditableObject[] objects, IList list)
+            public RevertableAddition(AddInListInfo[] infos, SingleAddInListInfo[] singleInfos)
             {
-                this.objects = objects;
-                this.list = list;
+                this.infos = infos;
+                this.singleInfos = singleInfos;
             }
 
             public IRevertable Revert(EditorSceneBase scene)
             {
                 uint var = 0;
-                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objects.Length];
-                
-                for (int i = 0; i < objects.Length; i++)
+                IList[] lists = new IList[infos.Length + singleInfos.Length];
+                int i_lists = 0;
+
+
+                //Revert Lists
+                RevertableDeletion.DeleteInListInfo[] deleteInfos = new RevertableDeletion.DeleteInListInfo[infos.Length];
+                int i_deleteInfos = 0;
+
+                foreach (AddInListInfo info in infos)
                 {
-                    infos[i] = new RevertableDeletion.DeleteInfo(objects[i], list.IndexOf(objects[i]));
-                    list.Remove(objects[i]);
-                    var |= objects[i].DeselectAll(scene.control, scene.SelectedObjects);
+                    deleteInfos[i_deleteInfos] = new RevertableDeletion.DeleteInListInfo(new RevertableDeletion.DeleteInfo[info.objs.Length], info.list);
+                    int i_info = 0;
+                    for (int i = info.objs.Length - 1; i >= 0; i--)
+                    {
+                        deleteInfos[i_deleteInfos].infos[i_info++] = new RevertableDeletion.DeleteInfo(info.objs[i], info.list.IndexOf(info.objs[i]));
+                        info.list.Remove(info.objs[i]);
+                    }
+                    lists[i_lists++] = info.list;
+                    i_deleteInfos++;
                 }
+
+                //Revert Singles
+                RevertableDeletion.SingleDeleteInListInfo[] deleteSingleInfos = new RevertableDeletion.SingleDeleteInListInfo[singleInfos.Length];
+                i_deleteInfos = 0;
+
+                foreach (SingleAddInListInfo info in singleInfos)
+                {
+                    deleteSingleInfos[i_deleteInfos++] = new RevertableDeletion.SingleDeleteInListInfo(info.obj, info.list.IndexOf(info.obj), info.list);
+                    info.list.Remove(info.obj);
+                    lists[i_lists++] = info.list;
+                }
+
+
 
                 scene.UpdateSelection(var);
 
-                scene.ListChanged.Invoke(this, new ListChangedEventArgs(list));
+                scene.ListChanged.Invoke(this, new ListChangedEventArgs(lists));
 
-                return new RevertableDeletion(infos, list);
+                return new RevertableDeletion(deleteInfos, deleteSingleInfos);
+            }
+
+            public struct AddInListInfo
+            {
+                public AddInListInfo(IEditableObject[] objs, IList list)
+                {
+                    this.objs = objs;
+                    this.list = list;
+                }
+                public IEditableObject[] objs;
+                public IList list;
+            }
+
+            public struct SingleAddInListInfo
+            {
+                public SingleAddInListInfo(IEditableObject obj, IList list)
+                {
+                    this.obj = obj;
+                    this.list = list;
+                }
+                public IEditableObject obj;
+                public IList list;
             }
         }
 
@@ -335,30 +382,56 @@ namespace GL_EditorFramework.EditorDrawables
 
         public struct RevertableDeletion : IRevertable
         {
-            DeleteInfo[] infos;
-            IList list;
+            DeleteInListInfo[] infos;
+            SingleDeleteInListInfo[] singleInfos;
 
-            public RevertableDeletion(DeleteInfo[] infos, IList list)
+            public RevertableDeletion(DeleteInListInfo[] infos, SingleDeleteInListInfo[] singleInfos)
             {
                 this.infos = infos;
-                this.list = list;
+                this.singleInfos = singleInfos;
             }
 
             public IRevertable Revert(EditorSceneBase scene)
             {
-                for (int i = infos.Length - 1; i >= 0; i--)
-                    list.Insert(infos[i].index, infos[i].obj);
+                IList[] lists = new IList[infos.Length + singleInfos.Length];
+                int i_lists = 0;
 
-                IEditableObject[] objects = new IEditableObject[infos.Length];
 
-                for (int i = 0; i < infos.Length; i++)
-                    objects[i] = infos[i].obj;
+                //Revert Lists
+                RevertableAddition.AddInListInfo[] addInfos = new RevertableAddition.AddInListInfo[infos.Length];
+                int i_addInfos = 0;
+
+                foreach (DeleteInListInfo info in infos)
+                {
+                    addInfos[i_addInfos] = new RevertableAddition.AddInListInfo(new IEditableObject[info.infos.Length], info.list);
+                    int i_info = 0;
+                    for (int i = info.infos.Length - 1; i >= 0; i--)
+                    {
+                        addInfos[i_addInfos].objs[i_info++] = info.infos[i].obj;
+                        info.list.Insert(info.infos[i].index, info.infos[i].obj);
+                    }
+                    lists[i_lists++] = info.list;
+                    i_addInfos++;
+                }
+
+                //Revert Singles
+                RevertableAddition.SingleAddInListInfo[] addSingleInfos = new RevertableAddition.SingleAddInListInfo[singleInfos.Length];
+                i_addInfos = 0;
+
+                foreach (SingleDeleteInListInfo info in singleInfos)
+                {
+                    addSingleInfos[i_addInfos++] = new RevertableAddition.SingleAddInListInfo(info.obj, info.list);
+                    info.list.Insert(info.index, info.obj);
+                    lists[i_lists++] = info.list;
+                }
+
+
 
                 scene.control.Refresh();
 
-                scene.ListChanged.Invoke(this, new ListChangedEventArgs(list));
+                scene.ListChanged.Invoke(this, new ListChangedEventArgs(lists));
 
-                return new RevertableAddition(objects, list);
+                return new RevertableAddition(addInfos, addSingleInfos);
             }
 
             public struct DeleteInfo
@@ -370,6 +443,30 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 public IEditableObject obj;
                 public int index;
+            }
+
+            public struct DeleteInListInfo
+            {
+                public DeleteInListInfo(DeleteInfo[] infos, IList list)
+                {
+                    this.infos = infos;
+                    this.list = list;
+                }
+                public DeleteInfo[] infos;
+                public IList list;
+            }
+
+            public struct SingleDeleteInListInfo
+            {
+                public SingleDeleteInListInfo(IEditableObject obj, int index, IList list)
+                {
+                    this.obj = obj;
+                    this.index = index;
+                    this.list = list;
+                }
+                public IEditableObject obj;
+                public int index;
+                public IList list;
             }
         }
     }

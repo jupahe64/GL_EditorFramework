@@ -18,10 +18,10 @@ namespace GL_EditorFramework.EditorDrawables
 
     public class ListChangedEventArgs : EventArgs
     {
-        public IList List;
-        public ListChangedEventArgs(IList list)
+        public IList[] Lists;
+        public ListChangedEventArgs(IList[] list)
         {
-            List = list;
+            Lists = list;
         }
     }
 
@@ -90,7 +90,7 @@ namespace GL_EditorFramework.EditorDrawables
                     var |= obj.SelectDefault(control, SelectedObjects);
                 }
 
-                undoStack.Push(new RevertableAddition(objs, list));
+                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo []{new RevertableAddition.AddInListInfo(objs, list)}, new RevertableAddition.SingleAddInListInfo[0]));
 
                 UpdateSelection(var);
             }
@@ -99,7 +99,7 @@ namespace GL_EditorFramework.EditorDrawables
                 foreach (IEditableObject obj in objs)
                     list.Add(obj);
 
-                undoStack.Push(new RevertableAddition(objs, list));
+                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
             }
         }
 
@@ -109,64 +109,97 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 uint var = 0;
 
-                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objs.Length];
+
+                int index = 0;
 
                 foreach (IEditableObject obj in objs)
                 {
-                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
+                    infos[index] = new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj));
                     list.Remove(obj);
                     var |= obj.DeselectAll(control, SelectedObjects);
+                    index++;
                 }
 
-                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
+                undoStack.Push(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
 
                 UpdateSelection(var);
             }
             else
             {
-                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objs.Length];
+
+                int index = 0;
 
                 foreach (IEditableObject obj in objs)
                 {
-                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
+                    infos[index] = new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj));
                     list.Remove(obj);
+                    index++;
                 }
 
-                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
+                undoStack.Push(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
             }
         }
 
-        public void Delete(IList list, bool updateSelection, IEnumerable<object> objs)
+        public class DeletionManager
         {
-            if (updateSelection)
+            internal Dictionary<IList, List<IEditableObject>> dict = new Dictionary<IList, List<IEditableObject>>();
+
+            public void Add(IList list, params IEditableObject[] objs)
             {
-                uint var = 0;
+                if (!dict.ContainsKey(list))
+                    dict[list] = new List<IEditableObject>();
 
-                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
-
-                foreach (IEditableObject obj in objs)
-                {
-                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
-                    list.Remove(obj);
-                    var |= obj.DeselectAll(control, SelectedObjects);
-                }
-
-                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
-
-                UpdateSelection(var);
+                dict[list].AddRange(objs);
             }
-            else
+        }
+
+        public void DeleteSelected(IList list)
+        {
+            DeletionManager manager = new DeletionManager();
+
+            foreach (IEditableObject obj in list)
+                obj.DeleteSelected(manager, list);
+
+            _ExecuteDeletion(manager);
+        }
+
+        protected void _ExecuteDeletion(DeletionManager manager)
+        {
+            List<RevertableDeletion.DeleteInListInfo> infos = new List<RevertableDeletion.DeleteInListInfo>();
+            List<RevertableDeletion.SingleDeleteInListInfo> singleInfos = new List<RevertableDeletion.SingleDeleteInListInfo>();
+
+            uint var = 0;
+
+            foreach (KeyValuePair<IList, List<IEditableObject>> entry in manager.dict)
             {
-                List<RevertableDeletion.DeleteInfo> infos = new List<RevertableDeletion.DeleteInfo>();
+                if (entry.Value.Count < 1)
+                    throw new Exception("entry has no objects");
 
-                foreach (IEditableObject obj in objs)
+                if (entry.Value.Count == 1)
                 {
-                    infos.Add(new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj)));
-                    list.Remove(obj);
+                    singleInfos.Add(new RevertableDeletion.SingleDeleteInListInfo(entry.Value[0], entry.Key.IndexOf(entry.Value[0]), entry.Key));
+                    var |= entry.Value[0].DeselectAll(control, SelectedObjects);
+                    entry.Key.Remove(entry.Value[0]);
                 }
-
-                undoStack.Push(new RevertableDeletion(infos.ToArray(), list));
+                else
+                {
+                    RevertableDeletion.DeleteInfo[] deleteInfos = new RevertableDeletion.DeleteInfo[entry.Value.Count];
+                    int i = 0;
+                    foreach (IEditableObject obj in entry.Value)
+                    {
+                        deleteInfos[i++] = new RevertableDeletion.DeleteInfo(obj, entry.Key.IndexOf(obj));
+                        var |= obj.DeselectAll(control, SelectedObjects);
+                        entry.Key.Remove(obj);
+                    }
+                    infos.Add(new RevertableDeletion.DeleteInListInfo(deleteInfos, entry.Key));
+                }
             }
+
+            UpdateSelection(var);
+
+            undoStack.Push(new RevertableDeletion(infos.ToArray(), singleInfos.ToArray()));
         }
 
         public void InsertAt(IList list, bool updateSelection, int index, params IEditableObject[] objs)
@@ -189,7 +222,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                undoStack.Push(new RevertableAddition(objs, list));
+                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
 
                 UpdateSelection(var);
             }
@@ -201,7 +234,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                undoStack.Push(new RevertableAddition(objs, list));
+                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
             }
         }
 

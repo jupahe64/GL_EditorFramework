@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -1124,6 +1125,21 @@ namespace GL_EditorFramework.EditorDrawables
             return false;
         }
 
+        public override void DeleteSelected(DeletionManager manager, IList list)
+        {
+            bool allPointsSelected = true;
+            foreach (PathPoint point in pathPoints)
+                allPointsSelected &= point.Selected;
+
+            if (allPointsSelected)
+                manager.Add(list, this);
+            else
+            {
+                foreach (PathPoint point in pathPoints)
+                    point.DeleteSelected(manager, pathPoints);
+            }
+        }
+
         public class PathPoint : EditableObject
         {
             public bool Selected = false;
@@ -1385,6 +1401,12 @@ namespace GL_EditorFramework.EditorDrawables
                     i++;
 
                 return i;
+            }
+
+            public override void DeleteSelected(DeletionManager manager, IList list)
+            {
+                if (Selected)
+                    manager.Add(list, this);
             }
         }
     }

@@ -3,6 +3,7 @@ using GL_EditorFramework.Interfaces;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -224,6 +225,12 @@ namespace GL_EditorFramework.EditorDrawables
         {
             position = transformAction.NewPos(position, out Vector3? prevPos);
             infos.Add(this, 0, prevPos, null, null);
+        }
+
+        public override void DeleteSelected(DeletionManager manager, IList list)
+        {
+            if (Selected)
+                manager.Add(list, this);
         }
     }
 }

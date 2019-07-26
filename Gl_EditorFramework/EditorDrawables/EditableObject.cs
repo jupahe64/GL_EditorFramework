@@ -77,6 +77,11 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
+        public virtual void DeleteSelected(DeletionManager manager, IList list)
+        {
+
+        }
+
         public struct BoundingBox
         {
             public float minX;
@@ -222,5 +227,7 @@ namespace GL_EditorFramework.EditorDrawables
         uint KeyDown(KeyEventArgs e, GL_ControlBase control);
 
         uint KeyUp(KeyEventArgs e, GL_ControlBase control);
+
+        void DeleteSelected(DeletionManager manager, IList list);
     }
 }
