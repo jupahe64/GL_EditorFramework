@@ -51,14 +51,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EditorDrawables\EditorSceneBase.cs" />
-    <Compile Include="EditorDrawables\SceneTransformations.cs" />
+    <Compile Include="EditorDrawables\EditorScene\EditorSceneBase.cs" />
+    <Compile Include="EditorDrawables\EditorScene\SceneTransformations.cs" />
     <Compile Include="EditorDrawables\SingleObject.cs" />
-    <Compile Include="EditorDrawables\UndoAndRedo.cs" />
+    <Compile Include="EditorDrawables\EditorScene\UndoAndRedo.cs" />
     <Compile Include="GL_Core\Cameras\Inspect.cs" />
     <Compile Include="GL_Core\Cameras\Walkaround.cs" />
     <Compile Include="EditorDrawables\EditableObject.cs" />
-    <Compile Include="EditorDrawables\EditorScene.cs" />
+    <Compile Include="EditorDrawables\EditorScene\EditorScene.cs" />
     <Compile Include="EditorDrawables\Path.cs" />
     <Compile Include="Framework.cs" />
     <Compile Include="GL_Core\GL_ControlBase.cs">
@@ -75,10 +75,10 @@
     </Compile>
     <Compile Include="GL_Core\OldGlEmulator.cs" />
     <Compile Include="GL_Core\VertexArrayObject.cs" />
-    <Compile Include="Interfaces\AbstractCamera.cs" />
-    <Compile Include="Interfaces\AbstractEventHandlingObj.cs" />
-    <Compile Include="Interfaces\AbstractGlDrawable.cs" />
-    <Compile Include="Interfaces\AbstractPropertyContainer.cs" />
+    <Compile Include="Abstract Classes\AbstractCamera.cs" />
+    <Compile Include="Abstract Classes\AbstractEventHandlingObj.cs" />
+    <Compile Include="Abstract Classes\AbstractGlDrawable.cs" />
+    <Compile Include="Abstract Classes\AbstractPropertyContainer.cs" />
     <Compile Include="ObjectPropertyControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
