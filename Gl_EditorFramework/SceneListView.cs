@@ -15,13 +15,17 @@ namespace GL_EditorFramework
     {
         public Dictionary<string, IList> lists = new Dictionary<string, IList>();
 
+        public IList escapeableList;
+
         public event SelectionChangedEventHandler SelectionChanged;
         public event ItemsMovedEventHandler ItemsMoved;
         public event EventHandler CategoryChanged;
+        public event HandledEventHandler ListExit;
 
         private string currentCategory = "None";
         private FastListView objectPanel;
         private CategoryPanel categoryPanel;
+        private Button btnBack;
         int fontHeight;
 
         public ISet<object> SelectedItems {
@@ -46,7 +50,59 @@ namespace GL_EditorFramework
             }
         }
 
-        public IList CurrentList => lists[currentCategory];
+        public IList CurrentList
+        {
+            get => escapeableList??lists[currentCategory];
+
+            set
+            {
+                foreach(KeyValuePair<string,IList> entry in lists)
+                {
+                    if (entry.Value == value)
+                    {
+                        currentCategory = entry.Key;
+                        objectPanel.AutoScrollMinSize = new Size(0, lists[currentCategory].Count * (fontHeight + 3));
+                        objectPanel.List = value;
+                        
+                        if (escapeableList != null)
+                        {
+                            categoryPanel.Visible = true;
+                            btnBack.Visible = false;
+                        }
+
+                        Refresh();
+                        return;
+                    }
+                }
+                //list is not in lists
+                escapeableList = value;
+
+                if (categoryPanel.Expanded)
+                {
+                    categoryPanel.Size = new Size(Width - 2, categoryPanel.FontHeight + 4);
+
+                    objectPanel.Location = new Point(1, categoryPanel.FontHeight + 7);
+                    objectPanel.Size = new Size(Width - 2, Height - categoryPanel.FontHeight - 8);
+                    objectPanel.Visible = true;
+                    categoryPanel.Expanded = false;
+                }
+
+                objectPanel.List = value;
+                categoryPanel.Visible = false;
+                btnBack.Visible = true;
+            }
+        }
+        
+        public void ExitList()
+        {
+            if (escapeableList == null)
+                return;
+
+            objectPanel.List = lists[currentCategory];
+
+            categoryPanel.Visible = true;
+            btnBack.Visible = false;
+        }
 
         public void UpdateAutoScroll()
         {
@@ -65,6 +121,7 @@ namespace GL_EditorFramework
             fontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
 
             categoryPanel.Size = new Size(298, categoryPanel.FontHeight + 4);
+            btnBack.Size = new Size(298, categoryPanel.FontHeight + 4);
 
             objectPanel.Location = new Point(1, categoryPanel.FontHeight + 7);
             objectPanel.Size = new Size(298, 300 - categoryPanel.FontHeight - 8);
@@ -171,8 +228,10 @@ namespace GL_EditorFramework
 
         private void InitializeComponent()
         {
-            this.objectPanel = new FastListView();
-            this.categoryPanel = new CategoryPanel();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SceneListView));
+            this.objectPanel = new GL_EditorFramework.FastListView();
+            this.categoryPanel = new GL_EditorFramework.SceneListView.CategoryPanel();
+            this.btnBack = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // objectPanel
@@ -181,12 +240,13 @@ namespace GL_EditorFramework
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.objectPanel.AutoScroll = true;
-            this.objectPanel.AutoScrollMinSize = new System.Drawing.Size(0, 1000);
             this.objectPanel.BackColor = System.Drawing.SystemColors.Window;
             this.objectPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.objectPanel.List = ((System.Collections.IList)(resources.GetObject("objectPanel.List")));
             this.objectPanel.Location = new System.Drawing.Point(1, 48);
             this.objectPanel.Margin = new System.Windows.Forms.Padding(1, 3, 1, 1);
             this.objectPanel.Name = "objectPanel";
+            this.objectPanel.SelectedItems = null;
             this.objectPanel.Size = new System.Drawing.Size(298, 251);
             this.objectPanel.TabIndex = 0;
             // 
@@ -203,8 +263,21 @@ namespace GL_EditorFramework
             this.categoryPanel.Size = new System.Drawing.Size(298, 43);
             this.categoryPanel.TabIndex = 1;
             // 
+            // btnBack
+            // 
+            this.btnBack.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBack.Location = new System.Drawing.Point(1, 1);
+            this.btnBack.Name = "btnBack";
+            this.btnBack.Size = new System.Drawing.Size(298, 44);
+            this.btnBack.TabIndex = 2;
+            this.btnBack.Text = "Back";
+            this.btnBack.UseVisualStyleBackColor = true;
+            this.btnBack.Visible = false;
+            this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
+            // 
             // SceneListView
             // 
+            this.Controls.Add(this.btnBack);
             this.Controls.Add(this.categoryPanel);
             this.Controls.Add(this.objectPanel);
             this.Name = "SceneListView";
@@ -266,6 +339,14 @@ namespace GL_EditorFramework
 
                 Refresh();
             }
+        }
+
+        private void btnBack_Click(object sender, EventArgs e)
+        {
+            HandledEventArgs args = new HandledEventArgs();
+            ListExit?.Invoke(this, args);
+            if(!args.Handled)
+                ExitList();
         }
     }
 
@@ -340,11 +421,13 @@ namespace GL_EditorFramework
             }
         }
 
+        private static List<object> emptyList = new List<object>();
+
         public IList List {
             get => list;
             set
             {
-                list = value;
+                list = value??emptyList;
                 AutoScrollMinSize = new Size(0, FontHeight * list.Count);
                 Refresh();
             }

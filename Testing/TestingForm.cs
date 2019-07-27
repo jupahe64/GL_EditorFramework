@@ -137,6 +137,10 @@ namespace Testing
 
             scene.ToogleSelected(scene.objects[4], true);
             Scene_SelectionChanged(this, null);
+
+            propertyContainer.PathPointEdit += (object sender, EventArgs _e) => {
+                sceneListView1.CurrentList = propertyContainer.selectedPath.PathPoints;
+            };
         }
 
         private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
@@ -157,11 +161,11 @@ namespace Testing
 
         private void SceneListView1_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            foreach (object obj in e.ItemsToSelect)
-                scene.ToogleSelected((EditableObject)obj, true);
-
             foreach (object obj in e.ItemsToDeselect)
                 scene.ToogleSelected((EditableObject)obj, false);
+
+            foreach (object obj in e.ItemsToSelect)
+                scene.ToogleSelected((EditableObject)obj, true);
 
             e.Handled = true;
             gL_ControlModern1.Refresh();
@@ -238,8 +242,16 @@ namespace Testing
 
         bool showMore = false;
 
+        public Path selectedPath;
+        public event EventHandler PathPointEdit;
+
         public void Setup(IEnumerable<object> editableObjects)
         {
+            if (editableObjects.Count() == 1)
+                selectedPath = (editableObjects.First() as Path);
+            else
+                selectedPath = null;
+
             EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
             foreach (IEditableObject obj in editableObjects)
             {
@@ -277,6 +289,12 @@ namespace Testing
             {
                 if (control.Button("Show Links"))
                     showMore = true;
+            }
+
+            if (selectedPath != null)
+            {
+                if (control.Button("Edit PathPoints"))
+                    PathPointEdit?.Invoke(this, null);
             }
         }
     }

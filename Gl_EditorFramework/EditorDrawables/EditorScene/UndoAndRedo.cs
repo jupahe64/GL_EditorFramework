@@ -374,7 +374,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                scene.ListChanged.Invoke(this, null);
+                scene.ListChanged.Invoke(this, new ListChangedEventArgs(new IList[] { list }));
 
                 return new RevertableReordering(originalIndex + offset, count, -offset, list);
             }
