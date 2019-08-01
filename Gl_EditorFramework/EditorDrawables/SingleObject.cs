@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace GL_EditorFramework.EditorDrawables
@@ -19,7 +20,7 @@ namespace GL_EditorFramework.EditorDrawables
     //     An EditableObject that has only one selectable Part. It's represented by a blue block
     public class SingleObject : EditableObject
     {
-        public Vector3 position = new Vector3(0, 0, 0);
+        public Vector3 Position = new Vector3(0, 0, 0);
 
         protected bool Selected = false;
 
@@ -33,7 +34,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public SingleObject(Vector3 pos)
         {
-            position = pos;
+            Position = pos;
         }
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
@@ -44,7 +45,7 @@ namespace GL_EditorFramework.EditorDrawables
             bool hovered = editorScene.Hovered == this;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
+                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
             Vector4 lineColor;
@@ -73,7 +74,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-                Matrix4.CreateTranslation(position));
+                Matrix4.CreateTranslation(Position));
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
 
@@ -87,7 +88,7 @@ namespace GL_EditorFramework.EditorDrawables
             bool hovered = editorScene.Hovered == this;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
+                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
             Vector4 lineColor;
@@ -115,7 +116,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
-                Matrix4.CreateTranslation(position));
+                Matrix4.CreateTranslation(Position));
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
 
@@ -133,7 +134,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public virtual void Translate(Vector3 lastPos, Vector3 translate, int subObj)
         {
-            position = lastPos + translate;
+            Position = lastPos + translate;
         }
 
         public virtual void UpdatePosition(int subObj)
@@ -143,7 +144,7 @@ namespace GL_EditorFramework.EditorDrawables
         
         public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
         {
-            localOrientation = new LocalOrientation(position);
+            localOrientation = new LocalOrientation(Position);
             dragExclusively = false;
             return Selected;
         }
@@ -154,23 +155,23 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             boundingBox.Include(new BoundingBox(
-                position.X - 0.5f,
-                position.X + 0.5f,
-                position.Y - 0.5f,
-                position.Y + 0.5f,
-                position.Z - 0.5f,
-                position.Z + 0.5f
+                Position.X - 0.5f,
+                Position.X + 0.5f,
+                Position.Y - 0.5f,
+                Position.Y + 0.5f,
+                Position.Z - 0.5f,
+                Position.Z + 0.5f
             ));
         }
 
         public override LocalOrientation GetLocalOrientation(int partIndex)
         {
-            return new LocalOrientation(position);
+            return new LocalOrientation(Position);
         }
 
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
         {
-            return (pos - position).LengthSquared < rangeSquared;
+            return (pos - Position).LengthSquared < rangeSquared;
         }
         
         public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
@@ -216,14 +217,14 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (pos.HasValue)
             {
-                prevPos = position;
-                position = pos.Value;
+                prevPos = Position;
+                Position = pos.Value;
             }
         }
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos infos)
         {
-            position = transformAction.NewPos(position, out Vector3? prevPos);
+            Position = transformAction.NewPos(Position, out Vector3? prevPos);
             infos.Add(this, 0, prevPos, null, null);
         }
 
@@ -231,6 +232,27 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (Selected)
                 manager.Add(list, this);
+        }
+
+        public override bool ProvidesProperty(EditorSceneBase scene) => Selected;
+
+        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this);
+
+        public class PropertyProvider : IPropertyProvider
+        {
+            SingleObject obj;
+            public PropertyProvider(SingleObject obj)
+            {
+                this.obj = obj;
+            }
+
+            public void DoUI(IObjectPropertyControl control)
+            {
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    obj.Position = control.Vector3Input(obj.Position, "Position", 1, 16);
+                else
+                    obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
+            }
         }
     }
 }

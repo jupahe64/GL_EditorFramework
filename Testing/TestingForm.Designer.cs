@@ -59,7 +59,7 @@
             // objectPropertyControl1
             // 
             this.objectPropertyControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.objectPropertyControl1.CurrentPropertyContainer = null;
+            this.objectPropertyControl1.CurrentPropertyProvider = null;
             this.objectPropertyControl1.Location = new System.Drawing.Point(13, 470);
             this.objectPropertyControl1.Name = "objectPropertyControl1";
             this.objectPropertyControl1.Size = new System.Drawing.Size(278, 265);

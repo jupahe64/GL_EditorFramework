@@ -8,6 +8,7 @@ using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using GL_EditorFramework;
 using OpenTK;
+using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace Testing
@@ -37,7 +38,7 @@ namespace Testing
             control.UpdateModelMatrix(
                 Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(scale) : scale) * 0.5f) *
                 Matrix4.CreateFromQuaternion(Selected ? editorScene.CurrentAction.NewRot(rotation) : rotation) *
-                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
+                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
             Vector4 lineColor;
@@ -70,7 +71,7 @@ namespace Testing
             control.UpdateModelMatrix(
                 Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(scale) : scale) * 0.5f) *
                 Matrix4.CreateFromQuaternion(Selected ? editorScene.CurrentAction.NewRot(rotation) : rotation) *
-                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position));
+                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
             Vector4 lineColor;
@@ -94,12 +95,12 @@ namespace Testing
 
         public override LocalOrientation GetLocalOrientation(int partIndex)
         {
-            return new LocalOrientation(position, rotation);
+            return new LocalOrientation(Position, rotation);
         }
 
         public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
         {
-            localOrientation = new LocalOrientation(position,rotation);
+            localOrientation = new LocalOrientation(Position,rotation);
             dragExclusively = false;
             return Selected;
         }
@@ -112,8 +113,8 @@ namespace Testing
 
             if (pos.HasValue)
             {
-                prevPos = position;
-                position = pos.Value;
+                prevPos = Position;
+                Position = pos.Value;
             }
 
             if (rot.HasValue)
@@ -131,10 +132,39 @@ namespace Testing
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos infos)
         {
-            position = transformAction.NewPos(position, out Vector3? prevPos);
+            Position = transformAction.NewPos(Position, out Vector3? prevPos);
             rotation = transformAction.NewRot(rotation, out Quaternion? prevRot);
             scale = transformAction.NewScale(scale, out Vector3? prevScale);
             infos.Add(this, 0, prevPos, prevRot, prevScale);
+        }
+
+        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this);
+
+        public new class PropertyProvider : IPropertyProvider
+        {
+            TransformableObject obj;
+            public PropertyProvider(TransformableObject obj)
+            {
+                this.obj = obj;
+            }
+
+            public void DoUI(IObjectPropertyControl control)
+            {
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    obj.Position = control.Vector3Input(obj.Position, "Position", 1, 16);
+                else
+                    obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
+
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    obj.rotation = Framework.QFromEulerAnglesDeg(control.Vector3Input(obj.rotation.ToEulerAnglesDeg(), "Rotation", 45, 18));
+                else
+                    obj.rotation = Framework.QFromEulerAnglesDeg(control.Vector3Input(obj.rotation.ToEulerAnglesDeg(), "Rotation", 5, 2));
+
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    obj.scale = control.Vector3Input(obj.scale, "Scale", 1, 16);
+                else
+                    obj.scale = control.Vector3Input(obj.scale, "Scale", 0.125f, 2);
+            }
         }
     }
 }

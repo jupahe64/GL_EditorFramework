@@ -35,7 +35,7 @@ namespace Testing
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
             mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
-            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position);
+            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position);
             control.UpdateModelMatrix(mtx);
 
             Vector4 pickingColor = control.NextPickingColor();
@@ -67,7 +67,7 @@ namespace Testing
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
             mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
-            mtx *= Matrix4.CreateTranslation(position);
+            mtx *= Matrix4.CreateTranslation(Position);
             control.UpdateModelMatrix(mtx);
 
             Vector4 pickingColor = control.NextPickingColor();
@@ -94,7 +94,7 @@ namespace Testing
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
             mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, (float)Math.PI / 2f);
-            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(position) : position);
+            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position);
             control.UpdateModelMatrix(mtx);
 
             Vector4 pickingColor = control.NextPickingColor();
@@ -126,7 +126,7 @@ namespace Testing
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
             mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
-            mtx *= Matrix4.CreateTranslation(position);
+            mtx *= Matrix4.CreateTranslation(Position);
             control.UpdateModelMatrix(mtx);
 
             Vector4 pickingColor = control.NextPickingColor();

@@ -20,7 +20,7 @@ namespace Testing
             InitializeComponent();
         }
 
-        private TestContainer propertyContainer = new TestContainer();
+        private TestProvider propertyContainer = new TestProvider();
 
         private EditorScene scene;
 
@@ -215,17 +215,7 @@ namespace Testing
         {
             sceneListView1.Refresh();
 
-            if (scene.SelectedObjects.Count > 0)
-            {
-                propertyContainer.Setup(scene.SelectedObjects);
-
-                objectPropertyControl1.CurrentPropertyContainer = propertyContainer;
-            }
-            else
-            {
-                if (objectPropertyControl1.CurrentPropertyContainer != null)
-                    objectPropertyControl1.CurrentPropertyContainer = null;
-            }
+            objectPropertyControl1.CurrentPropertyProvider = scene.GetPropertyProvider();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -235,7 +225,7 @@ namespace Testing
         }
     }
 
-    public class TestContainer : AbstractPropertyContainer
+    public class TestProvider : IPropertyProvider
     {
         public Vector3 pCenter;
         public Vector3 center;
@@ -261,7 +251,7 @@ namespace Testing
             pCenter = center;
         }
 
-        public override void DoUI(IObjectPropertyControl control)
+        public void DoUI(IObjectPropertyControl control)
         {
             center.X = control.NumberInput(center.X, "Position X", 0.125f, 2);
             center.Y = control.NumberInput(center.Y, "Position Y", 0.125f, 2);

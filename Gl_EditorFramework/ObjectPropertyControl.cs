@@ -44,15 +44,15 @@ namespace GL_EditorFramework
 
         EventType eventType = EventType.DRAW;
 
-        AbstractPropertyContainer propertyContainer;
+        IPropertyProvider propertyProvider;
 
-        public AbstractPropertyContainer CurrentPropertyContainer
+        public IPropertyProvider CurrentPropertyProvider
         {
-            get => propertyContainer;
+            get => propertyProvider;
 
             set
             {
-                propertyContainer = value;
+                propertyProvider = value;
                 Refresh();
             }
         }
@@ -177,7 +177,7 @@ namespace GL_EditorFramework
         {
             base.OnPaint(e);
 
-            if (propertyContainer == null)
+            if (propertyProvider == null)
                 return;
 
             g = e.Graphics;
@@ -188,7 +188,7 @@ namespace GL_EditorFramework
 
             usableWidth = Width - 10;
 
-            propertyContainer.DoUI(this);
+            propertyProvider.DoUI(this);
 
             AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y);
         }
@@ -265,7 +265,7 @@ namespace GL_EditorFramework
                 Refresh();
             }
             else{
-                if (propertyContainer == null)
+                if (propertyProvider == null)
                     return;
                 
                 eventType = EventType.CLICK;
@@ -671,6 +671,29 @@ namespace GL_EditorFramework
             return clicked;
         }
 
+        public bool CheckBox(string name, bool isChecked)
+        {
+            if (new Rectangle(usableWidth - 29, currentY + 1, 18, textBoxHeight - 2).Contains(mousePos))
+            {
+                if (eventType == EventType.CLICK)
+                {
+                    isChecked = !isChecked;
+                    changeTypes |= VALUE_SET;
+                }
+
+                DrawField(15, usableWidth - 30, currentY, 20, name, isChecked? "✔":"", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+            }
+            else
+            {
+                DrawField(15, usableWidth - 30, currentY, 20, name, isChecked ? "✔" : "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+            }
+
+            currentY += 20;
+            index++;
+            
+            return isChecked;
+        }
+
         static Color MixedColor(Color color1, Color color2)
         {
             byte a1 = color1.A;
@@ -692,16 +715,18 @@ namespace GL_EditorFramework
         }
     }
 
+
     public interface IObjectPropertyControl
     {
         float NumberInput(float number, string name, float increment = 1f, int incrementDragDivider = 8);
         OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1f, int incrementDragDivider = 8);
         bool Button(string name);
         bool Link(string name);
+        bool CheckBox(string name, bool isChecked);
     }
 
-    public abstract class AbstractPropertyContainer
+    public interface IPropertyProvider
     {
-        public abstract void DoUI(IObjectPropertyControl control);
+        void DoUI(IObjectPropertyControl control);
     }
 }

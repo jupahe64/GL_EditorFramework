@@ -61,6 +61,27 @@ namespace GL_EditorFramework.EditorDrawables
             _ExecuteDeletion(manager);
         }
 
+        public IPropertyProvider GetPropertyProvider()
+        {
+            IPropertyProvider provider = null;
+            foreach(IEditableObject obj in objects)
+            {
+                
+                if (obj.ProvidesProperty(this))
+                {
+                    if (provider == null)
+                        provider = obj.GetPropertyProvider(this);
+                    else
+                    {
+                        provider = null;
+                        break;
+                    }
+                }
+            }
+
+            return provider;
+        }
+
         public void InsertAt(IList list, int index, params IEditableObject[] objs)
         {
             InsertAt(list, list == objects, index, objs);

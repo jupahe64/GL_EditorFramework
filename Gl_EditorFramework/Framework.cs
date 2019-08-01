@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GL_EditorFramework.GL_Core;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
 namespace GL_EditorFramework
@@ -12,6 +13,12 @@ namespace GL_EditorFramework
         public static float TWO_PI = (float)Math.PI*2;
         public static float PI = (float)Math.PI;
         public static float HALF_PI = (float)Math.PI/2;
+
+        public static Quaternion QFromEulerAnglesDeg(Vector3 eulerAngles) => new Quaternion(
+            (float)(Math.PI * eulerAngles.X / 180.0),
+            (float)(Math.PI * eulerAngles.Y / 180.0),
+            (float)(Math.PI * eulerAngles.Z / 180.0)
+        );
 
         public static void Initialize()
         {
@@ -38,5 +45,18 @@ namespace GL_EditorFramework
         }
         private static bool initialized = false;
         public static int TextureSheet;
+    }
+
+
+
+
+
+    public static class Extensions
+    {
+        public static Vector3 ToEulerAnglesDeg(this Quaternion q) => new Vector3(
+            (float)(180 * Math.Atan2(-2 * (q.Y * q.Z - q.W * q.X), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z) / Math.PI),
+            (float)(180 * Math.Asin(2 * (q.X * q.Z + q.W * q.Y)) / Math.PI),
+            (float)(180 * Math.Atan2(-2 * (q.X * q.Y - q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z) / Math.PI)
+        );
     }
 }

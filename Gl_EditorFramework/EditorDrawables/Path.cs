@@ -10,6 +10,7 @@ using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 using static GL_EditorFramework.Renderers;
 
@@ -905,10 +906,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             selectedObjects?.Add(this);
             foreach (PathPoint point in PathPoints)
-            {
-                point.DeselectAll(control, selectedObjects);
-                point.Selected = true;
-            }
+                point.SelectAll(control, selectedObjects);
 
             return REDRAW;
         }
@@ -917,10 +915,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             selectedObjects?.Add(this);
             foreach (PathPoint point in PathPoints)
-            {
-                point.DeselectAll(control, selectedObjects);
-                point.Selected = true;
-            }
+                point.SelectDefault(control, selectedObjects);
 
             return REDRAW;
         }
@@ -955,18 +950,14 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
         {
+            selectedObjects?.Add(this);
             if (partIndex == 0)
             {
-                selectedObjects?.Add(this);
                 foreach (PathPoint point in PathPoints)
-                {
-                    point.DeselectAll(control, selectedObjects);
-                    point.Selected = true;
-                }
+                    point.SelectDefault(control, selectedObjects);
             }
             else
             {
-                bool allPointsSelected = true;
                 partIndex--;
                 foreach (PathPoint point in PathPoints)
                 {
@@ -976,18 +967,6 @@ namespace GL_EditorFramework.EditorDrawables
                         point.Select(partIndex, control, selectedObjects);
                     }
                     partIndex -= span;
-
-                    allPointsSelected &= point.Selected;
-                }
-
-                if (allPointsSelected)
-                {
-                    selectedObjects?.Add(this);
-                    foreach (PathPoint point in PathPoints)
-                    {
-                        point.DeselectAll(control, selectedObjects);
-                        point.Selected = true;
-                    }
                 }
             }
 
@@ -999,12 +978,12 @@ namespace GL_EditorFramework.EditorDrawables
             selectedObjects?.Remove(this);
             if (partIndex == 0)
             {
-                selectedObjects?.Remove(this);
                 foreach (PathPoint point in PathPoints)
                     point.DeselectAll(control, selectedObjects);
             }
             else
             {
+                bool noPointsSelected = true;
                 partIndex--;
                 foreach (PathPoint point in PathPoints)
                 {
@@ -1014,8 +993,10 @@ namespace GL_EditorFramework.EditorDrawables
                         point.Deselect(partIndex, control, selectedObjects);
                     }
                     partIndex -= span;
+                    noPointsSelected &= !point.Selected;
                 }
             }
+
             return REDRAW;
         }
 
@@ -1062,6 +1043,7 @@ namespace GL_EditorFramework.EditorDrawables
             selectedObjects?.Remove(this);
             foreach (PathPoint point in PathPoints)
                 point.DeselectAll(control, selectedObjects);
+
             return REDRAW;
         }
 
@@ -1137,6 +1119,62 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 foreach (PathPoint point in PathPoints)
                     point.DeleteSelected(manager, PathPoints);
+            }
+        }
+
+        public override bool ProvidesProperty(EditorSceneBase scene)
+        {
+            if (scene.SelectedObjects.Count > PathPoints.Count+1)
+                return false;
+            foreach(object obj in scene.SelectedObjects)
+            {
+                if (!PathPoints.Contains(obj) && obj != this)
+                    return false;
+            }
+            return true;
+
+        }
+
+        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene)
+        {
+            return new PropertyProvider(this, scene);
+        }
+
+        public class PropertyProvider : IPropertyProvider
+        {
+            Path path;
+            PathPoint point;
+            public PropertyProvider(Path path, EditorSceneBase scene)
+            {
+                this.path = path;
+
+                if (scene.SelectedObjects.Count == 1)
+                {
+                    point = (scene.SelectedObjects.First() as PathPoint);
+                }
+            }
+
+            public void DoUI(IObjectPropertyControl control)
+            {
+                path.Closed = control.CheckBox("Closed", path.Closed);
+
+                if (point != null)
+                {
+                    if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                        point.position = control.Vector3Input(point.position, "Position", 1, 16);
+                    else
+                        point.position = control.Vector3Input(point.position, "Position", 0.125f, 2);
+
+                    if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                        point.controlPoint1 = control.Vector3Input(point.controlPoint1, "Control Point 1", 1, 16);
+                    else
+                        point.controlPoint1 = control.Vector3Input(point.controlPoint1, "Control Point 1", 0.125f, 2);
+
+                    if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                        point.controlPoint2 = control.Vector3Input(point.controlPoint2, "Control Point 2", 1, 16);
+                    else
+                        point.controlPoint2 = control.Vector3Input(point.controlPoint2, "Control Point 2", 0.125f, 2);
+                }
             }
         }
 
