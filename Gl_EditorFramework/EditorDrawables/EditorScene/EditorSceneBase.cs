@@ -19,9 +19,20 @@ namespace GL_EditorFramework.EditorDrawables
     public class ListChangedEventArgs : EventArgs
     {
         public IList[] Lists;
-        public ListChangedEventArgs(IList[] list)
+        public ListChangedEventArgs(IList[] lists)
         {
-            Lists = list;
+            Lists = lists;
+        }
+    }
+
+    public delegate void CurrentListChangedEventHandler(object sender, CurrentListChangedEventArgs e);
+
+    public class CurrentListChangedEventArgs : EventArgs
+    {
+        public IList List;
+        public CurrentListChangedEventArgs(IList list)
+        {
+            List = list;
         }
     }
 
@@ -34,13 +45,15 @@ namespace GL_EditorFramework.EditorDrawables
         public int HoveredPart { get; protected set; } = 0;
 
         public readonly HashSet<object> SelectedObjects = new HashSet<object>();
+        public IList CurrentList;
 
         public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
 
         public event EventHandler SelectionChanged;
         public event EventHandler ObjectsMoved;
         public event ListChangedEventHandler ListChanged;
-        
+        public event CurrentListChangedEventHandler CurrentListChanged;
+
         protected float draggingDepth;
 
         protected GL_ControlBase control;
@@ -61,6 +74,12 @@ namespace GL_EditorFramework.EditorDrawables
         public AbstractTransformAction ExclusiveAction = NoAction;
 
         public static NoTransformAction NoAction {get; private set;} = new NoTransformAction();
+
+        public void SetCurrentList(IList list)
+        {
+            CurrentList = list;
+            CurrentListChanged?.Invoke(this, new CurrentListChangedEventArgs(list));
+        }
 
         protected void UpdateSelection(uint var)
         {

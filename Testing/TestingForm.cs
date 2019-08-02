@@ -120,6 +120,7 @@ namespace Testing
             scene.SelectionChanged += Scene_SelectionChanged;
             scene.ObjectsMoved += Scene_ObjectsMoved;
             scene.ListChanged += Scene_ListChanged;
+            scene.CurrentListChanged += Scene_CurrentListChanged;
             objectPropertyControl1.ValueChanged += ObjectPropertyControl1_ValueChanged;
             objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueChanged;
             objectPropertyControl1.ValueChangeStart += ObjectPropertyControl1_ValueChangeStart;
@@ -141,6 +142,11 @@ namespace Testing
             propertyContainer.PathPointEdit += (object sender, EventArgs _e) => {
                 sceneListView1.CurrentList = propertyContainer.selectedPath.PathPoints;
             };
+        }
+
+        private void Scene_CurrentListChanged(object sender, CurrentListChangedEventArgs e)
+        {
+            sceneListView1.CurrentList = e.List;
         }
 
         private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)

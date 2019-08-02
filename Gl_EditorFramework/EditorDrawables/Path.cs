@@ -1144,6 +1144,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             Path path;
             PathPoint point;
+            readonly EditorSceneBase scene;
             public PropertyProvider(Path path, EditorSceneBase scene)
             {
                 this.path = path;
@@ -1152,11 +1153,15 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     point = (scene.SelectedObjects.First() as PathPoint);
                 }
+                this.scene = scene;
             }
 
             public void DoUI(IObjectPropertyControl control)
             {
                 path.Closed = control.CheckBox("Closed", path.Closed);
+
+                if (scene.CurrentList!= path.PathPoints && control.Button("Edit Pathpoints"))
+                    scene.SetCurrentList(path.PathPoints);
 
                 if (point != null)
                 {
