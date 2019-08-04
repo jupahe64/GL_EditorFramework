@@ -81,6 +81,9 @@ namespace GL_EditorFramework.EditorDrawables
             CurrentListChanged?.Invoke(this, new CurrentListChangedEventArgs(list));
         }
 
+        public void Refresh() => control.Refresh();
+        public void DrawPicking() => control.DrawPicking();
+
         protected void UpdateSelection(uint var)
         {
             SelectionChanged?.Invoke(this, new EventArgs());
@@ -179,7 +182,7 @@ namespace GL_EditorFramework.EditorDrawables
             DeletionManager manager = new DeletionManager();
 
             foreach (IEditableObject obj in list)
-                obj.DeleteSelected(manager, list);
+                obj.DeleteSelected(manager, list, CurrentList);
 
             _ExecuteDeletion(manager);
         }

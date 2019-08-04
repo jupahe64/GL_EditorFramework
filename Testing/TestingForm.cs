@@ -20,7 +20,7 @@ namespace Testing
             InitializeComponent();
         }
 
-        private TestProvider propertyContainer = new TestProvider();
+        //private TestProvider propertyContainer = new TestProvider();
 
         private EditorScene scene;
 
@@ -121,10 +121,6 @@ namespace Testing
             scene.ObjectsMoved += Scene_ObjectsMoved;
             scene.ListChanged += Scene_ListChanged;
             scene.CurrentListChanged += Scene_CurrentListChanged;
-            objectPropertyControl1.ValueChanged += ObjectPropertyControl1_ValueChanged;
-            objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueChanged;
-            objectPropertyControl1.ValueChangeStart += ObjectPropertyControl1_ValueChangeStart;
-            objectPropertyControl1.ValueSet += ObjectPropertyControl1_ValueSet;
             gL_ControlModern1.KeyDown += GL_ControlModern1_KeyDown;
             
             for(int i = 0; i<15; i++)
@@ -138,10 +134,6 @@ namespace Testing
 
             scene.ToogleSelected(scene.objects[4], true);
             Scene_SelectionChanged(this, null);
-
-            propertyContainer.PathPointEdit += (object sender, EventArgs _e) => {
-                sceneListView1.CurrentList = propertyContainer.selectedPath.PathPoints;
-            };
         }
 
         private void Scene_CurrentListChanged(object sender, CurrentListChangedEventArgs e)
@@ -190,31 +182,10 @@ namespace Testing
             }
         }
 
-        private void ObjectPropertyControl1_ValueSet(object sender, EventArgs e)
-        {
-            scene.ApplyCurrentTransformAction();
-            propertyContainer.pCenter = propertyContainer.center;
-
-            propertyChangesAction.translation = new Vector3();
-            scene.CurrentAction = propertyChangesAction;
-        }
-
-        private void ObjectPropertyControl1_ValueChangeStart(object sender, EventArgs e)
-        {
-            scene.CurrentAction = propertyChangesAction;
-        }
-
         private void Scene_ObjectsMoved(object sender, EventArgs e)
         {
-            propertyContainer.Setup(scene.SelectedObjects);
+            objectPropertyControl1.CurrentPropertyProvider?.UpdateProperties();
             objectPropertyControl1.Refresh();
-        }
-
-        private void ObjectPropertyControl1_ValueChanged(object sender, EventArgs e)
-        {
-            propertyChangesAction.translation = propertyContainer.center - propertyContainer.pCenter;
-
-            gL_ControlModern1.Refresh();
         }
 
         private void Scene_SelectionChanged(object sender, EventArgs e)
@@ -230,7 +201,7 @@ namespace Testing
             sceneListView1.UpdateAutoScroll();
         }
     }
-
+    /*
     public class TestProvider : IPropertyProvider
     {
         public Vector3 pCenter;
@@ -294,4 +265,5 @@ namespace Testing
             }
         }
     }
+    */
 }

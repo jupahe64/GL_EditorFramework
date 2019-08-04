@@ -18,10 +18,6 @@ namespace GL_EditorFramework
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         protected static extern IntPtr SendMessage(HandleRef hWnd, int msg, int wParam, int lParam);
 
-        public event EventHandler ValueChangeStart;
-        public event EventHandler ValueChanged;
-        public event EventHandler ValueSet;
-
         public Font HeaderFont;
         public Font LinkFont;
 
@@ -138,12 +134,12 @@ namespace GL_EditorFramework
 
             eventType = EventType.DRAW;
 
-            if ((changeTypes & VALUE_CHANGE_START)>0)
-                ValueChangeStart.Invoke(this, e);
+            if ((changeTypes & VALUE_CHANGE_START) > 0)
+                propertyProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                ValueChanged.Invoke(this, e);
+                propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                ValueSet.Invoke(this, e);
+                propertyProvider?.OnValueSet();
         }
 
         private void TextBox1_KeyDown(object sender, KeyEventArgs e)
@@ -220,11 +216,11 @@ namespace GL_EditorFramework
             }
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
-                ValueChangeStart.Invoke(this, e);
+                propertyProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                ValueChanged.Invoke(this, e);
+                propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                ValueSet.Invoke(this, e);
+                propertyProvider?.OnValueSet();
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -244,11 +240,11 @@ namespace GL_EditorFramework
             lastMousePos = e.Location;
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
-                ValueChangeStart.Invoke(this, e);
+                propertyProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                ValueChanged.Invoke(this, e);
+                propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                ValueSet.Invoke(this, e);
+                propertyProvider?.OnValueSet();
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -276,11 +272,11 @@ namespace GL_EditorFramework
             eventType = EventType.DRAW;
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
-                ValueChangeStart.Invoke(this, e);
+                propertyProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                ValueChanged.Invoke(this, e);
+                propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                ValueSet.Invoke(this, e);
+                propertyProvider?.OnValueSet();
         }
 
         private void DrawField(int textX, int fieldX, int y, int width, string name, string value, Brush outline, Brush background)
@@ -728,5 +724,10 @@ namespace GL_EditorFramework
     public interface IPropertyProvider
     {
         void DoUI(IObjectPropertyControl control);
+        void UpdateProperties();
+
+        void OnValueChangeStart();
+        void OnValueChanged();
+        void OnValueSet();
     }
 }

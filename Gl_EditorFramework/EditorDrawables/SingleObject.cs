@@ -228,7 +228,7 @@ namespace GL_EditorFramework.EditorDrawables
             infos.Add(this, 0, prevPos, null, null);
         }
 
-        public override void DeleteSelected(DeletionManager manager, IList list)
+        public override void DeleteSelected(DeletionManager manager, IList list, IList currentList)
         {
             if (Selected)
                 manager.Add(list, this);
@@ -236,14 +236,18 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override bool ProvidesProperty(EditorSceneBase scene) => Selected;
 
-        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this);
+        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this,scene);
 
         public class PropertyProvider : IPropertyProvider
         {
+            Vector3 prevPos;
+
             SingleObject obj;
-            public PropertyProvider(SingleObject obj)
+            EditorSceneBase scene;
+            public PropertyProvider(SingleObject obj, EditorSceneBase scene)
             {
                 this.obj = obj;
+                this.scene = scene;
             }
 
             public void DoUI(IObjectPropertyControl control)
@@ -252,6 +256,29 @@ namespace GL_EditorFramework.EditorDrawables
                     obj.Position = control.Vector3Input(obj.Position, "Position", 1, 16);
                 else
                     obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
+            }
+
+            public void OnValueChangeStart()
+            {
+                prevPos = obj.Position;
+            }
+
+            public void OnValueChanged()
+            {
+                scene.Refresh();
+            }
+
+            public void OnValueSet()
+            {
+                if (prevPos != obj.Position)
+                    Console.WriteLine("Position Changed");
+
+                scene.Refresh();
+            }
+
+            public void UpdateProperties()
+            {
+                
             }
         }
     }

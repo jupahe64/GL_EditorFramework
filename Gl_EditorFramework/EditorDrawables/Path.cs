@@ -1018,8 +1018,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
         {
-            foreach (PathPoint point in PathPoints)
-                point.ApplyTransformActionToSelection(transformAction, ref transformChangeInfos);
+            
         }
 
         public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
@@ -1107,18 +1106,26 @@ namespace GL_EditorFramework.EditorDrawables
             return false;
         }
 
-        public override void DeleteSelected(DeletionManager manager, IList list)
+        public override void DeleteSelected(DeletionManager manager, IList list, IList currentList)
         {
             bool allPointsSelected = true;
             foreach (PathPoint point in PathPoints)
                 allPointsSelected &= point.Selected;
 
             if (allPointsSelected)
-                manager.Add(list, this);
+            {
+                if (currentList == PathPoints)
+                {
+                    for(int i = 1; i<PathPoints.Count; i++)
+                        PathPoints[i].DeleteSelected(manager, PathPoints, currentList);
+                }
+                else
+                    manager.Add(list, this);
+            }
             else
             {
                 foreach (PathPoint point in PathPoints)
-                    point.DeleteSelected(manager, PathPoints);
+                    point.DeleteSelected(manager, PathPoints, currentList);
             }
         }
 
@@ -1142,6 +1149,11 @@ namespace GL_EditorFramework.EditorDrawables
 
         public class PropertyProvider : IPropertyProvider
         {
+            bool prevClosed;
+            Vector3 prevPathPointPos;
+            Vector3 prevPathPointCP1;
+            Vector3 prevPathPointCP2;
+            
             Path path;
             PathPoint point;
             readonly EditorSceneBase scene;
@@ -1149,10 +1161,19 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 this.path = path;
 
-                if (scene.SelectedObjects.Count == 1)
+                List<PathPoint> points = new List<PathPoint>();
+                
+                foreach(IEditableObject obj in scene.SelectedObjects)
                 {
-                    point = (scene.SelectedObjects.First() as PathPoint);
+                    if ((point = obj as PathPoint) != null)
+                        points.Add(point);
                 }
+
+                if (points.Count == 1)
+                    point = point ?? points.First(); //if the last selected object isn't a PathPoint, use the first selected point
+                else
+                    point = null;
+
                 this.scene = scene;
             }
 
@@ -1180,6 +1201,38 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         point.controlPoint2 = control.Vector3Input(point.controlPoint2, "Control Point 2", 0.125f, 2);
                 }
+            }
+
+            public void OnValueChangeStart()
+            {
+                prevClosed = path.Closed;
+                prevPathPointPos = point.position;
+                prevPathPointCP1 = point.controlPoint1;
+                prevPathPointCP2 = point.controlPoint2;
+            }
+
+            public void OnValueChanged()
+            {
+                scene.Refresh();
+            }
+
+            public void OnValueSet()
+            {
+                if (prevClosed != path.Closed)
+                    Console.WriteLine("Closed Changed");
+                if (prevPathPointPos != point.position)
+                    Console.WriteLine("Point Position Changed");
+                if (prevPathPointCP1 != point.controlPoint1)
+                    Console.WriteLine("Control Point 1 Changed");
+                if (prevPathPointCP2 != point.controlPoint2)
+                    Console.WriteLine("Control Point 2 Changed");
+
+                scene.Refresh();
+            }
+
+            public void UpdateProperties()
+            {
+
             }
         }
 
@@ -1448,7 +1501,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return i;
             }
 
-            public override void DeleteSelected(DeletionManager manager, IList list)
+            public override void DeleteSelected(DeletionManager manager, IList list, IList currentList)
             {
                 if (Selected)
                     manager.Add(list, this);

@@ -138,14 +138,22 @@ namespace Testing
             infos.Add(this, 0, prevPos, prevRot, prevScale);
         }
 
-        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this);
+        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this, scene);
 
         public new class PropertyProvider : IPropertyProvider
         {
+            Vector3 prevPos;
+            Vector3 rot;
+            Vector3 prevRot;
+            Vector3 prevScale;
+
             TransformableObject obj;
-            public PropertyProvider(TransformableObject obj)
+            EditorSceneBase scene;
+            public PropertyProvider(TransformableObject obj, EditorSceneBase scene)
             {
                 this.obj = obj;
+                this.scene = scene;
+                rot = obj.rotation.ToEulerAnglesDeg();
             }
 
             public void DoUI(IObjectPropertyControl control)
@@ -156,14 +164,47 @@ namespace Testing
                     obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
 
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
-                    obj.rotation = Framework.QFromEulerAnglesDeg(control.Vector3Input(obj.rotation.ToEulerAnglesDeg(), "Rotation", 45, 18));
+                    rot = control.Vector3Input(rot, "Rotation", 45, 18);
                 else
-                    obj.rotation = Framework.QFromEulerAnglesDeg(control.Vector3Input(obj.rotation.ToEulerAnglesDeg(), "Rotation", 5, 2));
+                    rot = control.Vector3Input(rot, "Rotation", 5, 2);
 
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                     obj.scale = control.Vector3Input(obj.scale, "Scale", 1, 16);
                 else
                     obj.scale = control.Vector3Input(obj.scale, "Scale", 0.125f, 2);
+            }
+
+            public void OnValueChangeStart()
+            {
+                prevPos = obj.Position;
+                prevRot = rot;
+                prevScale = obj.scale;
+            }
+
+            public void OnValueChanged()
+            {
+                obj.rotation = Framework.QFromEulerAnglesDeg(rot);
+
+                scene.Refresh();
+            }
+
+            public void OnValueSet()
+            {
+                obj.rotation = Framework.QFromEulerAnglesDeg(rot);
+
+                if (prevPos != obj.Position)
+                    Console.WriteLine("Position Changed");
+                if (prevRot != rot)
+                    Console.WriteLine("Rotation Changed");
+                if (prevScale != obj.scale)
+                    Console.WriteLine("Scale Changed");
+
+                scene.Refresh();
+            }
+
+            public void UpdateProperties()
+            {
+                rot = obj.rotation.ToEulerAnglesDeg();
             }
         }
     }
