@@ -1090,6 +1090,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
         {
+            if (PathPoints.Count == 1)
+                return (PathPoints[0].position - pos).LengthSquared < rangeSquared;
+
             BoundingBox box;
             for (int i = 1; i<PathPoints.Count; i++)
             {
