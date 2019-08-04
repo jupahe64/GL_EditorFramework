@@ -139,6 +139,10 @@ namespace Testing
         private void Scene_CurrentListChanged(object sender, CurrentListChangedEventArgs e)
         {
             sceneListView1.CurrentList = e.List;
+            if (e.List as List<Path.PathPoint> != null)
+                button1.Text = "Add Point";
+            else
+                button1.Text = "Add Object";
         }
 
         private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
@@ -197,8 +201,13 @@ namespace Testing
 
         private void button1_Click(object sender, EventArgs e)
         {
-            scene.Add(sceneListView1.CurrentList, new TransformableObject(Vector3.Zero,Quaternion.Identity,Vector3.One));
+            if(scene.CurrentList as List<Path.PathPoint> != null)
+                scene.Add(scene.CurrentList, new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
+            else
+                scene.Add(scene.CurrentList, new TransformableObject(Vector3.Zero,Quaternion.Identity,Vector3.One));
             sceneListView1.UpdateAutoScroll();
+            sceneListView1.Refresh();
+            gL_ControlModern1.Refresh();
         }
     }
     /*
