@@ -20,6 +20,7 @@ namespace GL_EditorFramework.EditorDrawables
     //     An EditableObject that has only one selectable Part. It's represented by a blue block
     public class SingleObject : EditableObject
     {
+        public static System.Reflection.FieldInfo FI_Position => typeof(SingleObject).GetField("Position");
         public Vector3 Position = new Vector3(0, 0, 0);
 
         protected bool Selected = false;
@@ -271,7 +272,7 @@ namespace GL_EditorFramework.EditorDrawables
             public void OnValueSet()
             {
                 if (prevPos != obj.Position)
-                    Console.WriteLine("Position Changed");
+                    scene.AddToUndo(new RevertableFieldChange(SingleObject.FI_Position, obj, prevPos));
 
                 scene.Refresh();
             }

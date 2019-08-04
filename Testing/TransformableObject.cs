@@ -24,8 +24,10 @@ namespace Testing
 
         public override string ToString() => "block";
 
+        public static System.Reflection.FieldInfo FI_Rotation => typeof(TransformableObject).GetField("rotation");
         public Quaternion rotation = Quaternion.Identity;
 
+        public static System.Reflection.FieldInfo FI_Scale => typeof(TransformableObject).GetField("scale");
         public Vector3 scale = new Vector3(1, 1, 1);
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
@@ -145,6 +147,7 @@ namespace Testing
             Vector3 prevPos;
             Vector3 rot;
             Vector3 prevRot;
+            Quaternion prevRotQ;
             Vector3 prevScale;
 
             TransformableObject obj;
@@ -178,6 +181,7 @@ namespace Testing
             {
                 prevPos = obj.Position;
                 prevRot = rot;
+                prevRotQ = obj.rotation;
                 prevScale = obj.scale;
             }
 
@@ -193,11 +197,11 @@ namespace Testing
                 obj.rotation = Framework.QFromEulerAnglesDeg(rot);
 
                 if (prevPos != obj.Position)
-                    Console.WriteLine("Position Changed");
+                    scene.AddToUndo(new RevertableFieldChange(SingleObject.FI_Position, obj, prevPos));
                 if (prevRot != rot)
-                    Console.WriteLine("Rotation Changed");
+                    scene.AddToUndo(new RevertableFieldChange(TransformableObject.FI_Rotation, obj, prevRotQ));
                 if (prevScale != obj.scale)
-                    Console.WriteLine("Scale Changed");
+                    scene.AddToUndo(new RevertableFieldChange(TransformableObject.FI_Scale, obj, prevScale));
 
                 scene.Refresh();
             }

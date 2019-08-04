@@ -125,7 +125,6 @@ namespace GL_EditorFramework
                 return;
 
             eventType = EventType.LOST_FOCUS;
-            changeTypes = 0;
 
             Refresh();
 
@@ -140,6 +139,8 @@ namespace GL_EditorFramework
                 propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
                 propertyProvider?.OnValueSet();
+
+            changeTypes = 0;
         }
 
         private void TextBox1_KeyDown(object sender, KeyEventArgs e)
@@ -199,7 +200,6 @@ namespace GL_EditorFramework
                 dragStarPos = e.Location;
                 eventType = EventType.DRAG_START;
                 dragIndex = -1;
-                changeTypes = 0;
 
                 Refresh();
 
@@ -210,7 +210,6 @@ namespace GL_EditorFramework
             else if (e.Button == MouseButtons.Right)
             {
                 eventType = EventType.DRAG_ABORT;
-                changeTypes = 0;
                 Refresh();
                 eventType = EventType.DRAW;
             }
@@ -221,6 +220,8 @@ namespace GL_EditorFramework
                 propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
                 propertyProvider?.OnValueSet();
+
+            changeTypes = 0;
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -232,8 +233,7 @@ namespace GL_EditorFramework
 
             if(mouseWasDragged)
                 eventType = EventType.DRAG;
-
-            changeTypes = 0;
+            
             Refresh();
 
             eventType = EventType.DRAW;
@@ -245,6 +245,8 @@ namespace GL_EditorFramework
                 propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
                 propertyProvider?.OnValueSet();
+
+            changeTypes = 0;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -257,7 +259,6 @@ namespace GL_EditorFramework
             if (mouseWasDragged)
             {
                 eventType = EventType.DRAG_END;
-                changeTypes = 0;
                 Refresh();
             }
             else{
@@ -265,7 +266,6 @@ namespace GL_EditorFramework
                     return;
                 
                 eventType = EventType.CLICK;
-                changeTypes = 0;
                 Refresh();
             }
 
@@ -277,6 +277,8 @@ namespace GL_EditorFramework
                 propertyProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
                 propertyProvider?.OnValueSet();
+
+            changeTypes = 0;
         }
 
         private void DrawField(int textX, int fieldX, int y, int width, string name, string value, Brush outline, Brush background)
@@ -671,6 +673,9 @@ namespace GL_EditorFramework
         {
             if (new Rectangle(usableWidth - 29, currentY + 1, 18, textBoxHeight - 2).Contains(mousePos))
             {
+                if(eventType == EventType.DRAG_START)
+                    changeTypes |= VALUE_CHANGE_START;
+
                 if (eventType == EventType.CLICK)
                 {
                     isChecked = !isChecked;

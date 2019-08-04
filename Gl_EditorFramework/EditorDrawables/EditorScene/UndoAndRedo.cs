@@ -38,23 +38,22 @@ namespace GL_EditorFramework.EditorDrawables
         public void AddTransformToUndo(TransformChangeInfos transformChangeInfos)
         {
             if(transformChangeInfos.changedRotations > 0)
-            {
-                undoStack.Push(new RevertableRotChange(transformChangeInfos));
-                redoStack.Clear();
-            }
+                AddToUndo(new RevertableRotChange(transformChangeInfos));
+
             else if (transformChangeInfos.changedScales > 0)
-            {
-                undoStack.Push(new RevertableScaleChange(transformChangeInfos));
-                redoStack.Clear();
-            }
+                AddToUndo(new RevertableScaleChange(transformChangeInfos));
+
             else if (transformChangeInfos.changedPositions > 0)
-            {
-                undoStack.Push(new RevertablePosChange(transformChangeInfos));
-                redoStack.Clear();
-            }
+                AddToUndo(new RevertablePosChange(transformChangeInfos));
 
             if(transformChangeInfos.changedPositions+transformChangeInfos.changedRotations+transformChangeInfos.changedScales>0)
                 ObjectsMoved.Invoke(this, null);
+        }
+
+        public void AddToUndo(IRevertable revertable)
+        {
+            undoStack.Push(revertable);
+            redoStack.Clear();
         }
 
         public struct RevertablePosChange : IRevertable
@@ -467,6 +466,26 @@ namespace GL_EditorFramework.EditorDrawables
                 public IEditableObject obj;
                 public int index;
                 public IList list;
+            }
+        }
+
+        public struct RevertableFieldChange : IRevertable
+        {
+            readonly System.Reflection.FieldInfo field;
+            readonly object obj;
+            readonly object prevValue;
+            public RevertableFieldChange(System.Reflection.FieldInfo field, object obj, object prevValue)
+            {
+                this.field = field;
+                this.obj = obj;
+                this.prevValue = prevValue;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                object currentValue = field.GetValue(obj);
+                field.SetValue(obj, prevValue);
+                return new RevertableFieldChange(field, obj, currentValue);
             }
         }
     }

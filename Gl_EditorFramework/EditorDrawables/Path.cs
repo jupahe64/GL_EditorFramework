@@ -30,6 +30,7 @@ namespace GL_EditorFramework.EditorDrawables
         private int pathPointBuffer;
         public List<PathPoint> PathPoints;
 
+        public static System.Reflection.FieldInfo FI_Closed => typeof(Path).GetField("Closed");
         public bool Closed = false;
 
         public new static Vector4 hoverColor = new Vector4(1, 1, 0.925f, 1);
@@ -1219,13 +1220,16 @@ namespace GL_EditorFramework.EditorDrawables
             public void OnValueSet()
             {
                 if (prevClosed != path.Closed)
-                    Console.WriteLine("Closed Changed");
+                    scene.AddToUndo(new RevertableFieldChange(Path.FI_Closed, path, prevClosed));
+
                 if (prevPathPointPos != point.position)
-                    Console.WriteLine("Point Position Changed");
+                    scene.AddToUndo(new RevertableFieldChange(PathPoint.FI_position, point, prevPathPointPos));
+
                 if (prevPathPointCP1 != point.controlPoint1)
-                    Console.WriteLine("Control Point 1 Changed");
+                    scene.AddToUndo(new RevertableFieldChange(PathPoint.FI_controlPoint1, point, prevPathPointCP1));
+
                 if (prevPathPointCP2 != point.controlPoint2)
-                    Console.WriteLine("Control Point 2 Changed");
+                    scene.AddToUndo(new RevertableFieldChange(PathPoint.FI_controlPoint2, point, prevPathPointCP2));
 
                 scene.Refresh();
             }
@@ -1248,8 +1252,14 @@ namespace GL_EditorFramework.EditorDrawables
                 this.controlPoint1 = controlPoint1;
                 this.controlPoint2 = controlPoint2;
             }
+
+            public static System.Reflection.FieldInfo FI_position => typeof(PathPoint).GetField("position");
             public Vector3 position;
+
+            public static System.Reflection.FieldInfo FI_controlPoint1 => typeof(PathPoint).GetField("controlPoint1");
             public Vector3 controlPoint1;
+
+            public static System.Reflection.FieldInfo FI_controlPoint2 => typeof(PathPoint).GetField("controlPoint2");
             public Vector3 controlPoint2;
 
             public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)

@@ -112,7 +112,7 @@ namespace GL_EditorFramework.EditorDrawables
                     var |= obj.SelectDefault(control, SelectedObjects);
                 }
 
-                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo []{new RevertableAddition.AddInListInfo(objs, list)}, new RevertableAddition.SingleAddInListInfo[0]));
+                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo []{new RevertableAddition.AddInListInfo(objs, list)}, new RevertableAddition.SingleAddInListInfo[0]));
 
                 UpdateSelection(var);
             }
@@ -121,7 +121,7 @@ namespace GL_EditorFramework.EditorDrawables
                 foreach (IEditableObject obj in objs)
                     list.Add(obj);
 
-                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
+                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
             }
         }
 
@@ -143,7 +143,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                undoStack.Push(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
+                AddToUndo(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
 
                 UpdateSelection(var);
             }
@@ -160,7 +160,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                undoStack.Push(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
+                AddToUndo(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
             }
         }
 
@@ -221,7 +221,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             UpdateSelection(var);
 
-            undoStack.Push(new RevertableDeletion(infos.ToArray(), singleInfos.ToArray()));
+            AddToUndo(new RevertableDeletion(infos.ToArray(), singleInfos.ToArray()));
         }
 
         public void InsertAt(IList list, bool updateSelection, int index, params IEditableObject[] objs)
@@ -244,7 +244,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
+                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
 
                 UpdateSelection(var);
             }
@@ -256,7 +256,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                undoStack.Push(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
+                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
             }
         }
 
@@ -277,7 +277,7 @@ namespace GL_EditorFramework.EditorDrawables
                 index++;
             }
 
-            undoStack.Push(new RevertableReordering(originalIndex + offset, count, -offset, list));
+            AddToUndo(new RevertableReordering(originalIndex + offset, count, -offset, list));
         }
 
         public void ApplyCurrentTransformAction()
