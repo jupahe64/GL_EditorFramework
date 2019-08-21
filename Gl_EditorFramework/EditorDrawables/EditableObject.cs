@@ -213,6 +213,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         int GetPickableSpan();
 
+        int GetRandomNumberSpan();
+
         uint MouseEnter(int index, GL_ControlBase control);
 
         uint MouseLeave(int index, GL_ControlBase control);

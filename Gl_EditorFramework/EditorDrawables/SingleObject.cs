@@ -43,6 +43,9 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
+            if (!editorScene.ShouldBeDrawn(this))
+                return;
+
             bool hovered = editorScene.Hovered == this;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
@@ -84,6 +87,9 @@ namespace GL_EditorFramework.EditorDrawables
         public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)
+                return;
+
+            if (!editorScene.ShouldBeDrawn(this))
                 return;
 
             bool hovered = editorScene.Hovered == this;

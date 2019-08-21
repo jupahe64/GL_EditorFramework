@@ -47,8 +47,6 @@
             // 
             // sceneListView1
             // 
-            this.sceneListView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
             this.sceneListView1.CurrentCategory = "None";
             this.sceneListView1.Location = new System.Drawing.Point(12, 237);
             this.sceneListView1.Name = "sceneListView1";
@@ -58,6 +56,8 @@
             // 
             // objectPropertyControl1
             // 
+            this.objectPropertyControl1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.objectPropertyControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.objectPropertyControl1.CurrentPropertyProvider = null;
             this.objectPropertyControl1.Location = new System.Drawing.Point(13, 470);
@@ -94,7 +94,6 @@
             this.gL_ControlModern1.BackColor = System.Drawing.Color.Black;
             this.gL_ControlModern1.CamRotX = 0F;
             this.gL_ControlModern1.CamRotY = 0F;
-            this.gL_ControlModern1.CurrentShader = null;
             this.gL_ControlModern1.DragStartPos = new System.Drawing.Point(0, 0);
             this.gL_ControlModern1.Fov = 0.7853982F;
             this.gL_ControlModern1.Location = new System.Drawing.Point(297, 20);

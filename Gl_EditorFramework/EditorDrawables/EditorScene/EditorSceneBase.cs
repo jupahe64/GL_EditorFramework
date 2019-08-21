@@ -597,5 +597,63 @@ namespace GL_EditorFramework.EditorDrawables
             Hovered = null;
             return REDRAW;
         }
+
+        protected float renderDistanceSquared = 1000000;
+        protected float renderDistance = 1000;
+
+        public float RenderDistance
+        {
+            get => renderDistanceSquared;
+            set
+            {
+                if (value < 1f)
+                {
+                    renderDistanceSquared = 1f;
+                    renderDistance = 1f;
+                }
+                else
+                {
+                    renderDistanceSquared = value * value;
+                    renderDistance = value;
+                }
+            }
+        }
+
+        protected int xrayPickingIndex;
+
+        public bool XRaySelection = true;
+
+        protected bool drawSelection = false;
+        protected bool drawOthers = false;
+
+        public bool ShouldBeDrawn(IEditableObject obj)
+        {
+            if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
+                return false;
+
+            if ((drawSelection && SelectedObjects.Contains(obj)) || (drawOthers && !SelectedObjects.Contains(obj)))
+                return true;
+
+            else
+            {
+                xrayPickingIndex += obj.GetPickableSpan();
+                for (int i = 0; i < obj.GetRandomNumberSpan(); i++)
+                    control.RNG?.Next();
+
+                return false;
+            }
+        }
+
+        protected Vector4 SelectColorHijack() => new Vector4(1, 1f, 0.25f, 1);
+
+        protected Vector4 ExtraPickingHijack()
+        {
+            return new Vector4(
+                ((xrayPickingIndex >> 16) & 0xFF) / 255f,
+                ((xrayPickingIndex >> 8) & 0xFF) / 255f,
+                (xrayPickingIndex & 0xFF) / 255f,
+                ((xrayPickingIndex++ >> 24) & 0xFF) / 255f
+            );
+        }
     }
 }

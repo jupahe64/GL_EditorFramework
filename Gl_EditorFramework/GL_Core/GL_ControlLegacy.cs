@@ -128,7 +128,9 @@ namespace GL_EditorFramework.GL_Core
                         Matrix4.CreateRotationY(0.03125f);
                     GL.LoadMatrix(ref orientationCubeMtx);
 
+                    GL.Enable(EnableCap.Texture2D);
                     DrawOrientationCube();
+                    GL.Disable(EnableCap.Texture2D);
                 }
 
                 if (showFakeCursor)
@@ -175,7 +177,9 @@ namespace GL_EditorFramework.GL_Core
                         Matrix4.CreateRotationY(-0.03125f);
                     GL.LoadMatrix(ref orientationCubeMtx);
 
+                    GL.Enable(EnableCap.Texture2D);
                     DrawOrientationCube();
+                    GL.Disable(EnableCap.Texture2D);
                 }
 
                 if (showFakeCursor)
@@ -221,7 +225,9 @@ namespace GL_EditorFramework.GL_Core
                         Matrix4.CreateTranslation(1 - 80f / Width, 1 - 80f / Height, 0);
                     GL.LoadMatrix(ref orientationCubeMtx);
 
+                    GL.Enable(EnableCap.Texture2D);
                     DrawOrientationCube();
+                    GL.Disable(EnableCap.Texture2D);
                 }
             }
 

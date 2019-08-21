@@ -39,6 +39,8 @@ namespace GL_EditorFramework.EditorDrawables
         public Path(List<PathPoint> pathPoints)
         {
             this.PathPoints = pathPoints;
+            foreach (PathPoint point in PathPoints)
+                point.Path = this;
         }
 
         public override string ToString() => "path";
@@ -46,6 +48,9 @@ namespace GL_EditorFramework.EditorDrawables
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)
+                return;
+
+            if (!editorScene.ShouldBeDrawn(this))
                 return;
 
             if(pass == Pass.PICKING)
@@ -65,7 +70,6 @@ namespace GL_EditorFramework.EditorDrawables
 
             int i = 0;
             int index = 0;
-            control.CurrentShader = bezierCurveShaderProgram;
             
             Vector4 col;
             Vector3 pos;
@@ -81,12 +85,9 @@ namespace GL_EditorFramework.EditorDrawables
                     1f
                     );
 
-                GL.Uniform4(lineColorLoc, color);
-                GL.Uniform1(gapIndexLoc, Closed?-1:PathPoints.Count-1);
-                GL.Uniform1(isPickingModeLoc, 0);
-
                 foreach (PathPoint point in PathPoints)
                 {
+                    #region Point
                     if (point.Selected)
                         pos = editorScene.CurrentAction.NewPos(point.position);
                     else
@@ -108,8 +109,9 @@ namespace GL_EditorFramework.EditorDrawables
                     (byte)(col.W * 255)}, 0);
 
                     part++;
+                    #endregion
 
-
+                    #region ControlPoint1
                     if (point.controlPoint1 != Vector3.Zero && editorScene.ExclusiveAction!=NoAction && 
                         editorScene.Hovered == this && editorScene.HoveredPart==part)
 
@@ -131,8 +133,9 @@ namespace GL_EditorFramework.EditorDrawables
 
                     if(point.controlPoint1!=Vector3.Zero)
                         part++;
+                    #endregion
 
-
+                    #region ControlPoint2
                     if (point.controlPoint2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         editorScene.Hovered == this && editorScene.HoveredPart == part)
 
@@ -154,21 +157,47 @@ namespace GL_EditorFramework.EditorDrawables
 
                     if (point.controlPoint2 != Vector3.Zero)
                         part++;
-
+                    #endregion;
 
                     i += 12;
                     index++;
                 }
+                GL.BufferData(BufferTarget.ArrayBuffer, data.Length * 4, data, BufferUsageHint.DynamicDraw);
+
+                #region draw path vao
+                GL.BindVertexArray(pathPointVao);
+
+                control.CurrentShader = defaultShaderProgram;
+                control.ResetModelMatrix();
+                
+                GL.DrawArrays(PrimitiveType.Points, 0, PathPoints.Count);
+
+                control.CurrentShader = bezierCurveShaderProgram;
+                
+                GL.Uniform4(lineColorLoc, color);
+                GL.Uniform1(gapIndexLoc, Closed ? -1 : PathPoints.Count - 1);
+                GL.Uniform1(isPickingModeLoc, 0);
+
+                GL.DrawArrays(PrimitiveType.LineLoop, 0, PathPoints.Count);
+                #endregion
             }
             else
             {
+                int part = 1;
+
+                control.CurrentShader = bezierCurveShaderProgram;
+
                 GL.Uniform4(lineColorLoc, control.NextPickingColor());
                 GL.Uniform1(gapIndexLoc, Closed ? -1 : PathPoints.Count - 1);
                 GL.Uniform1(isPickingModeLoc, 1);
 
                 foreach (PathPoint point in PathPoints)
                 {
-                    pos = point.position;
+                    #region Point
+                    if (point.Selected)
+                        pos = editorScene.CurrentAction.NewPos(point.position);
+                    else
+                        pos = point.position;
 
                     data[i] = pos.X;
                     data[i + 1] = pos.Y;
@@ -177,60 +206,92 @@ namespace GL_EditorFramework.EditorDrawables
                     col = control.NextPickingColor();
 
                     data[i + 3] = BitConverter.ToSingle(new byte[]{
-                    (byte)(col.X * 256),
-                    (byte)(col.Y * 256),
-                    (byte)(col.Z * 256),
-                    (byte)(col.W * 256)}, 0);
+                    (byte)(col.X * 255),
+                    (byte)(col.Y * 255),
+                    (byte)(col.Z * 255),
+                    (byte)(col.W * 255)}, 0);
 
-                    if(point.controlPoint1!=Vector3.Zero)
+                    part++;
+                    #endregion
+
+                    #region ControlPoint1
+                    if (point.controlPoint1!=Vector3.Zero)
                         col = control.NextPickingColor();
 
-                    pos = point.position + point.controlPoint1;
+                    if (point.controlPoint1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                        editorScene.Hovered == this && editorScene.HoveredPart == part)
+
+                        pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint1);
+
+                    else if (point.Selected)
+                        pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint1 * scale);
+                    else
+                        pos = point.position + point.controlPoint1;
 
                     data[i + 4] = pos.X;
                     data[i + 5] = pos.Y;
                     data[i + 6] = pos.Z;
                     data[i + 7] = BitConverter.ToSingle(new byte[]{
-                    (byte)(col.X * 256),
-                    (byte)(col.Y * 256),
-                    (byte)(col.Z * 256),
-                    (byte)(col.W * 256)}, 0);
+                    (byte)(col.X * 255),
+                    (byte)(col.Y * 255),
+                    (byte)(col.Z * 255),
+                    (byte)(col.W * 255)}, 0);
 
+                    if (point.controlPoint1 != Vector3.Zero)
+                        part++;
+                    #endregion
+
+                    #region ControlPoint2
                     if (point.controlPoint2 != Vector3.Zero)
                         col = control.NextPickingColor();
 
-                    pos = point.position + point.controlPoint2;
+                    if (point.controlPoint2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                        editorScene.Hovered == this && editorScene.HoveredPart == part)
+
+                        pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint2);
+
+                    else if (point.Selected)
+                        pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint2 * scale);
+                    else
+                        pos = point.position + point.controlPoint2;
 
                     data[i + 8] = pos.X;
                     data[i + 9] = pos.Y;
                     data[i + 10] = pos.Z;
                     data[i + 11] = BitConverter.ToSingle(new byte[]{
-                    (byte)(col.X * 256),
-                    (byte)(col.Y * 256),
-                    (byte)(col.Z * 256),
-                    (byte)(col.W * 256)}, 0);
+                    (byte)(col.X * 255),
+                    (byte)(col.Y * 255),
+                    (byte)(col.Z * 255),
+                    (byte)(col.W * 255)}, 0);
+
+                    if (point.controlPoint2 != Vector3.Zero)
+                        part++;
+                    #endregion
 
                     i += 12;
                     index++;
                 }
+                GL.BufferData(BufferTarget.ArrayBuffer, data.Length * 4, data, BufferUsageHint.DynamicDraw);
+
+                #region draw path vao
+                GL.BindVertexArray(pathPointVao);
+
+                control.ResetModelMatrix();
+
+                GL.DrawArrays(PrimitiveType.LineLoop, 0, PathPoints.Count);
+
+                control.CurrentShader = defaultShaderProgram;
+                GL.DrawArrays(PrimitiveType.Points, 0, PathPoints.Count);
+                #endregion
             }
-            GL.BufferData(BufferTarget.ArrayBuffer, data.Length*4, data, BufferUsageHint.DynamicDraw);
-
-            
-
-            control.ResetModelMatrix();
-            
-            GL.BindVertexArray(pathPointVao);
-
-            GL.DrawArrays(PrimitiveType.LineLoop, 0, PathPoints.Count);
-
-            control.CurrentShader = defaultShaderProgram;
-            GL.DrawArrays(PrimitiveType.Points, 0, PathPoints.Count);
         }
 
         public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)
+                return;
+
+            if (!editorScene.ShouldBeDrawn(this))
                 return;
 
             GL.Disable(EnableCap.Texture2D);
@@ -240,6 +301,16 @@ namespace GL_EditorFramework.EditorDrawables
             Vector3 scale = editorScene.CurrentAction.NewScale(Vector3.One);
 
             Vector4 color = new Vector4();
+
+            int part = 1;
+
+            Vector3[] positions = new Vector3[PathPoints.Count*3];
+
+            Vector4[] colors = new Vector4[PathPoints.Count];
+
+            int posIndex = 0;
+            int colorIndex = 0;
+
             if (pass == Pass.OPAQUE)
             {
                 int randomColor = control.RNG.Next();
@@ -251,20 +322,7 @@ namespace GL_EditorFramework.EditorDrawables
                         );
                 GL.Color4(color);
                 GL.LineWidth(1.0f);
-            }
-            else
-            {
-                color = control.NextPickingColor();
-                GL.LineWidth(2.0f);
-            }
-
-            int part = 1;
-
-            Vector3[] positions = new Vector3[PathPoints.Count*3];
-
-            int posIndex = 0;
-            if (pass == Pass.OPAQUE)
-            {
+                
                 foreach (PathPoint point in PathPoints)
                 {
                     Vector3 pos;
@@ -275,13 +333,13 @@ namespace GL_EditorFramework.EditorDrawables
 
                     control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
 
-                    GL.CallList(drawLists + 1); //white lines
-
                     if (point.Selected)
-                        GL.Color4(selectColor);
+                        GL.Color4(colors[colorIndex] = selectColor);
                     else
-                        GL.Color4(color);
+                        GL.Color4(colors[colorIndex] = color);
                     GL.CallList(drawLists);
+
+                    GL.CallList(drawLists + 1); //white lines
                     part++;
 
 
@@ -303,14 +361,11 @@ namespace GL_EditorFramework.EditorDrawables
                             Matrix4.CreateTranslation(
                                 positions[posIndex + 1] = pos + point.controlPoint1));
 
-                        GL.CallList(drawLists + 1); //white lines
-
-                        if (point.Selected)
-                            GL.Color4(selectColor);
-                        else
-                            GL.Color4(color);
+                        GL.Color4(colors[colorIndex]);
 
                         GL.CallList(drawLists);
+
+                        GL.CallList(drawLists + 1); //white lines
                         part++;
                     }
                     else
@@ -333,48 +388,91 @@ namespace GL_EditorFramework.EditorDrawables
                             Matrix4.CreateTranslation(
                                 positions[posIndex+2] = pos + point.controlPoint2));
 
-                        GL.CallList(drawLists + 1); //white lines
-
-                        if (point.Selected)
-                            GL.Color4(selectColor);
-                        else
-                            GL.Color4(color);
+                        GL.Color4(colors[colorIndex]);
 
                         GL.CallList(drawLists);
+
+                        GL.CallList(drawLists + 1); //white lines
                         part++;
                     }
                     else
                         positions[posIndex + 2] = pos;
                     
                     posIndex += 3;
+                    colorIndex++;
                 }
             }
             else
             {
+                color = control.NextPickingColor();
+                GL.LineWidth(4.0f);
+
                 foreach (PathPoint point in PathPoints)
                 {
-                    control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(point.position));
+                    Vector3 pos;
+                    if (point.Selected)
+                        positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.position);
+                    else
+                        positions[posIndex] = pos = point.position;
+
+                    control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
 
                     GL.Color4(control.NextPickingColor());
                     GL.CallList(drawLists);
+                    part++;
+
+                    colors[colorIndex] = color;
 
                     if (point.controlPoint1 != Vector3.Zero)
                     {
-                        control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(point.position + point.controlPoint1));
+                        if (editorScene.ExclusiveAction != NoAction &&
+                            editorScene.Hovered == this && editorScene.HoveredPart == part)
+
+                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
+                            Matrix4.CreateTranslation(
+                                positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint1)));
+                        else if (point.Selected)
+                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
+                            Matrix4.CreateTranslation(
+                                positions[posIndex + 1] = pos + rotation * (scale * point.controlPoint1)));
+                        else
+                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
+                            Matrix4.CreateTranslation(
+                                positions[posIndex + 1] = pos + point.controlPoint1));
 
                         GL.Color4(control.NextPickingColor());
                         GL.CallList(drawLists);
+                        part++;
                     }
+                    else
+                        positions[posIndex + 1] = pos;
 
                     if (point.controlPoint2 != Vector3.Zero)
                     {
-                        control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(point.position + point.controlPoint2));
+                        if (editorScene.ExclusiveAction != NoAction &&
+                            editorScene.Hovered == this && editorScene.HoveredPart == part)
+
+                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
+                            Matrix4.CreateTranslation(
+                                positions[posIndex + 2] = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint2)));
+                        else if (point.Selected)
+                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
+                            Matrix4.CreateTranslation(
+                                positions[posIndex + 2] = pos + rotation * (scale * point.controlPoint2)));
+                        else
+                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
+                            Matrix4.CreateTranslation(
+                                positions[posIndex + 2] = pos + point.controlPoint2));
 
                         GL.Color4(control.NextPickingColor());
                         GL.CallList(drawLists);
+                        part++;
                     }
+                    else
+                        positions[posIndex + 2] = pos;
+
+                    posIndex += 3;
+                    colorIndex++;
                 }
             }
 
@@ -404,6 +502,7 @@ namespace GL_EditorFramework.EditorDrawables
                         float uuu = uu * u;
                         float ttt = tt * t;
 
+                        GL.Color4(Vector4.Lerp(colors[i-1], colors[i], t));
                         GL.Vertex3(uuu * p0 +
                                         3 * uu * t * p1 +
                                         3 * u * tt * p2 +
@@ -443,6 +542,7 @@ namespace GL_EditorFramework.EditorDrawables
                         float uuu = uu * u;
                         float ttt = tt * t;
 
+                        GL.Color4(Vector4.Lerp(colors[PathPoints.Count - 1], colors[0], t));
                         GL.Vertex3(uuu * p0 +
                                         3 * uu * t * p1 +
                                         3 * u * tt * p2 +
@@ -501,6 +601,8 @@ namespace GL_EditorFramework.EditorDrawables
                 in vec4 fragColor;
                 void main(){
                     gl_FragColor = fragColor;
+                    if(gl_FragColor==vec4(0,0,0,0))
+                        discard;
                 }");
 
                 var defaultVert = new VertexShader(
@@ -685,54 +787,48 @@ namespace GL_EditorFramework.EditorDrawables
 
 
                 void main(){                  
-                    if(isPickingMode)
-                        fragColor = color[0];
-                    else
+                    if(!isPickingMode){
+                        //draw Point
                         fragColor = vec4(1,1,1,1);
-                    
-                    cubeScale = 0.5f;
-                    pos = vec4(p0,1);
-                    
-                    face(0,1,2,3);
-                    face(4,5,6,7);
-                    line(0,4);
-                    line(1,5);
-                    line(2,6);
-                    line(3,7);
-                    
-                    if(isPickingMode)
-                        fragColor = color[1];
-                    else
-                        fragColor = vec4(1,1,1,1);
-                    
-                    pos = vec4(p3,1);
-                    face(0,1,2,3);
-                    face(4,5,6,7);
-                    line(0,4);
-                    line(1,5);
-                    line(2,6);
-                    line(3,7);
-                    
-                    cubeScale = 0.25f;
-                    
-                    if(p1!=p0){
-                        fragColor = color[0];
-                        gl_Position = mtx * vec4(p0,1); EmitVertex();
-                        gl_Position = mtx * vec4(p1,1); EmitVertex();
-                        EndPrimitive();
                         
-                        if(isPickingMode)
-                            fragColor = color_cp2[0];
-                        else
-                            fragColor = vec4(1,1,1,1);
-                        
-                        pos = vec4(p1,1);
+                        cubeScale = 0.5f;
+                        pos = vec4(p0,1);
                         face(0,1,2,3);
                         face(4,5,6,7);
                         line(0,4);
                         line(1,5);
                         line(2,6);
                         line(3,7);
+                        
+                        pos = vec4(p3,1);
+                        face(0,1,2,3);
+                        face(4,5,6,7);
+                        line(0,4);
+                        line(1,5);
+                        line(2,6);
+                        line(3,7);
+                    }
+                    
+                    cubeScale = 0.25f;
+                    
+                    if(p1!=p0){
+                        //draw ControlPoint1 Handle
+                        fragColor = color[0];
+                        gl_Position = mtx * vec4(p0,1); EmitVertex();
+                        gl_Position = mtx * vec4(p1,1); EmitVertex();
+                        EndPrimitive();
+                        
+                        if(!isPickingMode){
+                            fragColor = vec4(1,1,1,1);
+                            
+                            pos = vec4(p1,1);
+                            face(0,1,2,3);
+                            face(4,5,6,7);
+                            line(0,4);
+                            line(1,5);
+                            line(2,6);
+                            line(3,7);
+                        }
                     }
                     
                     if(p2!=p3){
@@ -741,25 +837,30 @@ namespace GL_EditorFramework.EditorDrawables
                         gl_Position = mtx * vec4(p3,1); EmitVertex();
                         EndPrimitive();
                         
-                        if(isPickingMode)
-                            fragColor = color_cp1[1];
-                        else
+                        if(!isPickingMode){
                             fragColor = vec4(1,1,1,1);
                         
-                        pos = vec4(p2,1);
-                        face(0,1,2,3);
-                        face(4,5,6,7);
-                        line(0,4);
-                        line(1,5);
-                        line(2,6);
-                        line(3,7);
+                            pos = vec4(p2,1);
+                            face(0,1,2,3);
+                            face(4,5,6,7);
+                            line(0,4);
+                            line(1,5);
+                            line(2,6);
+                            line(3,7);
+                        }
                     }
                     if(gl_PrimitiveIDIn[0]!=gapIndex){
                         fragColor = lineColor;
                         if(p1!=p0||p2!=p3){
-                            for(float t = 0; t<=1.0; t+=0.0625){
-                                getPointAtTime(t);
-                            }
+                            if(isPickingMode)
+                                for(float t = 0; t<=1.0; t+=0.0625){
+                                    getPointAtTime(t);
+                                }
+                            else
+                                for(float t = 0; t<=1.0; t+=0.0625){
+                                    getPointAtTime(t);
+                                    fragColor = mix(color[0], color[1], t);
+                                }
                         }else{
                             gl_Position = mtx * vec4(p0, 1);
                             EmitVertex();
@@ -856,6 +957,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             return i;
         }
+
+        public override int GetRandomNumberSpan() => 1;
 
         public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
         {
@@ -1256,6 +1359,8 @@ namespace GL_EditorFramework.EditorDrawables
                 this.controlPoint2 = controlPoint2;
             }
 
+            public Path Path { get; internal set; }
+
             public static System.Reflection.FieldInfo FI_position => typeof(PathPoint).GetField("position");
             public Vector3 position;
 
@@ -1348,6 +1453,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = true;
                 selectedObjects?.Add(this);
+                selectedObjects?.Add(Path);
                 return REDRAW;
             }
 
@@ -1355,6 +1461,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = true;
                 selectedObjects?.Add(this);
+                selectedObjects?.Add(Path);
                 return REDRAW;
             }
 
@@ -1364,6 +1471,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Selected = true;
                     selectedObjects?.Add(this);
+                    selectedObjects?.Add(Path);
                 }
                 return REDRAW;
             }
@@ -1374,6 +1482,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Selected = false;
                     selectedObjects?.Remove(this);
+                    selectedObjects?.Remove(Path);
                 }
                 return REDRAW;
             }
@@ -1382,6 +1491,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = false;
                 selectedObjects?.Remove(this);
+                selectedObjects?.Remove(Path);
                 return REDRAW;
             }
 

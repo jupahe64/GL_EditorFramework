@@ -31,12 +31,14 @@ namespace Testing
             if (pass == Pass.TRANSPARENT)
                 return;
 
+            if (!editorScene.ShouldBeDrawn(this))
+                return;
+
             bool hovered = editorScene.Hovered == this;
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
-            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
+            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -Framework.HALF_PI);
             mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position);
-            control.UpdateModelMatrix(mtx);
 
             Vector4 pickingColor = control.NextPickingColor();
             
@@ -49,15 +51,17 @@ namespace Testing
             else
                 lineBoxColor = new Vector4(1, 1, 1, 1);
 
+            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+
+            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
+
+            control.UpdateModelMatrix(mtx);
+
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
 
             control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * 3f));
 
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
-
-            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
-
-            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
         }
 
         public override void Draw(GL_ControlModern control, Pass pass)
@@ -66,7 +70,7 @@ namespace Testing
                 return;
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
-            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
+            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -Framework.HALF_PI);
             mtx *= Matrix4.CreateTranslation(Position);
             control.UpdateModelMatrix(mtx);
 
@@ -74,15 +78,17 @@ namespace Testing
 
             Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 
+            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+
+            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
+
+            control.UpdateModelMatrix(mtx);
+
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
 
             control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * 3f));
 
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
-
-            control.UpdateModelMatrix(mtx);
-
-            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
         }
 
         public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
@@ -90,12 +96,14 @@ namespace Testing
             if (pass == Pass.TRANSPARENT)
                 return;
 
+            if (!editorScene.ShouldBeDrawn(this))
+                return;
+
             bool hovered = editorScene.Hovered == this;
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
-            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, (float)Math.PI / 2f);
+            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -Framework.HALF_PI);
             mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position);
-            control.UpdateModelMatrix(mtx);
 
             Vector4 pickingColor = control.NextPickingColor();
 
@@ -108,15 +116,17 @@ namespace Testing
             else
                 lineBoxColor = new Vector4(1, 1, 1, 1);
 
+            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+
+            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
+
+            control.UpdateModelMatrix(mtx);
+
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
 
             control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * 3f));
 
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
-
-            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
-
-            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
         }
 
         public override void Draw(GL_ControlLegacy control, Pass pass)
@@ -125,7 +135,7 @@ namespace Testing
                 return;
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
-            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -(float)Math.PI / 2f);
+            mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -Framework.HALF_PI);
             mtx *= Matrix4.CreateTranslation(Position);
             control.UpdateModelMatrix(mtx);
 
@@ -133,15 +143,17 @@ namespace Testing
 
             Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 
+            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+
+            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
+
+            control.UpdateModelMatrix(mtx);
+
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
 
             control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * 3f));
 
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
-
-            control.UpdateModelMatrix(mtx);
-
-            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
         }
 
         public override void Prepare(GL_ControlModern control)

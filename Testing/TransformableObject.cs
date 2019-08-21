@@ -35,6 +35,9 @@ namespace Testing
             if (pass == Pass.TRANSPARENT)
                 return;
 
+            if (!editorScene.ShouldBeDrawn(this))
+                return;
+
             bool hovered = editorScene.Hovered == this;
 
             control.UpdateModelMatrix(
@@ -66,6 +69,9 @@ namespace Testing
         public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)
+                return;
+
+            if (!editorScene.ShouldBeDrawn(this))
                 return;
 
             bool hovered = editorScene.Hovered == this;

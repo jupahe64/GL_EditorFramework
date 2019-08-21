@@ -63,6 +63,8 @@ namespace GL_EditorFramework.GL_Core
         protected int pickingIndex;
         private int lastPicked = -1;
 
+        public delegate Vector4 NextPickingColorHijackDel();
+
         protected Matrix4 mtxMdl, mtxCam, mtxProj;
 
         public Matrix4 ModelMatrix => mtxMdl;
@@ -109,7 +111,7 @@ namespace GL_EditorFramework.GL_Core
             set
             {
                 showOrientationCube = value;
-                pickingIndexOffset = value?7:1;
+                PickingIndexOffset = value?7:1;
                 Refresh();
             }
         }
@@ -164,7 +166,7 @@ namespace GL_EditorFramework.GL_Core
         public virtual AbstractGlDrawable MainDrawable { get; set; }
 
         protected AbstractCamera activeCamera;
-        private int pickingIndexOffset = 7;
+        public int PickingIndexOffset { get; private set; } = 7;
 
         public AbstractCamera ActiveCamera
         {
@@ -263,9 +265,12 @@ namespace GL_EditorFramework.GL_Core
 
         public ulong RedrawerFrame { get; private set; } = 0;
 
+        public NextPickingColorHijackDel NextPickingColorHijack;
+
         public Vector4 NextPickingColor()
         {
-            return new Vector4(
+            return NextPickingColorHijack?.Invoke() ??
+            new Vector4(
                 ((pickingIndex >> 16) & 0xFF)/255f,
                 ((pickingIndex >>  8) & 0xFF)/255f,
                 (pickingIndex & 0xFF) / 255f,
@@ -292,6 +297,7 @@ namespace GL_EditorFramework.GL_Core
 
             
             GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Lequal);
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(CullFaceMode.Back);
             GL.Enable(EnableCap.Texture2D);
@@ -347,7 +353,7 @@ namespace GL_EditorFramework.GL_Core
 
             PickingDepth = -(zfar * znear / (NormPickingDepth * (zfar - znear) - zfar))*32;
 
-            int picked = (int)pickingFrameBuffer - pickingIndexOffset;
+            int picked = (int)pickingFrameBuffer - PickingIndexOffset;
             if (lastPicked != picked || forceReEnter)
             {
                 if (picked >= 0)

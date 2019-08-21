@@ -201,8 +201,14 @@ namespace Testing
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if(scene.CurrentList as List<Path.PathPoint> != null)
-                scene.Add(scene.CurrentList, new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
+            List<Path.PathPoint> points;
+            if ((points = scene.CurrentList as List<Path.PathPoint>) != null)
+            {
+                if(points.Count>0)
+                    scene.Add(scene.CurrentList, new Path.PathPoint(points.Last().position, Vector3.Zero, Vector3.Zero));
+                else
+                    scene.Add(scene.CurrentList, new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
+            }
             else
                 scene.Add(scene.CurrentList, new TransformableObject(Vector3.Zero,Quaternion.Identity,Vector3.One));
             sceneListView1.UpdateAutoScroll();

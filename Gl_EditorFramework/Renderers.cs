@@ -227,46 +227,36 @@ namespace GL_EditorFramework
 
             public static void Draw(GL_ControlModern control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
             {
-                control.CurrentShader = SolidColorShaderProgram;
-
                 if (pass == Pass.OPAQUE)
                 {
-                    
+                    control.CurrentShader = DefaultShaderProgram;
+                    DefaultShaderProgram.SetVector4("color", blockColor);
+
+                    blockVao.Use(control);
+                    GL.DrawArrays(PrimitiveType.Quads, 0, 24);
+
                     #region outlines
                     GL.LineWidth(2.0f);
 
+                    control.CurrentShader = SolidColorShaderProgram;
                     SolidColorShaderProgram.SetVector4("color", lineColor);
+
                     linesVao.Use(control);
                     GL.DrawArrays(PrimitiveType.Lines, 0, 24);
                     #endregion
-                    
-                    control.CurrentShader = DefaultShaderProgram;
-
-                    DefaultShaderProgram.SetVector4("color", blockColor);
                 }
                 else
+                {
+                    control.CurrentShader = SolidColorShaderProgram;
                     SolidColorShaderProgram.SetVector4("color", pickingColor);
 
-                blockVao.Use(control);
-                GL.DrawArrays(PrimitiveType.Quads, 0, 24);
+                    blockVao.Use(control);
+                    GL.DrawArrays(PrimitiveType.Quads, 0, 24);
+                }
             }
 
             public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
             {
-                GL.Disable(EnableCap.Texture2D);
-
-                if (pass == Pass.OPAQUE)
-                {
-                    GL.Color4(lineColor);
-                    GL.CallList(lineDrawList);
-                }
-                else
-                {
-                    GL.Color4(pickingColor);
-
-                    GL.CallList(lineDrawList);
-                }
-
                 if (pass == Pass.OPAQUE)
                 {
                     GL.Enable(EnableCap.Texture2D);
@@ -320,6 +310,42 @@ namespace GL_EditorFramework
                     GL.Vertex3(points[5]);
                     GL.End();
                     #endregion
+
+                    GL.Disable(EnableCap.Texture2D);
+
+                    GL.Color4(lineColor);
+                    GL.CallList(lineDrawList);
+                }
+                else if(pass == Pass.PICKING)
+                {
+                    GL.Color4(pickingColor);
+
+                    GL.Begin(PrimitiveType.Quads);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[6]);
+                    GL.Vertex3(points[2]);
+                    GL.Vertex3(points[3]);
+
+                    GL.Vertex3(points[4]);
+                    GL.Vertex3(points[5]);
+                    GL.Vertex3(points[1]);
+                    GL.Vertex3(points[0]);
+                    GL.End();
+
+                    GL.Begin(PrimitiveType.QuadStrip);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[5]);
+                    GL.Vertex3(points[6]);
+                    GL.Vertex3(points[4]);
+                    GL.Vertex3(points[2]);
+                    GL.Vertex3(points[0]);
+                    GL.Vertex3(points[3]);
+                    GL.Vertex3(points[1]);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[5]);
+                    GL.End();
+
+                    GL.CallList(lineDrawList);
                 }
             }
 

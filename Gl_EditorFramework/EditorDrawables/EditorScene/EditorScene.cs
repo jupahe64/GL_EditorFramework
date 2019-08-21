@@ -1,6 +1,7 @@
 ﻿using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,27 +16,7 @@ namespace GL_EditorFramework.EditorDrawables
     public class EditorScene : EditorSceneBase
     {
         public List<IEditableObject> objects = new List<IEditableObject>();
-
-        private float renderDistanceSquared = 1000000;
-        private float renderDistance = 1000;
-
-        public float RenderDistance{
-            get => renderDistanceSquared;
-            set
-            {
-                if (value < 1f)
-                {
-                    renderDistanceSquared = 1f;
-                    renderDistance = 1f;
-                }
-                else
-                {
-                    renderDistanceSquared = value * value;
-                    renderDistance = value;
-                }
-            }
-        }
-
+        
         public EditorScene(bool multiSelect = true)
         {
             this.multiSelect = multiSelect;
@@ -90,15 +71,118 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void Draw(GL_ControlModern control, Pass pass)
         {
-            foreach (IEditableObject obj in objects)
+            if (XRaySelection)
             {
-                if(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
+                #region xray picking
+                if (pass == Pass.OPAQUE)
+                {
+                    //draw all objects except Selection
+                    drawOthers = true;
+                    drawSelection = false;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.OPAQUE, this);
+
+                    foreach (AbstractGlDrawable obj in staticObjects)
+                        obj.Draw(control, Pass.OPAQUE);
+
+
+                    //draw selection XRay
+                    drawOthers = false;
+                    drawSelection = true;
+
+                    control.NextPickingColorHijack = SelectColorHijack;
+
+                    GL.DepthMask(false);
+                    GL.DepthFunc(DepthFunction.Greater);
+                    
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+                    
+                    //draw visible selection
+                    GL.DepthMask(true);
+                    GL.DepthFunc(DepthFunction.Lequal);
+
+                    control.NextPickingColorHijack = null;
+                    control.RNG = new Random(0);
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.OPAQUE, this);
+                        
+                }
+                else if (pass == Pass.PICKING)
+                {
+                    //draw all objects except Selection
+                    drawOthers = true;
+                    drawSelection = false;
+
+                    control.NextPickingColorHijack = ExtraPickingHijack;
+                    xrayPickingIndex = control.PickingIndexOffset;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+                    foreach (AbstractGlDrawable obj in staticObjects)
+                        obj.Draw(control, Pass.PICKING);
+
+
+                    //clear depth where selected objects are
+                    drawOthers = false;
+                    drawSelection = true;
+
+                    GL.ColorMask(false, false, false, false);
+                    GL.DepthFunc(DepthFunction.Always);
+                    GL.DepthRange(1, 1);
+
+                    control.NextPickingColorHijack = SelectColorHijack;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+
+                    //draw "emulated x-ray"
+                    control.NextPickingColorHijack = ExtraPickingHijack;
+                    xrayPickingIndex = control.PickingIndexOffset;
+
+                    GL.ColorMask(true, true, true, true);
+                    GL.DepthFunc(DepthFunction.Lequal);
+                    GL.DepthRange(0, 1);
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+
+                    
+                    control.NextPickingColorHijack = null;
+                }
+                #endregion
+                else
+                {
+                    drawOthers = true;
+                    drawSelection = true;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.TRANSPARENT, this);
+
+                    foreach (AbstractGlDrawable obj in staticObjects)
+                        obj.Draw(control, Pass.TRANSPARENT);
+                }
+            }
+            else
+            {
+                drawOthers = true;
+                drawSelection = true;
+
+                foreach (IEditableObject obj in objects)
                     obj.Draw(control, pass, this);
+
+                foreach (AbstractGlDrawable obj in staticObjects)
+                    obj.Draw(control, pass);
+                
             }
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                obj.Draw(control, pass);
-            }
+
+
             if (pass == Pass.OPAQUE)
             {
                 CurrentAction.Draw(control);
@@ -108,15 +192,118 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void Draw(GL_ControlLegacy control, Pass pass)
         {
-            foreach (IEditableObject obj in objects)
+            if (XRaySelection)
             {
-                if (obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
+                #region xray picking
+                if (pass == Pass.OPAQUE)
+                {
+                    //draw all objects except Selection
+                    drawOthers = true;
+                    drawSelection = false;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.OPAQUE, this);
+
+                    foreach (AbstractGlDrawable obj in staticObjects)
+                        obj.Draw(control, Pass.OPAQUE);
+
+
+                    //draw selection XRay
+                    drawOthers = false;
+                    drawSelection = true;
+
+                    control.NextPickingColorHijack = SelectColorHijack;
+
+                    GL.DepthMask(false);
+                    GL.DepthFunc(DepthFunction.Greater);
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+
+                    //draw visible selection
+                    GL.DepthMask(true);
+                    GL.DepthFunc(DepthFunction.Lequal);
+
+                    control.NextPickingColorHijack = null;
+                    control.RNG = new Random(0);
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.OPAQUE, this);
+
+                }
+                else if (pass == Pass.PICKING)
+                {
+                    //draw all objects except Selection
+                    drawOthers = true;
+                    drawSelection = false;
+
+                    control.NextPickingColorHijack = ExtraPickingHijack;
+                    xrayPickingIndex = control.PickingIndexOffset;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+                    foreach (AbstractGlDrawable obj in staticObjects)
+                        obj.Draw(control, Pass.PICKING);
+
+
+                    //clear depth where selected objects are
+                    drawOthers = false;
+                    drawSelection = true;
+
+                    GL.ColorMask(false, false, false, false);
+                    GL.DepthFunc(DepthFunction.Always);
+                    GL.DepthRange(1, 1);
+
+                    control.NextPickingColorHijack = SelectColorHijack;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+
+                    //draw "emulated x-ray"
+                    control.NextPickingColorHijack = ExtraPickingHijack;
+                    xrayPickingIndex = control.PickingIndexOffset;
+
+                    GL.ColorMask(true, true, true, true);
+                    GL.DepthFunc(DepthFunction.Lequal);
+                    GL.DepthRange(0, 1);
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.PICKING, this);
+
+
+
+                    control.NextPickingColorHijack = null;
+                }
+                #endregion
+                else
+                {
+                    drawOthers = true;
+                    drawSelection = true;
+
+                    foreach (IEditableObject obj in objects)
+                        obj.Draw(control, Pass.TRANSPARENT, this);
+
+                    foreach (AbstractGlDrawable obj in staticObjects)
+                        obj.Draw(control, Pass.TRANSPARENT);
+                }
+            }
+            else
+            {
+                drawOthers = true;
+                drawSelection = true;
+
+                foreach (IEditableObject obj in objects)
                     obj.Draw(control, pass, this);
+
+                foreach (AbstractGlDrawable obj in staticObjects)
+                    obj.Draw(control, pass);
+
             }
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                obj.Draw(control, pass);
-            }
+
+
             if (pass == Pass.OPAQUE)
             {
                 CurrentAction.Draw(control);
