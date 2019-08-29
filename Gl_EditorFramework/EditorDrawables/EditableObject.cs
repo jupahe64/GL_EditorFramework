@@ -166,6 +166,11 @@ namespace GL_EditorFramework.EditorDrawables
                 Rotation = Quaternion.Identity;
             }
         }
+
+        public virtual void ListChanged(IList list)
+        {
+
+        }
     }
 
     public interface IEditableObject
@@ -240,5 +245,7 @@ namespace GL_EditorFramework.EditorDrawables
         bool ProvidesProperty(EditorSceneBase scene);
 
         IPropertyProvider GetPropertyProvider(EditorSceneBase scene);
+
+        void ListChanged(IList list);
     }
 }

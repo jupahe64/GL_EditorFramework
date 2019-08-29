@@ -28,7 +28,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         private int pathPointVao;
         private int pathPointBuffer;
-        public List<PathPoint> PathPoints;
+        private List<PathPoint> pathPoints;
 
         public static System.Reflection.FieldInfo FI_Closed => typeof(Path).GetField("Closed");
         public bool Closed = false;
@@ -38,9 +38,18 @@ namespace GL_EditorFramework.EditorDrawables
 
         public Path(List<PathPoint> pathPoints)
         {
-            this.PathPoints = pathPoints;
-            foreach (PathPoint point in PathPoints)
-                point.Path = this;
+            this.pathPoints = pathPoints;
+            foreach (PathPoint point in pathPoints)
+                point.path = this;
+        }
+
+        public override void ListChanged(IList list)
+        {
+            if (list == pathPoints)
+            {
+                foreach (PathPoint point in pathPoints)
+                    point.path = this;
+            }
         }
 
         public override string ToString() => "path";
@@ -66,7 +75,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             Vector3 scale = editorScene.CurrentAction.NewScale(Vector3.One);
 
-            float[] data = new float[PathPoints.Count * 12]; //px, py, pz, pCol, cp1x, cp1y, cp1z, cp1Col,  cp2x, cp2y, cp2z, cp2Col
+            float[] data = new float[pathPoints.Count * 12]; //px, py, pz, pCol, cp1x, cp1y, cp1z, cp1Col,  cp2x, cp2y, cp2z, cp2Col
 
             int i = 0;
             int index = 0;
@@ -85,7 +94,7 @@ namespace GL_EditorFramework.EditorDrawables
                     1f
                     );
 
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     #region Point
                     if (point.Selected)
@@ -170,15 +179,15 @@ namespace GL_EditorFramework.EditorDrawables
                 control.CurrentShader = defaultShaderProgram;
                 control.ResetModelMatrix();
                 
-                GL.DrawArrays(PrimitiveType.Points, 0, PathPoints.Count);
+                GL.DrawArrays(PrimitiveType.Points, 0, pathPoints.Count);
 
                 control.CurrentShader = bezierCurveShaderProgram;
                 
                 GL.Uniform4(lineColorLoc, color);
-                GL.Uniform1(gapIndexLoc, Closed ? -1 : PathPoints.Count - 1);
+                GL.Uniform1(gapIndexLoc, Closed ? -1 : pathPoints.Count - 1);
                 GL.Uniform1(isPickingModeLoc, 0);
 
-                GL.DrawArrays(PrimitiveType.LineLoop, 0, PathPoints.Count);
+                GL.DrawArrays(PrimitiveType.LineLoop, 0, pathPoints.Count);
                 #endregion
             }
             else
@@ -188,10 +197,10 @@ namespace GL_EditorFramework.EditorDrawables
                 control.CurrentShader = bezierCurveShaderProgram;
 
                 GL.Uniform4(lineColorLoc, control.NextPickingColor());
-                GL.Uniform1(gapIndexLoc, Closed ? -1 : PathPoints.Count - 1);
+                GL.Uniform1(gapIndexLoc, Closed ? -1 : pathPoints.Count - 1);
                 GL.Uniform1(isPickingModeLoc, 1);
 
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     #region Point
                     if (point.Selected)
@@ -278,10 +287,10 @@ namespace GL_EditorFramework.EditorDrawables
 
                 control.ResetModelMatrix();
 
-                GL.DrawArrays(PrimitiveType.LineLoop, 0, PathPoints.Count);
+                GL.DrawArrays(PrimitiveType.LineLoop, 0, pathPoints.Count);
 
                 control.CurrentShader = defaultShaderProgram;
-                GL.DrawArrays(PrimitiveType.Points, 0, PathPoints.Count);
+                GL.DrawArrays(PrimitiveType.Points, 0, pathPoints.Count);
                 #endregion
             }
         }
@@ -304,9 +313,9 @@ namespace GL_EditorFramework.EditorDrawables
 
             int part = 1;
 
-            Vector3[] positions = new Vector3[PathPoints.Count*3];
+            Vector3[] positions = new Vector3[pathPoints.Count*3];
 
-            Vector4[] colors = new Vector4[PathPoints.Count];
+            Vector4[] colors = new Vector4[pathPoints.Count];
 
             int posIndex = 0;
             int colorIndex = 0;
@@ -323,7 +332,7 @@ namespace GL_EditorFramework.EditorDrawables
                 GL.Color4(color);
                 GL.LineWidth(1.0f);
                 
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     Vector3 pos;
                     if (point.Selected)
@@ -407,7 +416,7 @@ namespace GL_EditorFramework.EditorDrawables
                 color = control.NextPickingColor();
                 GL.LineWidth(4.0f);
 
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     Vector3 pos;
                     if (point.Selected)
@@ -481,17 +490,17 @@ namespace GL_EditorFramework.EditorDrawables
             GL.Color4(color);
 
             posIndex = 0;
-            for(int i = 1; i<PathPoints.Count; i++)
+            for(int i = 1; i<pathPoints.Count; i++)
             {
                 GL.Begin(PrimitiveType.LineStrip);
-                if (PathPoints[i-1].controlPoint2 != Vector3.Zero || PathPoints[i].controlPoint1 != Vector3.Zero)//bezierCurve
+                if (pathPoints[i-1].controlPoint2 != Vector3.Zero || pathPoints[i].controlPoint1 != Vector3.Zero)//bezierCurve
                 {
                     Vector3 p0 = positions[posIndex];
                     Vector3 p1 = positions[posIndex+2];
                     Vector3 p2 = positions[posIndex+4];
                     Vector3 p3 = positions[posIndex+3];
 
-                    if (PathPoints[i-1].controlPoint2 != Vector3.Zero)
+                    if (pathPoints[i-1].controlPoint2 != Vector3.Zero)
                         GL.Vertex3(p1);
 
                     for (float t = 0f; t<=1.0; t += 0.125f)
@@ -509,7 +518,7 @@ namespace GL_EditorFramework.EditorDrawables
                                             ttt * p3);
                     }
 
-                    if (PathPoints[i].controlPoint1 != Vector3.Zero)
+                    if (pathPoints[i].controlPoint1 != Vector3.Zero)
                         GL.Vertex3(p2);
                 }
                 else
@@ -524,14 +533,14 @@ namespace GL_EditorFramework.EditorDrawables
             if (Closed)
             {
                 GL.Begin(PrimitiveType.LineStrip);
-                if (PathPoints[PathPoints.Count - 1].controlPoint2 != Vector3.Zero || PathPoints[0].controlPoint1 != Vector3.Zero)//bezierCurve
+                if (pathPoints[pathPoints.Count - 1].controlPoint2 != Vector3.Zero || pathPoints[0].controlPoint1 != Vector3.Zero)//bezierCurve
                 {
                     Vector3 p0 = positions[posIndex];
                     Vector3 p1 = positions[posIndex + 2];
                     Vector3 p2 = positions[1];
                     Vector3 p3 = positions[0];
 
-                    if (PathPoints[PathPoints.Count - 1].controlPoint2 != Vector3.Zero)
+                    if (pathPoints[pathPoints.Count - 1].controlPoint2 != Vector3.Zero)
                         GL.Vertex3(p1);
 
                     for (float t = 0f; t <= 1.0; t += 0.25f)
@@ -542,14 +551,14 @@ namespace GL_EditorFramework.EditorDrawables
                         float uuu = uu * u;
                         float ttt = tt * t;
 
-                        GL.Color4(Vector4.Lerp(colors[PathPoints.Count - 1], colors[0], t));
+                        GL.Color4(Vector4.Lerp(colors[pathPoints.Count - 1], colors[0], t));
                         GL.Vertex3(uuu * p0 +
                                         3 * uu * t * p1 +
                                         3 * u * tt * p2 +
                                             ttt * p3);
                     }
 
-                    if (PathPoints[0].controlPoint1 != Vector3.Zero)
+                    if (pathPoints[0].controlPoint1 != Vector3.Zero)
                         GL.Vertex3(p2);
                 }
                 else
@@ -572,7 +581,7 @@ namespace GL_EditorFramework.EditorDrawables
             pathPointBuffer = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, pathPointBuffer);
 
-            float[] data = new float[PathPoints.Count];
+            float[] data = new float[pathPoints.Count];
 
             GL.BufferData(BufferTarget.ArrayBuffer, data.Length, data, BufferUsageHint.DynamicDraw);
 
@@ -952,7 +961,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override int GetPickableSpan()
         {
             int i = 1;
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
                 i += point.GetPickableSpan();
 
             return i;
@@ -966,7 +975,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 BoundingBox box = BoundingBox.Default;
                 bool allPointsSelected = true;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     if (point.Selected)
                         box.Include(new BoundingBox(
@@ -988,7 +997,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
             {
                 hoveredPart--;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (hoveredPart >= 0 && hoveredPart < span)
@@ -1009,7 +1018,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
             selectedObjects?.Add(this);
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
                 point.SelectAll(control, selectedObjects);
 
             return REDRAW;
@@ -1018,7 +1027,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
         {
             selectedObjects?.Add(this);
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
                 point.SelectDefault(control, selectedObjects);
 
             return REDRAW;
@@ -1029,7 +1038,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (partIndex == 0)
             {
                 bool allPointsSelected = true;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                    allPointsSelected &= point.Selected;
                 }
@@ -1038,7 +1047,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
             {
                 partIndex--;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
@@ -1057,13 +1066,13 @@ namespace GL_EditorFramework.EditorDrawables
             selectedObjects?.Add(this);
             if (partIndex == 0)
             {
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                     point.SelectDefault(control, selectedObjects);
             }
             else
             {
                 partIndex--;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
@@ -1082,14 +1091,14 @@ namespace GL_EditorFramework.EditorDrawables
             selectedObjects?.Remove(this);
             if (partIndex == 0)
             {
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                     point.DeselectAll(control, selectedObjects);
             }
             else
             {
                 bool noPointsSelected = true;
                 partIndex--;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
@@ -1107,7 +1116,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int _part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
         {
             _part--;
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
             {
                 int span = point.GetPickableSpan();
                 if (_part >= 0 && _part < span)
@@ -1128,7 +1137,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
         {
             _part--;
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
             {
                 int span = point.GetPickableSpan();
                 if (_part >= 0 && _part < span)
@@ -1144,7 +1153,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
             selectedObjects?.Remove(this);
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
                 point.DeselectAll(control, selectedObjects);
 
             return REDRAW;
@@ -1162,7 +1171,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void GetSelectionBox(ref BoundingBox boundingBox)
         {
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
                 point.GetSelectionBox(ref boundingBox);
         }
 
@@ -1171,7 +1180,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (partIndex == 0)
             {
                 BoundingBox box = BoundingBox.Default;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     box.Include(point.position);
                 }
@@ -1180,7 +1189,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
             {
                 partIndex--;
-                foreach (PathPoint point in PathPoints)
+                foreach (PathPoint point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
@@ -1193,17 +1202,17 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
         {
-            if (PathPoints.Count == 1)
-                return (PathPoints[0].position - pos).LengthSquared < rangeSquared;
+            if (pathPoints.Count == 1)
+                return (pathPoints[0].position - pos).LengthSquared < rangeSquared;
 
             BoundingBox box;
-            for (int i = 1; i<PathPoints.Count; i++)
+            for (int i = 1; i<pathPoints.Count; i++)
             {
                 box = BoundingBox.Default;
-                box.Include(PathPoints[i - 1].position);
-                box.Include(PathPoints[i - 1].position + PathPoints[i - 1].controlPoint2);
-                box.Include(PathPoints[i].position + PathPoints[i].controlPoint1);
-                box.Include(PathPoints[i].position);
+                box.Include(pathPoints[i - 1].position);
+                box.Include(pathPoints[i - 1].position + pathPoints[i - 1].controlPoint2);
+                box.Include(pathPoints[i].position + pathPoints[i].controlPoint1);
+                box.Include(pathPoints[i].position);
 
                 if (pos.X < box.maxX + range && pos.X > box.minX - range &&
                     pos.Y < box.maxY + range && pos.Y > box.minY - range &&
@@ -1216,33 +1225,33 @@ namespace GL_EditorFramework.EditorDrawables
         public override void DeleteSelected(DeletionManager manager, IList list, IList currentList)
         {
             bool allPointsSelected = true;
-            foreach (PathPoint point in PathPoints)
+            foreach (PathPoint point in pathPoints)
                 allPointsSelected &= point.Selected;
 
             if (allPointsSelected)
             {
-                if (currentList == PathPoints)
+                if (currentList == pathPoints)
                 {
-                    for(int i = 1; i<PathPoints.Count; i++)
-                        PathPoints[i].DeleteSelected(manager, PathPoints, currentList);
+                    for(int i = 1; i<pathPoints.Count; i++)
+                        pathPoints[i].DeleteSelected(manager, pathPoints, currentList);
                 }
                 else
                     manager.Add(list, this);
             }
             else
             {
-                foreach (PathPoint point in PathPoints)
-                    point.DeleteSelected(manager, PathPoints, currentList);
+                foreach (PathPoint point in pathPoints)
+                    point.DeleteSelected(manager, pathPoints, currentList);
             }
         }
 
         public override bool ProvidesProperty(EditorSceneBase scene)
         {
-            if (scene.SelectedObjects.Count > PathPoints.Count+1)
+            if (scene.SelectedObjects.Count > pathPoints.Count+1)
                 return false;
             foreach(object obj in scene.SelectedObjects)
             {
-                if (!PathPoints.Contains(obj) && obj != this)
+                if (!pathPoints.Contains(obj) && obj != this)
                     return false;
             }
             return true;
@@ -1288,8 +1297,8 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 path.Closed = control.CheckBox("Closed", path.Closed);
 
-                if (scene.CurrentList!= path.PathPoints && control.Button("Edit Pathpoints"))
-                    scene.SetCurrentList(path.PathPoints);
+                if (scene.CurrentList!= path.pathPoints && control.Button("Edit Pathpoints"))
+                    scene.SetCurrentList(path.pathPoints);
 
                 if (point != null)
                 {
@@ -1453,7 +1462,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = true;
                 selectedObjects?.Add(this);
-                selectedObjects?.Add(Path);
+                selectedObjects?.Add(path);
                 return REDRAW;
             }
 
@@ -1461,7 +1470,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = true;
                 selectedObjects?.Add(this);
-                selectedObjects?.Add(Path);
+                selectedObjects?.Add(path);
                 return REDRAW;
             }
 
@@ -1471,7 +1480,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Selected = true;
                     selectedObjects?.Add(this);
-                    selectedObjects?.Add(Path);
+                    selectedObjects?.Add(path);
                 }
                 return REDRAW;
             }
@@ -1482,7 +1491,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Selected = false;
                     selectedObjects?.Remove(this);
-                    selectedObjects?.Remove(Path);
+                    selectedObjects?.Remove(path);
                 }
                 return REDRAW;
             }
@@ -1491,7 +1500,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = false;
                 selectedObjects?.Remove(this);
-                selectedObjects?.Remove(Path);
+                selectedObjects?.Remove(path);
                 return REDRAW;
             }
 

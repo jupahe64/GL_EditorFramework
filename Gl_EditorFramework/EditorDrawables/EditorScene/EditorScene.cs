@@ -15,6 +15,8 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public class EditorScene : EditorSceneBase
     {
+        protected override IEnumerable<IEditableObject> GetObjects() => objects;
+
         public List<IEditableObject> objects = new List<IEditableObject>();
         
         public EditorScene(bool multiSelect = true)

@@ -38,6 +38,8 @@ namespace GL_EditorFramework.EditorDrawables
 
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
+        protected abstract IEnumerable<IEditableObject> GetObjects();
+
         protected bool multiSelect;
 
         public IEditableObject Hovered { get; protected set; } = null;
@@ -107,10 +109,13 @@ namespace GL_EditorFramework.EditorDrawables
                 SelectedObjects.Clear();
 
                 foreach (IEditableObject obj in objs)
-                {
                     list.Add(obj);
+
+                foreach (IEditableObject obj in GetObjects())
+                    obj.ListChanged(list);
+
+                foreach (IEditableObject obj in objs)
                     var |= obj.SelectDefault(control, SelectedObjects);
-                }
 
                 AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo []{new RevertableAddition.AddInListInfo(objs, list)}, new RevertableAddition.SingleAddInListInfo[0]));
 
@@ -120,6 +125,9 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 foreach (IEditableObject obj in objs)
                     list.Add(obj);
+
+                foreach (IEditableObject obj in GetObjects())
+                    obj.ListChanged(list);
 
                 AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
             }
@@ -162,6 +170,9 @@ namespace GL_EditorFramework.EditorDrawables
 
                 AddToUndo(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
             }
+
+            foreach (IEditableObject obj in GetObjects())
+                obj.ListChanged(list);
         }
 
         public class DeletionManager
