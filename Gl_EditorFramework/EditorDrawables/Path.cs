@@ -1368,7 +1368,7 @@ namespace GL_EditorFramework.EditorDrawables
                 this.controlPoint2 = controlPoint2;
             }
 
-            public Path Path { get; internal set; }
+            public Path path { get; internal set; }
 
             public static System.Reflection.FieldInfo FI_position => typeof(PathPoint).GetField("position");
             public Vector3 position;
