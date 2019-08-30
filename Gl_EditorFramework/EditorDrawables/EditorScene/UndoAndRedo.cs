@@ -266,6 +266,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
+        #region List Operations
         public struct RevertableAddition : IRevertable
         {
             AddInListInfo[] infos;
@@ -296,6 +297,7 @@ namespace GL_EditorFramework.EditorDrawables
                     {
                         deleteInfos[i_deleteInfos].infos[i_info++] = new RevertableDeletion.DeleteInfo(info.objs[i], info.list.IndexOf(info.objs[i]));
                         info.list.Remove(info.objs[i]);
+                        (info.objs[i] as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
                     }
                     lists[i_lists++] = info.list;
                     i_deleteInfos++;
@@ -310,6 +312,7 @@ namespace GL_EditorFramework.EditorDrawables
                     deleteSingleInfos[i_deleteInfos++] = new RevertableDeletion.SingleDeleteInListInfo(info.obj, info.list.IndexOf(info.obj), info.list);
                     info.list.Remove(info.obj);
                     lists[i_lists++] = info.list;
+                    (info.obj as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
                 }
 
 
@@ -323,23 +326,23 @@ namespace GL_EditorFramework.EditorDrawables
 
             public struct AddInListInfo
             {
-                public AddInListInfo(IEditableObject[] objs, IList list)
+                public AddInListInfo(object[] objs, IList list)
                 {
                     this.objs = objs;
                     this.list = list;
                 }
-                public IEditableObject[] objs;
+                public object[] objs;
                 public IList list;
             }
 
             public struct SingleAddInListInfo
             {
-                public SingleAddInListInfo(IEditableObject obj, IList list)
+                public SingleAddInListInfo(object obj, IList list)
                 {
                     this.obj = obj;
                     this.list = list;
                 }
-                public IEditableObject obj;
+                public object obj;
                 public IList list;
             }
         }
@@ -370,7 +373,7 @@ namespace GL_EditorFramework.EditorDrawables
                 }
 
                 int index = originalIndex + offset;
-                foreach (IEditableObject obj in objs)
+                foreach (object obj in objs)
                 {
                     list.Insert(index, obj);
                     index++;
@@ -405,7 +408,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 foreach (DeleteInListInfo info in infos)
                 {
-                    addInfos[i_addInfos] = new RevertableAddition.AddInListInfo(new IEditableObject[info.infos.Length], info.list);
+                    addInfos[i_addInfos] = new RevertableAddition.AddInListInfo(new object[info.infos.Length], info.list);
                     int i_info = 0;
                     for (int i = info.infos.Length - 1; i >= 0; i--)
                     {
@@ -438,12 +441,12 @@ namespace GL_EditorFramework.EditorDrawables
 
             public struct DeleteInfo
             {
-                public DeleteInfo(IEditableObject obj, int index)
+                public DeleteInfo(object obj, int index)
                 {
                     this.obj = obj;
                     this.index = index;
                 }
-                public IEditableObject obj;
+                public object obj;
                 public int index;
             }
 
@@ -460,17 +463,204 @@ namespace GL_EditorFramework.EditorDrawables
 
             public struct SingleDeleteInListInfo
             {
-                public SingleDeleteInListInfo(IEditableObject obj, int index, IList list)
+                public SingleDeleteInListInfo(object obj, int index, IList list)
                 {
                     this.obj = obj;
                     this.index = index;
                     this.list = list;
                 }
-                public IEditableObject obj;
+                public object obj;
                 public int index;
                 public IList list;
             }
         }
+        #endregion
+
+        #region Dictionary Operations
+        public struct RevertableDictAddition : IRevertable
+        {
+            AddInDictInfo[] infos;
+            SingleAddInDictInfo[] singleInfos;
+
+            public RevertableDictAddition(AddInDictInfo[] infos, SingleAddInDictInfo[] singleInfos)
+            {
+                this.infos = infos;
+                this.singleInfos = singleInfos;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                uint var = 0;
+                IDictionary[] dicts = new IDictionary[infos.Length + singleInfos.Length];
+                int i_dicts = 0;
+
+
+                //Revert Lists
+                RevertableDictDeletion.DeleteInDictInfo[] deleteInfos = new RevertableDictDeletion.DeleteInDictInfo[infos.Length];
+                int i_deleteInfos = 0;
+
+                foreach (AddInDictInfo info in infos)
+                {
+                    deleteInfos[i_deleteInfos] = new RevertableDictDeletion.DeleteInDictInfo(new RevertableDictDeletion.DeleteInfo[info.infos.Length], info.dict);
+                    int i_info = 0;
+                    for (int i = info.infos.Length - 1; i >= 0; i--)
+                    {
+                        deleteInfos[i_deleteInfos].infos[i_info++] = new RevertableDictDeletion.DeleteInfo(info.infos[i].obj, info.infos[i].key);
+                        info.dict.Remove(info.infos[i].key);
+                        (info.infos[i].obj as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
+                    }
+                    dicts[i_dicts++] = info.dict;
+                    i_deleteInfos++;
+                }
+
+                //Revert Singles
+                RevertableDictDeletion.SingleDeleteInDictInfo[] deleteSingleInfos = new RevertableDictDeletion.SingleDeleteInDictInfo[singleInfos.Length];
+                i_deleteInfos = 0;
+
+                foreach (SingleAddInDictInfo info in singleInfos)
+                {
+                    deleteSingleInfos[i_deleteInfos++] = new RevertableDictDeletion.SingleDeleteInDictInfo(info.obj, info.key, info.dict);
+                    info.dict.Remove(info.key);
+                    dicts[i_dicts++] = info.dict;
+                    (info.obj as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
+                }
+
+
+
+                scene.UpdateSelection(var);
+
+                scene.DictChanged?.Invoke(this, new DictChangedEventArgs(dicts));
+
+                return new RevertableDictDeletion(deleteInfos, deleteSingleInfos);
+            }
+
+            public struct AddInfo
+            {
+                public AddInfo(object obj, string key)
+                {
+                    this.obj = obj;
+                    this.key = key;
+                }
+                public object obj;
+                public string key;
+            }
+
+            public struct AddInDictInfo
+            {
+                public AddInDictInfo(AddInfo[] infos, IDictionary dict)
+                {
+                    this.infos = infos;
+                    this.dict = dict;
+                }
+                public AddInfo[] infos;
+                public IDictionary dict;
+            }
+
+            public struct SingleAddInDictInfo
+            {
+                public SingleAddInDictInfo(object obj, string key, IDictionary dict)
+                {
+                    this.obj = obj;
+                    this.key = key;
+                    this.dict = dict;
+                }
+                public object obj;
+                public string key;
+                public IDictionary dict;
+            }
+        }
+
+        public struct RevertableDictDeletion : IRevertable
+        {
+            DeleteInDictInfo[] infos;
+            SingleDeleteInDictInfo[] singleInfos;
+
+            public RevertableDictDeletion(DeleteInDictInfo[] infos, SingleDeleteInDictInfo[] singleInfos)
+            {
+                this.infos = infos;
+                this.singleInfos = singleInfos;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                IDictionary[] dicts = new IDictionary[infos.Length + singleInfos.Length];
+                int i_dicts = 0;
+
+
+                //Revert Lists
+                RevertableDictAddition.AddInDictInfo[] addInfos = new RevertableDictAddition.AddInDictInfo[infos.Length];
+                int i_addInfos = 0;
+
+                foreach (DeleteInDictInfo info in infos)
+                {
+                    addInfos[i_addInfos] = new RevertableDictAddition.AddInDictInfo(new RevertableDictAddition.AddInfo[info.infos.Length], info.dict);
+                    int i_info = 0;
+                    for (int i = info.infos.Length - 1; i >= 0; i--)
+                    {
+                        addInfos[i_addInfos].infos[i_info++] = new RevertableDictAddition.AddInfo(info.infos[i].obj, info.infos[i].key);
+                        info.dict.Add(info.infos[i].key, info.infos[i].obj);
+                    }
+                    dicts[i_dicts++] = info.dict;
+                    i_addInfos++;
+                }
+
+                //Revert Singles
+                RevertableDictAddition.SingleAddInDictInfo[] addSingleInfos = new RevertableDictAddition.SingleAddInDictInfo[singleInfos.Length];
+                i_addInfos = 0;
+
+                foreach (SingleDeleteInDictInfo info in singleInfos)
+                {
+                    addSingleInfos[i_addInfos++] = new RevertableDictAddition.SingleAddInDictInfo(info.obj, info.key, info.dict);
+                    info.dict.Add(info.key, info.obj);
+                    dicts[i_dicts++] = info.dict;
+                }
+
+
+
+                scene.control.Refresh();
+
+                scene.DictChanged?.Invoke(this, new DictChangedEventArgs(dicts));
+
+                return new RevertableDictAddition(addInfos, addSingleInfos);
+            }
+
+            public struct DeleteInfo
+            {
+                public DeleteInfo(object obj, string key)
+                {
+                    this.obj = obj;
+                    this.key = key;
+                }
+                public object obj;
+                public string key;
+            }
+
+            public struct DeleteInDictInfo
+            {
+                public DeleteInDictInfo(DeleteInfo[] infos, IDictionary dict)
+                {
+                    this.infos = infos;
+                    this.dict = dict;
+                }
+                public DeleteInfo[] infos;
+                public IDictionary dict;
+            }
+
+            public struct SingleDeleteInDictInfo
+            {
+                public SingleDeleteInDictInfo(object obj, string key, IDictionary dict)
+                {
+                    this.obj = obj;
+                    this.key = key;
+                    this.dict = dict;
+                }
+                public object obj;
+                public string key;
+                public IDictionary dict;
+            }
+        }
+        #endregion
+
 
         public struct RevertableFieldChange : IRevertable
         {

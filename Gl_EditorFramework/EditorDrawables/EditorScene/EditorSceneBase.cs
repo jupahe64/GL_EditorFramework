@@ -25,6 +25,17 @@ namespace GL_EditorFramework.EditorDrawables
         }
     }
 
+    public delegate void DictChangedEventHandler(object sender, DictChangedEventArgs e);
+
+    public class DictChangedEventArgs : EventArgs
+    {
+        public IDictionary[] Dicts;
+        public DictChangedEventArgs(IDictionary[] dicts)
+        {
+            Dicts = dicts;
+        }
+    }
+
     public delegate void CurrentListChangedEventHandler(object sender, CurrentListChangedEventArgs e);
 
     public class CurrentListChangedEventArgs : EventArgs
@@ -54,6 +65,7 @@ namespace GL_EditorFramework.EditorDrawables
         public event EventHandler SelectionChanged;
         public event EventHandler ObjectsMoved;
         public event ListChangedEventHandler ListChanged;
+        public event DictChangedEventHandler DictChanged;
         public event CurrentListChangedEventHandler CurrentListChanged;
 
         protected float draggingDepth;
