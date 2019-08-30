@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace GL_EditorFramework.Interfaces
@@ -18,6 +18,9 @@ namespace GL_EditorFramework.Interfaces
 
     public abstract class AbstractGlDrawable : AbstractEventHandling3DObj
     {
+        [Browsable(false)]
+        public bool Visible { get; set; } = true;
+
         public const uint REDRAW =				0x80000000;
         public const uint REDRAW_PICKING =		0xC0000000;
         public const uint REPICK =				0x40000000;

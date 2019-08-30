@@ -33,6 +33,45 @@ namespace GL_EditorFramework.GL_Core
             
         }
 
+        //For framing the camera
+        private DefaultCameraFraming DefaultCameraFrame = new DefaultCameraFraming();
+
+        class DefaultCameraFraming
+        {
+            public float camRotX = 0;
+            public float camRotY = 0;
+
+            public float Distance = 10f;
+
+            public Vector3 CameraTarget = new Vector3(0);
+
+            public void Reset(GL_ControlBase control)
+            {
+                camRotX = control.camRotX;
+                camRotY = control.camRotY;
+                Distance = control.CameraDistance;
+                CameraTarget = control.CameraTarget;
+            }
+        }
+
+        public void ResetCamera(bool FrameCamera)
+        {
+            if (FrameCamera)
+            {
+                CameraTarget = DefaultCameraFrame.CameraTarget;
+                camRotX = DefaultCameraFrame.camRotX;
+                camRotY = DefaultCameraFrame.camRotY;
+                CameraDistance = DefaultCameraFrame.Distance;
+            }
+            else
+            {
+                CameraTarget = new Vector3(0);
+                camRotX = 0;
+                camRotY = 0;
+                CameraDistance = 10f;
+            }
+        }
+
         public Random RNG;
 
         protected Matrix4 orientationCubeMtx;
@@ -327,7 +366,36 @@ namespace GL_EditorFramework.GL_Core
             Refresh();
         }
 
-        
+        public void ApplyCameraOrientation(int pickingBuffer)
+        {
+            switch (pickingBuffer)
+            {
+                case 1:
+                    camRotX = 0;
+                    camRotY = Framework.HALF_PI;
+                    break;
+                case 2:
+                    camRotX = 0;
+                    camRotY = -Framework.HALF_PI;
+                    break;
+                case 3:
+                    camRotX = 0;
+                    camRotY = 0;
+                    break;
+                case 4:
+                    camRotX = Framework.PI;
+                    camRotY = 0;
+                    break;
+                case 5:
+                    camRotX = -Framework.HALF_PI;
+                    camRotY = 0;
+                    break;
+                case 6:
+                    camRotX = Framework.HALF_PI;
+                    camRotY = 0;
+                    break;
+            }
+        }
 
         public void Repick()
         {
@@ -394,6 +462,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected void DrawOrientationCube()
         {
+            GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
             GL.Disable(EnableCap.DepthTest);
 

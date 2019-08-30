@@ -21,9 +21,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         public static Vector4 hoverColor = new Vector4(1, 1, 0.925f,1);
         public static Vector4 selectColor = new Vector4(1, 1, 0.675f, 1);
-
-        [Browsable(false)]
-        public bool Visible { get; set; } = true;
         
         public EditableObject()
         {

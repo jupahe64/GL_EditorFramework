@@ -86,6 +86,11 @@ namespace GL_EditorFramework.GL_Core
                 shader.UpdateModelMatrix(mtxMdl = Matrix4.Identity, this);
         }
 
+        public void ReloadShaders()
+        {
+
+        }
+
         protected override void OnResize(EventArgs e)
         {
             if (DesignMode)

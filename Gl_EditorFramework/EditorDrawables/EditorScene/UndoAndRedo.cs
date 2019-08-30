@@ -19,7 +19,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (undoStack.Count > 0)
             {
                 redoStack.Push(undoStack.Pop().Revert(this));
-                ObjectsMoved.Invoke(this,null);
+                ObjectsMoved?.Invoke(this,null);
             }
 
         }
@@ -29,7 +29,7 @@ namespace GL_EditorFramework.EditorDrawables
             if(redoStack.Count > 0)
             {
                 undoStack.Push(redoStack.Pop().Revert(this));
-                ObjectsMoved.Invoke(this, null);
+                ObjectsMoved?.Invoke(this, null);
             }
         }
 
@@ -50,7 +50,7 @@ namespace GL_EditorFramework.EditorDrawables
                 AddToUndo(new RevertablePosChange(transformChangeInfos));
 
             if(transformChangeInfos.changedPositions+transformChangeInfos.changedRotations+transformChangeInfos.changedScales>0)
-                ObjectsMoved.Invoke(this, null);
+                ObjectsMoved?.Invoke(this, null);
         }
 
         public void AddToUndo(IRevertable revertable)
@@ -319,7 +319,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 scene.UpdateSelection(var);
 
-                scene.ListChanged.Invoke(this, new ListChangedEventArgs(lists));
+                scene.ListChanged?.Invoke(this, new ListChangedEventArgs(lists));
 
                 return new RevertableDeletion(deleteInfos, deleteSingleInfos);
             }
@@ -379,7 +379,7 @@ namespace GL_EditorFramework.EditorDrawables
                     index++;
                 }
 
-                scene.ListChanged.Invoke(this, new ListChangedEventArgs(new IList[] { list }));
+                scene.ListChanged?.Invoke(this, new ListChangedEventArgs(new IList[] { list }));
 
                 return new RevertableReordering(originalIndex + offset, count, -offset, list);
             }
@@ -434,7 +434,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 scene.control.Refresh();
 
-                scene.ListChanged.Invoke(this, new ListChangedEventArgs(lists));
+                scene.ListChanged?.Invoke(this, new ListChangedEventArgs(lists));
 
                 return new RevertableAddition(addInfos, addSingleInfos);
             }
