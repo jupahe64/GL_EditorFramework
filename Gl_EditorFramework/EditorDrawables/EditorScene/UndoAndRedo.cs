@@ -11,6 +11,9 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
+        protected Stack<IRevertable> undoStack = new Stack<IRevertable>();
+        protected Stack<IRevertable> redoStack = new Stack<IRevertable>();
+
         public void Undo()
         {
             if (undoStack.Count > 0)

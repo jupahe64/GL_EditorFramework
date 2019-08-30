@@ -60,9 +60,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         protected GL_ControlBase control;
 
-        protected Stack<IRevertable> undoStack = new Stack<IRevertable>();
-        protected Stack<IRevertable> redoStack = new Stack<IRevertable>();
-
         public enum DragActionType
         {
             TRANSLATE,
@@ -94,6 +91,29 @@ namespace GL_EditorFramework.EditorDrawables
 
             if ((var & REDRAW_PICKING) > 0)
                 control.DrawPicking();
+        }
+
+        public abstract void DeleteSelected();
+
+        public IPropertyProvider GetPropertyProvider()
+        {
+            IPropertyProvider provider = null;
+            foreach (IEditableObject obj in GetObjects())
+            {
+
+                if (obj.ProvidesProperty(this))
+                {
+                    if (provider == null)
+                        provider = obj.GetPropertyProvider(this);
+                    else
+                    {
+                        provider = null;
+                        break;
+                    }
+                }
+            }
+
+            return provider;
         }
 
         public void Add(IList list, bool updateSelection, params IEditableObject[] objs)
@@ -316,355 +336,6 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 var |= obj.DeselectAll(control, SelectedObjects);
             }
-        }
-
-        public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
-        {
-            uint var = 0;
-            if(CurrentAction==NoAction && ExclusiveAction==NoAction && Hovered!=null)
-            {
-                LocalOrientation rLocalOrientation;
-                bool rDragExclusively;
-                if (e.Button == MouseButtons.Left)
-                {
-                    if (Hovered.TryStartDragging(DragActionType.TRANSLATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
-                    {
-                        draggingDepth = control.PickingDepth;
-                        if (rDragExclusively)
-                            ExclusiveAction = new TranslateAction(control, e.Location, rLocalOrientation.Origin, draggingDepth);
-                        else
-                        {
-                            BoundingBox box = BoundingBox.Default;
-
-                            foreach (IEditableObject selected in SelectedObjects)
-                                selected.GetSelectionBox(ref box);
-
-                            CurrentAction = new TranslateAction(control, e.Location, box.GetCenter(), draggingDepth);
-                        }
-                    }
-                }
-                else if (e.Button == MouseButtons.Right)
-                {
-                    if (Hovered.TryStartDragging(DragActionType.ROTATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
-                    {
-                        draggingDepth = control.PickingDepth;
-                        if (rDragExclusively)
-                            ExclusiveAction = new RotateAction(control, e.Location, rLocalOrientation.Origin, draggingDepth);
-                        else
-                        {
-                            BoundingBox box = BoundingBox.Default;
-
-                            foreach (IEditableObject selected in SelectedObjects)
-                                selected.GetSelectionBox(ref box);
-
-                            CurrentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
-                        }
-                    }
-                }
-                else if (e.Button == MouseButtons.Middle)
-                {
-                    bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
-                    if (Hovered.TryStartDragging(shift ? DragActionType.SCALE : DragActionType.SCALE_EXCLUSIVE, HoveredPart, out rLocalOrientation, out rDragExclusively))
-                    {
-                        draggingDepth = control.PickingDepth;
-                        if (rDragExclusively)
-                        {
-                            if (shift)
-                                ExclusiveAction = new ScaleAction(control, e.Location, rLocalOrientation.Origin);
-                            else
-                                ExclusiveAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
-                        }
-                        else
-                        {
-                            BoundingBox box = BoundingBox.Default;
-
-                            foreach (IEditableObject selected in SelectedObjects)
-                                selected.GetSelectionBox(ref box);
-
-                            if (shift)
-                                CurrentAction = new ScaleAction(control, e.Location, box.GetCenter());
-                            else
-                                CurrentAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                var |= REDRAW_PICKING;
-                var |= FORCE_REENTER;
-
-                CurrentAction = NoAction; //abort current action
-                ExclusiveAction = NoAction;
-            }
-            
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                var |= obj.MouseDown(e, control);
-            }
-            return var;
-        }
-
-        public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control)
-        {
-            uint var = 0;
-
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                var |= obj.MouseMove(e, lastMousePos, control);
-            }
-
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
-            {
-                CurrentAction.UpdateMousePos(e.Location);
-                ExclusiveAction.UpdateMousePos(e.Location);
-
-                var |= REDRAW | NO_CAMERA_ACTION;
-
-                var &= ~REPICK;
-            }
-            else
-            {
-                var |= REPICK;
-            }
-            return var;
-        }
-
-        public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
-        {
-            uint var = 0;
-
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                var |= obj.MouseWheel(e, control);
-            }
-
-            if (CurrentAction != NoAction)
-            {
-                CurrentAction.ApplyScrolling(e.Location, e.Delta);
-                ExclusiveAction.ApplyScrolling(e.Location, e.Delta);
-
-                var |= REDRAW | NO_CAMERA_ACTION;
-
-                var &= ~REPICK;
-            }
-
-            return var;
-        }
-
-        public override uint MouseUp(MouseEventArgs e, GL_ControlBase control)
-        {
-            TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
-            uint var = 0;
-
-            if (CurrentAction != NoAction && CurrentAction.IsApplyOnRelease())
-            {
-                foreach (IEditableObject obj in SelectedObjects)
-                {
-                    obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
-                }
-
-                var |= REDRAW_PICKING | FORCE_REENTER;
-
-                CurrentAction = NoAction;
-            }
-
-            if (ExclusiveAction != NoAction)
-            {
-                Hovered.ApplyTransformActionToPart(ExclusiveAction, HoveredPart, ref transformChangeInfos);
-
-                var |= REDRAW_PICKING;
-
-                ExclusiveAction = NoAction;
-            }
-
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                var |= obj.MouseUp(e, control);
-            }
-
-            AddTransformToUndo(transformChangeInfos);
-            return var;
-        }
-
-        public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
-        {
-            uint var = 0;
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                var |= obj.MouseClick(e, control);
-            }
-
-            bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
-            bool hoveredIsSelected = Hovered != null && Hovered.IsSelected(HoveredPart);
-            bool nothingHovered = Hovered == null;
-
-            if (e.Button == MouseButtons.Left)
-            {
-                if (nothingHovered)
-                {
-                    if (!shift)
-                    {
-                        foreach (IEditableObject selected in SelectedObjects)
-                        {
-                            selected.DeselectAll(control,null);
-                        }
-                        SelectedObjects.Clear();
-                        SelectionChanged?.Invoke(this, new EventArgs());
-                    }
-                }
-                else if (multiSelect)
-                {
-                    if (shift && hoveredIsSelected)
-                    {
-                        //remove from selection
-                        Hovered.Deselect(HoveredPart, control, SelectedObjects);
-                        SelectionChanged?.Invoke(this, new EventArgs());
-                    }
-                    else if (shift)
-                    {
-                        //add to selection
-                        Hovered.Select(HoveredPart, control, SelectedObjects);
-                        SelectionChanged?.Invoke(this, new EventArgs());
-                    }
-                    else if (!hoveredIsSelected)
-                    {
-                        //change selection
-                        foreach (IEditableObject selected in SelectedObjects)
-                        {
-                            selected.DeselectAll(control, null);
-                        }
-                        SelectedObjects.Clear();
-                        Hovered.Select(HoveredPart, control, SelectedObjects);
-                        SelectionChanged?.Invoke(this, new EventArgs());
-                    }
-                }
-                else
-                {
-                    if (shift && hoveredIsSelected)
-                    {
-                        //remove from selection
-                        Hovered.Deselect(HoveredPart, control, SelectedObjects);
-                        SelectionChanged?.Invoke(this, new EventArgs());
-                    }
-                    else if (!hoveredIsSelected)
-                    {
-                        //change selection
-                        foreach (IEditableObject selected in SelectedObjects)
-                        {
-                            selected.DeselectAll(control, null);
-                        }
-                        SelectedObjects.Clear();
-                        Hovered.Select(HoveredPart, control, SelectedObjects);
-                        SelectionChanged?.Invoke(this, new EventArgs());
-                    }
-                }
-            }
-
-            CurrentAction = NoAction; //because MouseClick implies that the Mouse Button is not pressed anymore
-
-            var |= REDRAW;
-            var |= FORCE_REENTER;
-
-            return var;
-        }
-
-        public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
-        {
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
-                return 0;
-            
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                int span = obj.GetPickableSpan();
-                if (inObjectIndex >= 0 && inObjectIndex < span)
-                {
-                    return obj.MouseEnter(inObjectIndex, control);
-                }
-                inObjectIndex -= span;
-            }
-            return 0;
-        }
-
-        public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
-        {
-            foreach (AbstractGlDrawable obj in staticObjects)
-            {
-                int span = obj.GetPickableSpan();
-                if (inObjectIndex >= 0 && inObjectIndex < span)
-                {
-                    return obj.MouseLeave(inObjectIndex, control);
-                }
-                inObjectIndex -= span;
-            }
-            return 0;
-        }
-
-        public override uint MouseLeaveEntirely(GL_ControlBase control)
-        {
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
-                return 0;
-
-            Hovered = null;
-            return REDRAW;
-        }
-
-        protected float renderDistanceSquared = 1000000;
-        protected float renderDistance = 1000;
-
-        public float RenderDistance
-        {
-            get => renderDistanceSquared;
-            set
-            {
-                if (value < 1f)
-                {
-                    renderDistanceSquared = 1f;
-                    renderDistance = 1f;
-                }
-                else
-                {
-                    renderDistanceSquared = value * value;
-                    renderDistance = value;
-                }
-            }
-        }
-
-        protected int xrayPickingIndex;
-
-        public bool XRaySelection = true;
-
-        protected bool drawSelection = false;
-        protected bool drawOthers = false;
-
-        public bool ShouldBeDrawn(IEditableObject obj)
-        {
-            if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
-                return false;
-
-            if ((drawSelection && SelectedObjects.Contains(obj)) || (drawOthers && !SelectedObjects.Contains(obj)))
-                return true;
-
-            else
-            {
-                xrayPickingIndex += obj.GetPickableSpan();
-                for (int i = 0; i < obj.GetRandomNumberSpan(); i++)
-                    control.RNG?.Next();
-
-                return false;
-            }
-        }
-
-        protected Vector4 SelectColorHijack() => new Vector4(1, 1f, 0.25f, 1);
-
-        protected Vector4 ExtraPickingHijack()
-        {
-            return new Vector4(
-                ((xrayPickingIndex >> 16) & 0xFF) / 255f,
-                ((xrayPickingIndex >> 8) & 0xFF) / 255f,
-                (xrayPickingIndex & 0xFF) / 255f,
-                ((xrayPickingIndex++ >> 24) & 0xFF) / 255f
-            );
         }
     }
 }
