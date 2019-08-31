@@ -11,9 +11,9 @@ using OpenTK;
 using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
-namespace Testing
+namespace GL_EditorFramework.EditorDrawables
 {
-    class TransformableObject : SingleObject
+    public class TransformableObject : SingleObject
     {
         public TransformableObject(Vector3 pos, Quaternion rot, Vector3 scale)
             : base(pos)

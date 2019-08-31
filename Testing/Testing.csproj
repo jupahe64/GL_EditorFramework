@@ -63,7 +63,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TransformableObject.cs" />
     <EmbeddedResource Include="TestingForm.resx">
       <DependentUpon>TestingForm.cs</DependentUpon>
     </EmbeddedResource>
