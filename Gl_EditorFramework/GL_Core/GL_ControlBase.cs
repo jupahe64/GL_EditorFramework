@@ -9,6 +9,7 @@ using GL_EditorFramework.Interfaces;
 using GL_EditorFramework.StandardCameras;
 using System.Drawing;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace GL_EditorFramework.GL_Core
 {
@@ -124,6 +125,7 @@ namespace GL_EditorFramework.GL_Core
 
         public bool GradientBackground;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Point DragStartPos
         {
             get => dragStartPos;
@@ -202,11 +204,13 @@ namespace GL_EditorFramework.GL_Core
         }
 
         protected AbstractGlDrawable mainDrawable;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual AbstractGlDrawable MainDrawable { get; set; }
 
         protected AbstractCamera activeCamera;
         public int PickingIndexOffset { get; private set; } = 7;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AbstractCamera ActiveCamera
         {
             get => activeCamera;

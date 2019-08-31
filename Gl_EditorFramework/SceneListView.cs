@@ -28,6 +28,7 @@ namespace GL_EditorFramework
         private Button btnBack;
         int fontHeight;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISet<object> SelectedItems {
             get => objectPanel.SelectedItems;
             set
@@ -36,6 +37,7 @@ namespace GL_EditorFramework
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CurrentCategory {
             get => currentCategory;
             set
@@ -50,6 +52,7 @@ namespace GL_EditorFramework
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList CurrentList
         {
             get => escapeableList??lists[currentCategory];
@@ -413,6 +416,7 @@ namespace GL_EditorFramework
 
         private int marginScrollSpeed = 0;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISet<object> SelectedItems {
             get => selectedItems;
             set {
@@ -423,6 +427,7 @@ namespace GL_EditorFramework
 
         private static List<object> emptyList = new List<object>();
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList List {
             get => list;
             set

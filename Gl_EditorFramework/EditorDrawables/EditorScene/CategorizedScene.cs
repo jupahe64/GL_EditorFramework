@@ -9,6 +9,11 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public class CategorizedScene : EditorSceneBase
     {
+        public CategorizedScene(bool multiSelect = true)
+        {
+            this.multiSelect = multiSelect;
+        }
+
         protected override IEnumerable<IEditableObject> GetObjects()
         {
             foreach(List<IEditableObject> objects in categories.Values)
