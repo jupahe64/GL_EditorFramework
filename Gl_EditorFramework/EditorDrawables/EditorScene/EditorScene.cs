@@ -25,21 +25,6 @@ namespace GL_EditorFramework.EditorDrawables
             CurrentList = objects;
         }
 
-        public void Add(IList list, params IEditableObject[] objs)
-        {
-            Add(list, list == CurrentList, objs);
-        }
-
-        public void Delete(IList list, params IEditableObject[] objs)
-        {
-            Delete(list, list == CurrentList, objs);
-        }
-
-        public void InsertAt(IList list, int index, params IEditableObject[] objs)
-        {
-            InsertAt(list, list == objects, index, objs);
-        }
-
         public override void DeleteSelected()
         {
             DeletionManager manager = new DeletionManager();

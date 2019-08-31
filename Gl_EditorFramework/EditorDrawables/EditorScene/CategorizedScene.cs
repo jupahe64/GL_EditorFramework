@@ -1,0 +1,36 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace GL_EditorFramework.EditorDrawables
+{
+    class CategorizedScene : EditorSceneBase
+    {
+        protected override IEnumerable<IEditableObject> GetObjects()
+        {
+            foreach(List<IEditableObject> objects in categories.Values)
+            {
+                foreach (IEditableObject obj in objects)
+                    yield return obj;
+            }
+        }
+
+        public Dictionary<string, List<IEditableObject>> categories = new Dictionary<string, List<IEditableObject>>();
+        
+        public override void DeleteSelected()
+        {
+            DeletionManager manager = new DeletionManager();
+
+            foreach (List<IEditableObject> objects in categories.Values)
+            {
+                foreach (IEditableObject obj in objects)
+                    obj.DeleteSelected(manager, objects, CurrentList);
+            }
+
+            _ExecuteDeletion(manager);
+        }
+    }
+}
