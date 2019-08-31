@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    class CategorizedScene : EditorSceneBase
+    public class CategorizedScene : EditorSceneBase
     {
         protected override IEnumerable<IEditableObject> GetObjects()
         {
