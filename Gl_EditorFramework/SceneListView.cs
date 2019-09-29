@@ -276,7 +276,7 @@ namespace GL_EditorFramework
             this.btnBack.Text = "Back";
             this.btnBack.UseVisualStyleBackColor = true;
             this.btnBack.Visible = false;
-            this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
+            this.btnBack.Click += new System.EventHandler(this.BtnBack_Click);
             // 
             // SceneListView
             // 
@@ -344,7 +344,7 @@ namespace GL_EditorFramework
             }
         }
 
-        private void btnBack_Click(object sender, EventArgs e)
+        private void BtnBack_Click(object sender, EventArgs e)
         {
             HandledEventArgs args = new HandledEventArgs();
             ListExit?.Invoke(this, args);
@@ -425,7 +425,7 @@ namespace GL_EditorFramework
             }
         }
 
-        private static List<object> emptyList = new List<object>();
+        private static readonly List<object> emptyList = new List<object>();
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList List {

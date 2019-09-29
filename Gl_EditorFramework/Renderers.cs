@@ -130,7 +130,6 @@ namespace GL_EditorFramework
                             gl_Position = mtxCam*mtxMdl*position;
                         }");
                     DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert, control);
-                    DefaultShaderProgram.SetInt("tex", Framework.TextureSheet);
                     
                     SolidColorShaderProgram = new ShaderProgram(solidColorFrag, solidColorVert, control);
                     
@@ -139,7 +138,7 @@ namespace GL_EditorFramework
                     #region block
                     buffer = GL.GenBuffer();
                     
-                    blockVao = new VertexArrayObject(buffer, control);
+                    blockVao = new VertexArrayObject(buffer);
                     blockVao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     blockVao.Initialize(control);
 
@@ -160,7 +159,7 @@ namespace GL_EditorFramework
                     #region lines
                     buffer = GL.GenBuffer();
 
-                    linesVao = new VertexArrayObject(buffer, control);
+                    linesVao = new VertexArrayObject(buffer);
                     linesVao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
                     linesVao.Initialize(control);
                     
@@ -230,6 +229,10 @@ namespace GL_EditorFramework
                 if (pass == Pass.OPAQUE)
                 {
                     control.CurrentShader = DefaultShaderProgram;
+
+                    GL.ActiveTexture(TextureUnit.Texture0);
+                    GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
+
                     DefaultShaderProgram.SetVector4("color", blockColor);
 
                     blockVao.Use(control);
@@ -260,6 +263,8 @@ namespace GL_EditorFramework
                 if (pass == Pass.OPAQUE)
                 {
                     GL.Enable(EnableCap.Texture2D);
+
+                    GL.ActiveTexture(TextureUnit.Texture0);
                     GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
 
                     #region draw faces
