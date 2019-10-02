@@ -2,294 +2,227 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections;
 
 namespace GL_EditorFramework
 {
+    /// <summary>
+    /// A control for viewing the content of and selecting items in multiple <see cref="IList"/>s
+    /// </summary>
     public partial class SceneListView : UserControl
     {
-        public Dictionary<string, IList> lists = new Dictionary<string, IList>();
+        /// <summary>
+        /// A dictionary containing all RootLists stored by their name
+        /// </summary>
+        public Dictionary<string, IList> RootLists { get; set; } = new Dictionary<string, IList>();
 
-        public IList escapeableList;
+        private Stack<IList> listStack = new Stack<IList>();
 
         public event SelectionChangedEventHandler SelectionChanged;
         public event ItemsMovedEventHandler ItemsMoved;
-        public event EventHandler CategoryChanged;
+        public event EventHandler CurrentListChanged;
         public event HandledEventHandler ListExit;
 
-        private string currentCategory = "None";
-        private FastListView objectPanel;
-        private CategoryPanel categoryPanel;
-        private Button btnBack;
         int fontHeight;
 
+        /// <summary>
+        /// The set used to determine which objects are selected
+        /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISet<object> SelectedItems {
-            get => objectPanel.SelectedItems;
+            get => listView.SelectedItems;
             set
             {
-                objectPanel.SelectedItems = value;
+                listView.SelectedItems = value;
             }
         }
 
+        /// <summary>
+        /// The name of the current list on the root level
+        /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public string CurrentCategory {
-            get => currentCategory;
-            set
+        public string CurrentRootListName { get; private set; } = "None";
+
+        /// <summary>
+        /// Sets the current list to a list in <see cref="RootLists"/>
+        /// </summary>
+        /// <param name="listName">The name under which the name is stored in <see cref="RootLists"/></param>
+        public void SetRootList(string listName)
+        {
+            if (RootLists.ContainsKey(listName))
             {
-                if (lists.ContainsKey(value))
-                {
-                    currentCategory = value;
-                    objectPanel.AutoScrollMinSize = new Size(0, lists[currentCategory].Count * (fontHeight+3));
-                    objectPanel.List = lists[currentCategory];
-                    Refresh();
-                }
+                CurrentRootListName = listName;
+                listStack.Clear();
+                listStack.Push(RootLists[listName]);
+                listView.CurrentList = RootLists[listName];
             }
         }
 
+        /// <summary>
+        /// The current list in the list view
+        /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList CurrentList
         {
-            get => escapeableList??lists[currentCategory];
-
-            set
-            {
-                foreach(KeyValuePair<string,IList> entry in lists)
-                {
-                    if (entry.Value == value)
-                    {
-                        currentCategory = entry.Key;
-                        objectPanel.AutoScrollMinSize = new Size(0, lists[currentCategory].Count * (fontHeight + 3));
-                        objectPanel.List = value;
-                        
-                        if (escapeableList != null)
-                        {
-                            categoryPanel.Visible = true;
-                            btnBack.Visible = false;
-                        }
-
-                        Refresh();
-                        return;
-                    }
-                }
-                //list is not in lists
-                escapeableList = value;
-
-                if (categoryPanel.Expanded)
-                {
-                    categoryPanel.Size = new Size(Width - 2, categoryPanel.FontHeight + 4);
-
-                    objectPanel.Location = new Point(1, categoryPanel.FontHeight + 7);
-                    objectPanel.Size = new Size(Width - 2, Height - categoryPanel.FontHeight - 8);
-                    objectPanel.Visible = true;
-                    categoryPanel.Expanded = false;
-                }
-
-                objectPanel.List = value;
-                categoryPanel.Visible = false;
-                btnBack.Visible = true;
-            }
+            get => listView.CurrentList;
         }
-        
-        public void ExitList()
+
+        /// <summary>
+        /// Views a new list and adds the current one to the Stack
+        /// </summary>
+        /// <param name="list">the list to be entered</param>
+        public void EnterList(IList list)
         {
-            if (escapeableList == null)
+            if (listStack == null)
                 return;
 
-            objectPanel.List = lists[currentCategory];
+            listStack.Push(list);
+            listView.CurrentList = list;
 
-            categoryPanel.Visible = true;
+            rootListChangePanel.Visible = false;
+            btnBack.Visible = true;
+        }
+
+        /// <summary>
+        /// Tries to go back to the last list in the Stack
+        /// </summary>
+        public void ExitList()
+        {
+            if (listStack.Count==0)
+                return;
+
+            listView.CurrentList = RootLists[CurrentRootListName];
+
+            rootListChangePanel.Visible = true;
             btnBack.Visible = false;
         }
 
-        public void UpdateAutoScroll()
+        /// <summary>
+        /// Recalculate the height of the Autoscroll for the <see cref="FastListView"/>
+        /// </summary>
+        public void UpdateAutoScrollHeight()
         {
-            objectPanel.UpdateAutoScroll();
+            listView.UpdateAutoscrollHeight();
         }
 
         public SceneListView()
         {
             InitializeComponent();
 
-            objectPanel.SelectionChanged += (x,y) => SelectionChanged?.Invoke(x,y);
-            objectPanel.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
+            listView.SelectionChanged += (x,y) => SelectionChanged?.Invoke(x,y);
+            listView.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
 
             Graphics g = CreateGraphics();
 
             fontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
 
-            categoryPanel.Size = new Size(298, categoryPanel.FontHeight + 4);
-            btnBack.Size = new Size(298, categoryPanel.FontHeight + 4);
+            rootListChangePanel.Height = rootListChangePanel.FontHeight + 4;
+            btnBack.Height = rootListChangePanel.FontHeight + 6;
 
-            objectPanel.Location = new Point(1, categoryPanel.FontHeight + 7);
-            objectPanel.Size = new Size(298, 300 - categoryPanel.FontHeight - 8);
+            listView.Top = rootListChangePanel.FontHeight + 7;
+            listView.Height = Height - rootListChangePanel.FontHeight - 8;
 
-            categoryPanel.Paint += CategoryPanel_Paint;
-            categoryPanel.Click += CategoryPanel_Click;
+            rootListChangePanel.Paint += RootListChangePanel_Paint;
+            rootListChangePanel.Click += RootListChangePanel_Click;
         }
 
-        private void CategoryPanel_Click(object sender, EventArgs e)
+        private void RootListChangePanel_Click(object sender, EventArgs e)
         {
-            if (categoryPanel.Expanded)
+            if (rootListChangePanel.Expanded)
             {
-                categoryPanel.Size = new Size(Width - 2, categoryPanel.FontHeight + 4);
+                rootListChangePanel.Height = rootListChangePanel.FontHeight + 4;
 
-                objectPanel.Location = new Point(1, categoryPanel.FontHeight + 7);
-                objectPanel.Size = new Size(Width - 2, Height - categoryPanel.FontHeight - 8);
-                objectPanel.Visible = true;
-                categoryPanel.Expanded = false;
-                currentCategory = lists.Keys.ElementAt(categoryPanel.HoveredCategoryIndex);
-                objectPanel.List = lists[currentCategory];
-                CategoryChanged?.Invoke(this, null);
-                categoryPanel.Refresh();
+                listView.Top = rootListChangePanel.FontHeight + 7;
+                listView.Height =  Height - rootListChangePanel.FontHeight - 8;
+                listView.Visible = true;
+                rootListChangePanel.Expanded = false;
+                CurrentRootListName = RootLists.Keys.ElementAt(rootListChangePanel.HoveredCategoryIndex);
+                listView.CurrentList = RootLists[CurrentRootListName];
+                CurrentListChanged?.Invoke(this, null);
+                rootListChangePanel.Refresh();
             }
             else
             {
-                categoryPanel.FullHeight = lists.Count * (categoryPanel.FontHeight+4);
-                if (categoryPanel.FullHeight > Height / 2)
+                rootListChangePanel.FullHeight = RootLists.Count * (rootListChangePanel.FontHeight+4);
+                if (rootListChangePanel.FullHeight > Height / 2)
                 {
-                    categoryPanel.Size = new Size(Width - 2, Height - 2);
-                    objectPanel.Visible = false;
+                    rootListChangePanel.Height =  Height - 2;
+                    listView.Visible = false;
                 }
                 else
                 {
-                    categoryPanel.Size = new Size(Width - 2, categoryPanel.FullHeight);
-                    objectPanel.Location = new Point(1, categoryPanel.FullHeight + 7);
-                    objectPanel.Size = new Size(Width-2, Height - categoryPanel.FullHeight - 8);
+                    rootListChangePanel.Height =  rootListChangePanel.FullHeight;
+                    listView.Top = rootListChangePanel.FullHeight + 7;
+                    listView.Height =  Height - rootListChangePanel.FullHeight - 8;
                 }
-                categoryPanel.Expanded = true;
-                categoryPanel.Refresh();
+                rootListChangePanel.Expanded = true;
+                rootListChangePanel.Refresh();
             }
         }
 
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            if (categoryPanel.Expanded)
+            if (rootListChangePanel.Expanded)
             {
-                if (categoryPanel.FullHeight > Height / 2)
+                if (rootListChangePanel.FullHeight > Height / 2)
                 {
-                    categoryPanel.Size = new Size(Width - 2, Height - 2);
-                    objectPanel.Visible = false;
+                    rootListChangePanel.Height =  Height - 2;
+                    listView.Visible = false;
                 }
                 else
                 {
-                    categoryPanel.Size = new Size(Width - 2, categoryPanel.FullHeight);
-                    objectPanel.Location = new Point(1, categoryPanel.FullHeight + 7);
-                    objectPanel.Size = new Size(Width - 2, Height - categoryPanel.FullHeight - 8);
-                    objectPanel.Visible = true;
+                    rootListChangePanel.Height =  rootListChangePanel.FullHeight;
+                    listView.Top = rootListChangePanel.FullHeight + 7;
+                    listView.Height =  Height - rootListChangePanel.FullHeight - 8;
+                    listView.Visible = true;
                 }
-                categoryPanel.Refresh();
+                rootListChangePanel.Refresh();
             }
         }
 
-        private void CategoryPanel_Paint(object sender, PaintEventArgs e)
+        private void RootListChangePanel_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
 
-            if (categoryPanel.Expanded)
+            if (rootListChangePanel.Expanded)
             {
                 int i = 0;
                 int y;
-                foreach (string category in lists.Keys)
+                foreach (string rootList in RootLists.Keys)
                 {
-                    if ((y = 2 + i * (categoryPanel.FontHeight + 4) + categoryPanel.AutoScrollPosition.Y+categoryPanel.YOffset) > 2 - categoryPanel.FontHeight)
+                    if ((y = 2 + i * (rootListChangePanel.FontHeight + 4) + rootListChangePanel.AutoScrollPosition.Y+rootListChangePanel.YOffset) > 2 - rootListChangePanel.FontHeight)
                     {
-                        if (currentCategory == category)
+                        if (CurrentRootListName == rootList)
                         {
-                            g.FillRectangle(SystemBrushes.Highlight, 0, y-2, categoryPanel.Width, categoryPanel.FontHeight+4);
-                            g.DrawString(category, categoryPanel.Font, SystemBrushes.HighlightText, 4, y);
+                            g.FillRectangle(SystemBrushes.Highlight, 0, y-2, rootListChangePanel.Width, rootListChangePanel.FontHeight+4);
+                            g.DrawString(rootList, rootListChangePanel.Font, SystemBrushes.HighlightText, 4, y);
                         }
-                        else if (categoryPanel.HoveredCategoryIndex == i)
+                        else if (rootListChangePanel.HoveredCategoryIndex == i)
                         {
-                            g.FillRectangle(SystemBrushes.MenuHighlight, 0, y-2, categoryPanel.Width, categoryPanel.FontHeight+4);
-                            g.DrawString(category, categoryPanel.Font, SystemBrushes.HighlightText, 4, y);
+                            g.FillRectangle(SystemBrushes.MenuHighlight, 0, y-2, rootListChangePanel.Width, rootListChangePanel.FontHeight+4);
+                            g.DrawString(rootList, rootListChangePanel.Font, SystemBrushes.HighlightText, 4, y);
                         }
                         else
-                            g.DrawString(category, categoryPanel.Font, new SolidBrush(ForeColor), 4, y);
+                            g.DrawString(rootList, rootListChangePanel.Font, new SolidBrush(ForeColor), 4, y);
 
                     }
                     i++;
-                    if (y > categoryPanel.Height)
+                    if (y > rootListChangePanel.Height)
                         break;
                 }
             } else
-                g.DrawString(currentCategory, categoryPanel.Font, new SolidBrush(ForeColor), 4, 2);
+                g.DrawString(CurrentRootListName, rootListChangePanel.Font, new SolidBrush(ForeColor), 4, 2);
         }
+        
 
 
 
 
 
-
-
-
-        private void InitializeComponent()
-        {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SceneListView));
-            this.objectPanel = new GL_EditorFramework.FastListView();
-            this.categoryPanel = new GL_EditorFramework.SceneListView.CategoryPanel();
-            this.btnBack = new System.Windows.Forms.Button();
-            this.SuspendLayout();
-            // 
-            // objectPanel
-            // 
-            this.objectPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.objectPanel.AutoScroll = true;
-            this.objectPanel.BackColor = System.Drawing.SystemColors.Window;
-            this.objectPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.objectPanel.List = ((System.Collections.IList)(resources.GetObject("objectPanel.List")));
-            this.objectPanel.Location = new System.Drawing.Point(1, 48);
-            this.objectPanel.Margin = new System.Windows.Forms.Padding(1, 3, 1, 1);
-            this.objectPanel.Name = "objectPanel";
-            this.objectPanel.SelectedItems = null;
-            this.objectPanel.Size = new System.Drawing.Size(298, 251);
-            this.objectPanel.TabIndex = 0;
-            // 
-            // categoryPanel
-            // 
-            this.categoryPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.categoryPanel.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.categoryPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.categoryPanel.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.categoryPanel.Location = new System.Drawing.Point(1, 1);
-            this.categoryPanel.Margin = new System.Windows.Forms.Padding(1);
-            this.categoryPanel.Name = "categoryPanel";
-            this.categoryPanel.Size = new System.Drawing.Size(298, 43);
-            this.categoryPanel.TabIndex = 1;
-            // 
-            // btnBack
-            // 
-            this.btnBack.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnBack.Location = new System.Drawing.Point(1, 1);
-            this.btnBack.Name = "btnBack";
-            this.btnBack.Size = new System.Drawing.Size(298, 44);
-            this.btnBack.TabIndex = 2;
-            this.btnBack.Text = "Back";
-            this.btnBack.UseVisualStyleBackColor = true;
-            this.btnBack.Visible = false;
-            this.btnBack.Click += new System.EventHandler(this.BtnBack_Click);
-            // 
-            // SceneListView
-            // 
-            this.Controls.Add(this.btnBack);
-            this.Controls.Add(this.categoryPanel);
-            this.Controls.Add(this.objectPanel);
-            this.Name = "SceneListView";
-            this.Size = new System.Drawing.Size(300, 300);
-            this.ResumeLayout(false);
-
-        }
-
-        private class CategoryPanel : UserControl
+        private class RootListChangePanel : UserControl
         {
             public int HoveredCategoryIndex = -1;
 
@@ -309,7 +242,7 @@ namespace GL_EditorFramework
                 FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
             }
 
-            public CategoryPanel()
+            public RootListChangePanel()
             {
                 SetStyle(
                 ControlStyles.AllPaintingInWmPaint |
@@ -416,6 +349,9 @@ namespace GL_EditorFramework
 
         private int marginScrollSpeed = 0;
 
+        /// <summary>
+        /// The set used to determine which objects are selected
+        /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISet<object> SelectedItems {
             get => selectedItems;
@@ -428,7 +364,7 @@ namespace GL_EditorFramework
         private static readonly List<object> emptyList = new List<object>();
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public IList List {
+        public IList CurrentList {
             get => list;
             set
             {
@@ -438,7 +374,10 @@ namespace GL_EditorFramework
             }
         }
 
-        public void UpdateAutoScroll()
+        /// <summary>
+        /// Recalculate the height of the Autoscroll for this <see cref="FastListView"/>
+        /// </summary>
+        public void UpdateAutoscrollHeight()
         {
             AutoScrollMinSize = new Size(0, FontHeight * list.Count);
         }
@@ -660,7 +599,7 @@ namespace GL_EditorFramework
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            if (List == null)
+            if (CurrentList == null)
                 return;
 
             Graphics g = e.Graphics;

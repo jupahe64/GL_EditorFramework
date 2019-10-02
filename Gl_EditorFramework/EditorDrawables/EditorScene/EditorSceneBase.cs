@@ -18,7 +18,7 @@ namespace GL_EditorFramework.EditorDrawables
 
     public class ListChangedEventArgs : EventArgs
     {
-        public IList[] Lists;
+        public IList[] Lists { get; set; }
         public ListChangedEventArgs(IList[] lists)
         {
             Lists = lists;
@@ -29,19 +29,19 @@ namespace GL_EditorFramework.EditorDrawables
 
     public class DictChangedEventArgs : EventArgs
     {
-        public IDictionary[] Dicts;
+        public IDictionary[] Dicts { get; set; }
         public DictChangedEventArgs(IDictionary[] dicts)
         {
             Dicts = dicts;
         }
     }
 
-    public delegate void CurrentListChangedEventHandler(object sender, CurrentListChangedEventArgs e);
+    public delegate void ListEnteredEventHandler(object sender, ListEnteredEventArgs e);
 
-    public class CurrentListChangedEventArgs : EventArgs
+    public class ListEnteredEventArgs : EventArgs
     {
-        public IList List;
-        public CurrentListChangedEventArgs(IList list)
+        public IList List { get; set; }
+        public ListEnteredEventArgs(IList list)
         {
             List = list;
         }
@@ -58,15 +58,15 @@ namespace GL_EditorFramework.EditorDrawables
         public int HoveredPart { get; protected set; } = 0;
 
         public readonly HashSet<object> SelectedObjects = new HashSet<object>();
-        public IList CurrentList;
+        public IList CurrentList { get; set; }
 
-        public List<AbstractGlDrawable> staticObjects = new List<AbstractGlDrawable>();
+        public List<AbstractGlDrawable> StaticObjects { get; set; } = new List<AbstractGlDrawable>();
 
         public event EventHandler SelectionChanged;
         public event EventHandler ObjectsMoved;
         public event ListChangedEventHandler ListChanged;
         public event DictChangedEventHandler DictChanged;
-        public event CurrentListChangedEventHandler CurrentListChanged;
+        public event ListEnteredEventHandler ListEntered;
 
         protected float draggingDepth;
 
@@ -84,12 +84,16 @@ namespace GL_EditorFramework.EditorDrawables
 
         public AbstractTransformAction ExclusiveAction = NoAction;
 
-        public static NoTransformAction NoAction {get; private set;} = new NoTransformAction();
+        public static NoTransformAction NoAction {get;} = new NoTransformAction();
 
-        public void SetCurrentList(IList list)
+        /// <summary>
+        /// Sets the CurrentList to <paramref name="list"/> and triggers the <see cref="ListEntered"/> event
+        /// </summary>
+        /// <param name="list"></param>
+        public void EnterList(IList list)
         {
             CurrentList = list;
-            CurrentListChanged?.Invoke(this, new CurrentListChangedEventArgs(list));
+            ListEntered?.Invoke(this, new ListEnteredEventArgs(list));
         }
 
         public void Refresh() => control.Refresh();
@@ -105,11 +109,18 @@ namespace GL_EditorFramework.EditorDrawables
                 control.DrawPicking();
         }
 
+        /// <summary>
+        /// Deletes all selected objects if they can be deleted, this action is undoable
+        /// </summary>
         public abstract void DeleteSelected();
 
-        public IPropertyProvider GetPropertyProvider()
+        /// <summary>
+        /// Returns a new <see cref="IObjectUIProvider"/> based on the currently selected objects
+        /// </summary>
+        /// <returns></returns>
+        public IObjectUIProvider GetObjectUIProvider()
         {
-            IPropertyProvider provider = null;
+            IObjectUIProvider provider = null;
             foreach (IEditableObject obj in GetObjects())
             {
 
@@ -128,21 +139,42 @@ namespace GL_EditorFramework.EditorDrawables
             return provider;
         }
 
+        /// <summary>
+        /// Adds one or more objects to a list, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are added to</param>
+        /// <param name="objs">The objects which are added to the list</param>
         public void Add(IList list, params IEditableObject[] objs)
         {
             Add(list, list == CurrentList, objs);
         }
 
+        /// <summary>
+        /// Deletes one or more objects from a list, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are deleted from</param>
+        /// <param name="objs">The objects which are deleted from the list</param>
         public void Delete(IList list, params IEditableObject[] objs)
         {
             Delete(list, list == CurrentList, objs);
         }
 
+        /// <summary>
+        /// Inserts one or more objects into a list at a specified index, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are inserted into</param>
+        /// <param name="objs">The objects which are inserted into the list</param>
+        /// <param name="index">The index at which the objects are inserted</param>
         public void InsertAt(IList list, int index, params IEditableObject[] objs)
         {
             InsertAt(list, list == CurrentList, index, objs);
         }
 
+        /// <summary>
+        /// Adds one or more objects to a list, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are added to</param>
+        /// <param name="objs">The objects which are added to the list</param>
         public void Add(IList list, bool updateSelection, params IEditableObject[] objs)
         {
             if (updateSelection)
@@ -180,6 +212,11 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
+        /// <summary>
+        /// Deletes one or more objects from a list, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are deleted from</param>
+        /// <param name="objs">The objects which are deleted from the list</param>
         public void Delete(IList list, bool updateSelection, params IEditableObject[] objs)
         {
             if (updateSelection)
@@ -282,6 +319,13 @@ namespace GL_EditorFramework.EditorDrawables
             AddToUndo(new RevertableDeletion(infos.ToArray(), singleInfos.ToArray()));
         }
 
+        /// <summary>
+        /// Inserts one or more objects into a list at a specified index, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are inserted into</param>
+        /// <param name="objs">The objects which are inserted into the list</param>
+        /// <param name="index">The index at which the objects are inserted</param>
+        /// <param name="updateSelection">weither to update the selection to include </param>
         public void InsertAt(IList list, bool updateSelection, int index, params IEditableObject[] objs)
         {
             if (updateSelection)

@@ -11,11 +11,11 @@ using GL_EditorFramework.EditorDrawables;
 using OpenTK;
 using WinInput = System.Windows.Input;
 
-namespace Testing
+namespace Example
 {
-    public partial class TestingForm : Form
+    public partial class ExampleEditor : Form
     {
-        public TestingForm()
+        public ExampleEditor()
         {
             InitializeComponent();
         }
@@ -28,8 +28,11 @@ namespace Testing
 
         protected override void OnLoad(EventArgs e)
         {
-            EditableObject obj;
             base.OnLoad(e);
+            
+            EditableObject obj;
+
+            #region Create scene and add objects to it
             scene = new EditorScene();
             
             scene.objects.Add(obj = new AnimatedObject(new Vector3(0, -4, 0)));
@@ -106,43 +109,53 @@ namespace Testing
             };
 
             scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
-
+            
             for (int i = 5; i<10000; i++)
             {
                 scene.objects.Add(obj = new TransformableObject(new Vector3(i,0,0), Quaternion.Identity, Vector3.One));
             }
+            #endregion
 
+            //setup the gl controls
             gL_ControlModern1.MainDrawable = scene;
             gL_ControlModern1.ActiveCamera = new GL_EditorFramework.StandardCameras.InspectCamera(1f);
 
             gL_ControlLegacy1.MainDrawable = new SingleObject(new Vector3());
             gL_ControlModern1.CameraDistance = 20;
+
+            //add event handlers to scene and gl control
             scene.SelectionChanged += Scene_SelectionChanged;
             scene.ObjectsMoved += Scene_ObjectsMoved;
             scene.ListChanged += Scene_ListChanged;
-            scene.CurrentListChanged += Scene_CurrentListChanged;
+            scene.ListEntered += Scene_ListEntered;
             gL_ControlModern1.KeyDown += GL_ControlModern1_KeyDown;
-            
-            for(int i = 0; i<15; i++)
-                sceneListView1.lists.Add("Test"+i,scene.objects);
 
+            //add categories to sceneListView (in this case 15 references to the same list, 
+            //which should never be done and only serves for demonstration purposes)
+            for (int i = 0; i<15; i++)
+                sceneListView1.RootLists.Add("Test"+i,scene.objects);
 
+            //link the scenes selected objs to sceneListView
             sceneListView1.SelectedItems = scene.SelectedObjects;
-            sceneListView1.CurrentCategory = "Test0";
+            //set current category (highly recommended to do once all categories are added
+            sceneListView1.SetRootList("Test0");
+
+            //add event handlers to sceneListView
             sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
             sceneListView1.ItemsMoved += SceneListView1_ItemsMoved;
 
+            //auto select the 5th object for testing purposes
             scene.ToogleSelected(scene.objects[4], true);
             Scene_SelectionChanged(this, null);
         }
 
-        private void Scene_CurrentListChanged(object sender, CurrentListChangedEventArgs e)
+        private void Scene_ListEntered(object sender, ListEnteredEventArgs e)
         {
-            sceneListView1.CurrentList = e.List;
+            sceneListView1.EnterList(e.List);
             if (e.List as List<Path.PathPoint> != null)
-                button1.Text = "Add Point";
+                btnAdd.Text = "Add Point";
             else
-                button1.Text = "Add Object";
+                btnAdd.Text = "Add Object";
         }
 
         private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
@@ -156,13 +169,14 @@ namespace Testing
         {
             if (e.Lists.Contains(sceneListView1.CurrentList))
             {
-                sceneListView1.UpdateAutoScroll();
+                sceneListView1.UpdateAutoScrollHeight();
                 sceneListView1.Refresh();
             }
         }
 
         private void SceneListView1_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            //apply selection changes to scene
             foreach (object obj in e.ItemsToDeselect)
                 scene.ToogleSelected((EditableObject)obj, false);
 
@@ -179,41 +193,48 @@ namespace Testing
         {
             if (e.KeyCode == Keys.Delete)
             {
+                //delete all selected objects if possible
+                //the deletion is handled by the scene and it's objects
                 scene.DeleteSelected();
                 gL_ControlModern1.Refresh();
-                sceneListView1.UpdateAutoScroll();
+                sceneListView1.UpdateAutoScrollHeight();
                 Scene_SelectionChanged(this, null);
             }
         }
 
         private void Scene_ObjectsMoved(object sender, EventArgs e)
         {
-            objectPropertyControl1.CurrentPropertyProvider?.UpdateProperties();
-            objectPropertyControl1.Refresh();
+            //update the property control because properties might have changed
+            objectUIControl1.CurrentObjectUIProvider?.UpdateProperties();
+            objectUIControl1.Refresh();
         }
 
         private void Scene_SelectionChanged(object sender, EventArgs e)
         {
+            //update sceneListView
             sceneListView1.Refresh();
 
-            objectPropertyControl1.CurrentPropertyProvider = scene.GetPropertyProvider();
+            //fetch availible properties for selection
+            objectUIControl1.CurrentObjectUIProvider = scene.GetObjectUIProvider();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void BtnAdd_Click(object sender, EventArgs e)
         {
-            List<Path.PathPoint> points;
-            if ((points = scene.CurrentList as List<Path.PathPoint>) != null)
+            if (scene.CurrentList is List<Path.PathPoint> points)
             {
-                if(points.Count>0)
+                //add new pathpount to path
+
+                if (points.Count > 0)
                     scene.Add(scene.CurrentList, new Path.PathPoint(points.Last().position, Vector3.Zero, Vector3.Zero));
                 else
                     scene.Add(scene.CurrentList, new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
             }
             else
-                scene.Add(scene.CurrentList, new TransformableObject(Vector3.Zero,Quaternion.Identity,Vector3.One));
-            sceneListView1.UpdateAutoScroll();
-            sceneListView1.Refresh();
-            gL_ControlModern1.Refresh();
+                //add new TransformableObject to the scene
+                scene.Add(scene.CurrentList, new TransformableObject(Vector3.Zero, Quaternion.Identity, Vector3.One));
+
+
+            sceneListView1.UpdateAutoScrollHeight();
         }
     }
     /*

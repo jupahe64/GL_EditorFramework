@@ -13,7 +13,7 @@ using WinInput = System.Windows.Input;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    public abstract partial class EditorSceneBase
+    public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
         static Vector4 colorX = new Vector4(1, 0, 0, 1);
         static Vector4 colorY = new Vector4(0, 0.5f, 1, 1);

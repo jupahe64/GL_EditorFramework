@@ -94,7 +94,7 @@ namespace GL_EditorFramework.EditorDrawables
                 ExclusiveAction = NoAction;
             }
 
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 var |= obj.MouseDown(e, control);
             }
@@ -116,7 +116,7 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseMove(e, lastMousePos, control);
             }
 
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 var |= obj.MouseMove(e, lastMousePos, control);
             }
@@ -145,7 +145,7 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseWheel(e, control);
             }
 
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 var |= obj.MouseWheel(e, control);
             }
@@ -189,7 +189,7 @@ namespace GL_EditorFramework.EditorDrawables
                 ExclusiveAction = NoAction;
             }
 
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 var |= obj.MouseUp(e, control);
             }
@@ -212,7 +212,7 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseClick(e, control);
             }
 
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 var |= obj.MouseClick(e, control);
             }
@@ -310,7 +310,7 @@ namespace GL_EditorFramework.EditorDrawables
                 inObjectIndex -= span;
             }
 
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
@@ -338,7 +338,7 @@ namespace GL_EditorFramework.EditorDrawables
                 inObjectIndex -= span;
             }
 
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
@@ -459,7 +459,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 var |= obj.KeyDown(e, control);
             }
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 var |= obj.KeyDown(e, control);
             }
@@ -478,7 +478,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 var |= obj.KeyUp(e, control);
             }
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 var |= obj.KeyUp(e, control);
             }

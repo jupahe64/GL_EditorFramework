@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GL_EditorFramework", "Gl_EditorFramework\GL_EditorFramework.csproj", "{D593A72D-554D-40FB-9967-503CB15A744F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{860B49C9-54E3-4E10-830D-6497B845ED11}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Testing\Example.csproj", "{860B49C9-54E3-4E10-830D-6497B845ED11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

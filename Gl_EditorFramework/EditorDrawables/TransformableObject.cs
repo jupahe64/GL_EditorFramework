@@ -146,9 +146,9 @@ namespace GL_EditorFramework.EditorDrawables
             infos.Add(this, 0, prevPos, prevRot, prevScale);
         }
 
-        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this, scene);
+        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this, scene);
 
-        public new class PropertyProvider : IPropertyProvider
+        public new class PropertyProvider : IObjectUIProvider
         {
             Vector3 prevPos;
             Vector3 rot;
@@ -165,7 +165,7 @@ namespace GL_EditorFramework.EditorDrawables
                 rot = obj.rotation.ToEulerAnglesDeg();
             }
 
-            public void DoUI(IObjectPropertyControl control)
+            public void DoUI(IObjectUIControl control)
             {
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                     obj.Position = control.Vector3Input(obj.Position, "Position", 1, 16);

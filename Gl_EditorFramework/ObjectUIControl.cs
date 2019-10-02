@@ -13,7 +13,10 @@ using System.Runtime.InteropServices;
 
 namespace GL_EditorFramework
 {
-    public partial class ObjectPropertyControl : UserControl, IObjectPropertyControl
+    /// <summary>
+    /// A control for displaying object specific UI that an <see cref="IObjectUIProvider"/> provides
+    /// </summary>
+    public partial class ObjectUIControl : UserControl, IObjectUIControl
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         protected static extern IntPtr SendMessage(HandleRef hWnd, int msg, int wParam, int lParam);
@@ -31,7 +34,7 @@ namespace GL_EditorFramework
             DRAG_ABORT,
             LOST_FOCUS
         }
-        
+
         static uint VALUE_CHANGE_START = 1;
         static uint VALUE_CHANGED = 2;
         static uint VALUE_SET = 4;
@@ -40,15 +43,18 @@ namespace GL_EditorFramework
 
         EventType eventType = EventType.DRAW;
 
-        IPropertyProvider propertyProvider;
+        IObjectUIProvider objectUIProvider;
 
-        public IPropertyProvider CurrentPropertyProvider
+        /// <summary>
+        /// The ObjectUIProvider used for the UI in this control
+        /// </summary>
+        public IObjectUIProvider CurrentObjectUIProvider
         {
-            get => propertyProvider;
+            get => objectUIProvider;
 
             set
             {
-                propertyProvider = value;
+                objectUIProvider = value;
                 Refresh();
             }
         }
@@ -63,7 +69,7 @@ namespace GL_EditorFramework
 
         int usableWidth;
 
-        Brush buttonHighlight = new SolidBrush(MixedColor(SystemColors.GradientInactiveCaption,SystemColors.ControlLightLight));
+        Brush buttonHighlight = new SolidBrush(MixedColor(SystemColors.GradientInactiveCaption, SystemColors.ControlLightLight));
 
         Timer doubleClickTimer = new Timer();
         bool acceptDoubleClick = false;
@@ -76,9 +82,9 @@ namespace GL_EditorFramework
         int dragIndex = -1;
 
         bool mouseWasDragged = false;
-
         int textBoxHeight;
-        public ObjectPropertyControl()
+
+        public ObjectUIControl()
         {
             SetStyle(
             ControlStyles.AllPaintingInWmPaint |
@@ -105,7 +111,7 @@ namespace GL_EditorFramework
 
         private void TextBox1_MouseClick(object sender, MouseEventArgs e)
         {
-            if (acceptDoubleClick || e.Clicks==2)
+            if (acceptDoubleClick || e.Clicks == 2)
             {
                 textBox1.SelectAll();
                 acceptDoubleClick = false;
@@ -134,11 +140,11 @@ namespace GL_EditorFramework
             eventType = EventType.DRAW;
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
-                propertyProvider?.OnValueChangeStart();
+                objectUIProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                propertyProvider?.OnValueChanged();
+                objectUIProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                propertyProvider?.OnValueSet();
+                objectUIProvider?.OnValueSet();
 
             changeTypes = 0;
         }
@@ -174,7 +180,7 @@ namespace GL_EditorFramework
         {
             base.OnPaint(e);
 
-            if (propertyProvider == null)
+            if (objectUIProvider == null)
                 return;
 
             g = e.Graphics;
@@ -185,7 +191,7 @@ namespace GL_EditorFramework
 
             usableWidth = Width - 10;
 
-            propertyProvider.DoUI(this);
+            objectUIProvider.DoUI(this);
 
             AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y);
         }
@@ -215,11 +221,11 @@ namespace GL_EditorFramework
             }
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
-                propertyProvider?.OnValueChangeStart();
+                objectUIProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                propertyProvider?.OnValueChanged();
+                objectUIProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                propertyProvider?.OnValueSet();
+                objectUIProvider?.OnValueSet();
 
             changeTypes = 0;
         }
@@ -228,23 +234,23 @@ namespace GL_EditorFramework
         {
             mousePos = e.Location;
 
-            if (e.Button==MouseButtons.Left && Math.Abs(mousePos.X - dragStarPos.X) > 2)
+            if (e.Button == MouseButtons.Left && Math.Abs(mousePos.X - dragStarPos.X) > 2)
                 mouseWasDragged = true;
 
-            if(mouseWasDragged)
+            if (mouseWasDragged)
                 eventType = EventType.DRAG;
-            
+
             Refresh();
 
             eventType = EventType.DRAW;
             lastMousePos = e.Location;
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
-                propertyProvider?.OnValueChangeStart();
+                objectUIProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                propertyProvider?.OnValueChanged();
+                objectUIProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                propertyProvider?.OnValueSet();
+                objectUIProvider?.OnValueSet();
 
             changeTypes = 0;
         }
@@ -261,10 +267,11 @@ namespace GL_EditorFramework
                 eventType = EventType.DRAG_END;
                 Refresh();
             }
-            else{
-                if (propertyProvider == null)
+            else
+            {
+                if (objectUIProvider == null)
                     return;
-                
+
                 eventType = EventType.CLICK;
                 Refresh();
             }
@@ -272,30 +279,30 @@ namespace GL_EditorFramework
             eventType = EventType.DRAW;
 
             if ((changeTypes & VALUE_CHANGE_START) > 0)
-                propertyProvider?.OnValueChangeStart();
+                objectUIProvider?.OnValueChangeStart();
             if ((changeTypes & VALUE_CHANGED) > 0)
-                propertyProvider?.OnValueChanged();
+                objectUIProvider?.OnValueChanged();
             if ((changeTypes & VALUE_SET) > 0)
-                propertyProvider?.OnValueSet();
+                objectUIProvider?.OnValueSet();
 
             changeTypes = 0;
         }
 
         private void DrawField(int textX, int fieldX, int y, int width, string name, string value, Brush outline, Brush background)
         {
-            g.FillRectangle(outline, fieldX, y, width, textBoxHeight+2);
-            g.FillRectangle(background, fieldX + 1, y + 1,   width-2, textBoxHeight);
+            g.FillRectangle(outline, fieldX, y, width, textBoxHeight + 2);
+            g.FillRectangle(background, fieldX + 1, y + 1, width - 2, textBoxHeight);
 
             g.DrawString(name + ": ", textBox1.Font, SystemBrushes.ControlText, textX, y);
 
             g.SetClip(new Rectangle(
-                fieldX+1,
+                fieldX + 1,
                 y + 1,
-                width-2,
+                width - 2,
                 textBoxHeight));
-            
-            g.DrawString(value, textBox1.Font, SystemBrushes.ControlText, 
-                fieldX+1 + (width-(int)g.MeasureString(value,textBox1.Font).Width)/2, y);
+
+            g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
+                fieldX + 1 + (width - (int)g.MeasureString(value, textBox1.Font).Width) / 2, y);
 
             g.ResetClip();
         }
@@ -305,7 +312,7 @@ namespace GL_EditorFramework
             int stringWidth = (int)g.MeasureString(name, textBox1.Font).Width;
 
             textBox1.Text = value;
-            textBox1.Location = new Point(fieldX+1, y+1);
+            textBox1.Location = new Point(fieldX + 1, y + 1);
             textBox1.Width = width - 2;
             textBox1.Visible = true;
             textBox1.Focus();
@@ -314,7 +321,7 @@ namespace GL_EditorFramework
             int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
 
             textBox1.Select(Math.Max(0, num), 0);
-            
+
             focusedIndex = index;
 
             acceptDoubleClick = true;
@@ -322,14 +329,14 @@ namespace GL_EditorFramework
         }
 
 
-
+        #region Availible UI Elements
         float valueBeforeDrag;
-        public float NumberInput(float number, string name, float increment=1, int incrementDragDivider = 8)
+        public float NumberInput(float number, string name, float increment = 1, int incrementDragDivider = 8)
         {
             switch (eventType)
             {
                 case EventType.CLICK:
-                    if (new Rectangle(usableWidth - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
+                    if (new Rectangle(usableWidth - 89, currentY + 1, 78, textBoxHeight - 2).Contains(mousePos))
                     {
                         DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
                         PrepareFieldForInput(usableWidth - 90, currentY, 80, name, number.ToString());
@@ -348,7 +355,7 @@ namespace GL_EditorFramework
                     {
                         DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
 
-                        if (new Rectangle(usableWidth - 89, currentY+1, 78, textBoxHeight-2).Contains(mousePos))
+                        if (new Rectangle(usableWidth - 89, currentY + 1, 78, textBoxHeight - 2).Contains(mousePos))
                         {
                             dragIndex = index;
                             valueBeforeDrag = number;
@@ -370,7 +377,7 @@ namespace GL_EditorFramework
                         DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
                         DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
-                    
+
                     currentY += 20;
                     index++;
                     return number;
@@ -386,7 +393,7 @@ namespace GL_EditorFramework
                         DrawField(15, usableWidth - 90, currentY, 80, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                     else
                         DrawField(15, usableWidth - 90, currentY, 80, name, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
-                    
+
                     currentY += 20;
                     index++;
                     return number;
@@ -462,7 +469,7 @@ namespace GL_EditorFramework
                                 SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                         else
                         {
-                            if (new Rectangle(31 + width * i, currentY+1, width - 22, textBoxHeight-2).Contains(mousePos))
+                            if (new Rectangle(31 + width * i, currentY + 1, width - 22, textBoxHeight - 2).Contains(mousePos))
                             {
                                 DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
                                 SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
@@ -487,7 +494,7 @@ namespace GL_EditorFramework
                                 SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight);
                         else
                         {
-                            if (new Rectangle(31 + width * i, currentY+1, width - 22, textBoxHeight-2).Contains(mousePos))
+                            if (new Rectangle(31 + width * i, currentY + 1, width - 22, textBoxHeight - 2).Contains(mousePos))
                             {
                                 dragIndex = index;
                                 changeTypes |= VALUE_CHANGE_START;
@@ -630,8 +637,8 @@ namespace GL_EditorFramework
             {
                 g.FillRectangle(SystemBrushes.ControlDark, 15, currentY, usableWidth - 25, textBoxHeight + 6);
                 g.FillRectangle(SystemBrushes.ControlLight, 16, currentY + 1, usableWidth - 27, textBoxHeight + 4);
-                
-                
+
+
             }
 
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText,
@@ -649,11 +656,11 @@ namespace GL_EditorFramework
 
             if (new Rectangle(15, currentY, (int)g.MeasureString(name, textBox1.Font).Width, textBoxHeight).Contains(mousePos))
             {
-                if(mouseDown)
+                if (mouseDown)
                     g.DrawString(name, LinkFont, Brushes.Red, 15, currentY);
                 else
                     g.DrawString(name, LinkFont, Brushes.Blue, 15, currentY);
-                
+
                 clicked = eventType == EventType.CLICK;
             }
             else
@@ -673,7 +680,7 @@ namespace GL_EditorFramework
         {
             if (new Rectangle(usableWidth - 29, currentY + 1, 18, textBoxHeight - 2).Contains(mousePos))
             {
-                if(eventType == EventType.DRAG_START)
+                if (eventType == EventType.DRAG_START)
                     changeTypes |= VALUE_CHANGE_START;
 
                 if (eventType == EventType.CLICK)
@@ -682,7 +689,7 @@ namespace GL_EditorFramework
                     changeTypes |= VALUE_SET;
                 }
 
-                DrawField(15, usableWidth - 30, currentY, 20, name, isChecked? "✔":"", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+                DrawField(15, usableWidth - 30, currentY, 20, name, isChecked ? "✔" : "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
             }
             else
             {
@@ -691,9 +698,10 @@ namespace GL_EditorFramework
 
             currentY += 20;
             index++;
-            
+
             return isChecked;
         }
+        #endregion
 
         static Color MixedColor(Color color1, Color color2)
         {
@@ -716,8 +724,10 @@ namespace GL_EditorFramework
         }
     }
 
-
-    public interface IObjectPropertyControl
+    /// <summary>
+    /// A control for displaying object specific UI that an <see cref="IObjectUIProvider"/> provides
+    /// </summary>
+    public interface IObjectUIControl
     {
         float NumberInput(float number, string name, float increment = 1f, int incrementDragDivider = 8);
         OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1f, int incrementDragDivider = 8);
@@ -726,9 +736,12 @@ namespace GL_EditorFramework
         bool CheckBox(string name, bool isChecked);
     }
 
-    public interface IPropertyProvider
+    /// <summary>
+    /// A provider for object specific UI for example properties
+    /// </summary>
+    public interface IObjectUIProvider
     {
-        void DoUI(IObjectPropertyControl control);
+        void DoUI(IObjectUIControl control);
         void UpdateProperties();
 
         void OnValueChangeStart();

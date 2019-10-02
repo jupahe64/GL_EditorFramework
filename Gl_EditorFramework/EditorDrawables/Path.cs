@@ -1258,12 +1258,12 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene)
+        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene)
         {
             return new PropertyProvider(this, scene);
         }
 
-        public class PropertyProvider : IPropertyProvider
+        public class PropertyProvider : IObjectUIProvider
         {
             bool prevClosed;
             Vector3 prevPathPointPos;
@@ -1293,12 +1293,12 @@ namespace GL_EditorFramework.EditorDrawables
                 this.scene = scene;
             }
 
-            public void DoUI(IObjectPropertyControl control)
+            public void DoUI(IObjectUIControl control)
             {
                 path.Closed = control.CheckBox("Closed", path.Closed);
 
                 if (scene.CurrentList!= path.pathPoints && control.Button("Edit Pathpoints"))
-                    scene.SetCurrentList(path.pathPoints);
+                    scene.EnterList(path.pathPoints);
 
                 if (point != null)
                 {

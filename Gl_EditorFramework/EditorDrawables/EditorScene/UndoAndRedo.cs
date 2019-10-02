@@ -349,9 +349,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public struct RevertableReordering : IRevertable
         {
-            int originalIndex;
-            int count;
-            int offset;
+            readonly int originalIndex;
+            readonly int count;
+            readonly int offset;
             IList list;
 
             public RevertableReordering(int originalIndex, int count, int offset, IList list)

@@ -11,7 +11,7 @@ using GL_EditorFramework.Interfaces;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace Testing
+namespace Example
 {
     //This class is supposed to show of some very basic animation stuff you could do with this framework
     //but it's highly recommended to add members like startTime and isPlaying if you want to make your own animated object class

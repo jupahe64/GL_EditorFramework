@@ -72,7 +72,7 @@ namespace GL_EditorFramework.GL_Core
                 CameraDistance = 10f;
             }
         }
-
+        
         public Random RNG;
 
         protected Matrix4 orientationCubeMtx;

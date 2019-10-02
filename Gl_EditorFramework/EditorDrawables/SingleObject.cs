@@ -15,11 +15,12 @@ using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    //
-    // Summary:
-    //     An EditableObject that has only one selectable Part. It's represented by a blue block
+    /// <summary>
+    /// An EditableObject that has only one selectable Part. It's represented by a blue block
+    /// </summary>
     public class SingleObject : EditableObject
     {
+
         public static System.Reflection.FieldInfo FI_Position => typeof(SingleObject).GetField("Position");
         public Vector3 Position = new Vector3(0, 0, 0);
 
@@ -243,9 +244,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override bool ProvidesProperty(EditorSceneBase scene) => Selected;
 
-        public override IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this,scene);
+        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this,scene);
 
-        public class PropertyProvider : IPropertyProvider
+        public class PropertyProvider : IObjectUIProvider
         {
             Vector3 prevPos;
 
@@ -257,7 +258,7 @@ namespace GL_EditorFramework.EditorDrawables
                 this.scene = scene;
             }
 
-            public void DoUI(IObjectPropertyControl control)
+            public void DoUI(IObjectUIControl control)
             {
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                     obj.Position = control.Vector3Input(obj.Position, "Position", 1, 16);

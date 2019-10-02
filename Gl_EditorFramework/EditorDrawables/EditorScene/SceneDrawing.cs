@@ -50,7 +50,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in GetObjects())
                         obj.Draw(control, Pass.OPAQUE, this);
 
-                    foreach (AbstractGlDrawable obj in staticObjects)
+                    foreach (AbstractGlDrawable obj in StaticObjects)
                         obj.Draw(control, Pass.OPAQUE);
 
 
@@ -90,7 +90,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in GetObjects())
                         obj.Draw(control, Pass.PICKING, this);
 
-                    foreach (AbstractGlDrawable obj in staticObjects)
+                    foreach (AbstractGlDrawable obj in StaticObjects)
                         obj.Draw(control, Pass.PICKING);
 
 
@@ -132,7 +132,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in GetObjects())
                         obj.Draw(control, Pass.TRANSPARENT, this);
 
-                    foreach (AbstractGlDrawable obj in staticObjects)
+                    foreach (AbstractGlDrawable obj in StaticObjects)
                         obj.Draw(control, Pass.TRANSPARENT);
                 }
             }
@@ -144,7 +144,7 @@ namespace GL_EditorFramework.EditorDrawables
                 foreach (IEditableObject obj in GetObjects())
                     obj.Draw(control, pass, this);
 
-                foreach (AbstractGlDrawable obj in staticObjects)
+                foreach (AbstractGlDrawable obj in StaticObjects)
                     obj.Draw(control, pass);
 
             }
@@ -171,7 +171,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in GetObjects())
                         obj.Draw(control, Pass.OPAQUE, this);
 
-                    foreach (AbstractGlDrawable obj in staticObjects)
+                    foreach (AbstractGlDrawable obj in StaticObjects)
                         obj.Draw(control, Pass.OPAQUE);
 
 
@@ -211,7 +211,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in GetObjects())
                         obj.Draw(control, Pass.PICKING, this);
 
-                    foreach (AbstractGlDrawable obj in staticObjects)
+                    foreach (AbstractGlDrawable obj in StaticObjects)
                         obj.Draw(control, Pass.PICKING);
 
 
@@ -253,7 +253,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in GetObjects())
                         obj.Draw(control, Pass.TRANSPARENT, this);
 
-                    foreach (AbstractGlDrawable obj in staticObjects)
+                    foreach (AbstractGlDrawable obj in StaticObjects)
                         obj.Draw(control, Pass.TRANSPARENT);
                 }
             }
@@ -265,7 +265,7 @@ namespace GL_EditorFramework.EditorDrawables
                 foreach (IEditableObject obj in GetObjects())
                     obj.Draw(control, pass, this);
 
-                foreach (AbstractGlDrawable obj in staticObjects)
+                foreach (AbstractGlDrawable obj in StaticObjects)
                     obj.Draw(control, pass);
 
             }
@@ -283,7 +283,7 @@ namespace GL_EditorFramework.EditorDrawables
             this.control = control;
             foreach (IEditableObject obj in GetObjects())
                 obj.Prepare(control);
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
                 obj.Prepare(control);
         }
 
@@ -292,7 +292,7 @@ namespace GL_EditorFramework.EditorDrawables
             this.control = control;
             foreach (IEditableObject obj in GetObjects())
                 obj.Prepare(control);
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
                 obj.Prepare(control);
         }
 
@@ -302,7 +302,7 @@ namespace GL_EditorFramework.EditorDrawables
             foreach (IEditableObject obj in GetObjects())
                 if (obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
                     var += obj.GetPickableSpan();
-            foreach (AbstractGlDrawable obj in staticObjects)
+            foreach (AbstractGlDrawable obj in StaticObjects)
                 var += obj.GetPickableSpan();
             return var;
         }

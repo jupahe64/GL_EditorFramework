@@ -82,7 +82,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public virtual bool ProvidesProperty(EditorSceneBase scene) => false;
 
-        public virtual IPropertyProvider GetPropertyProvider(EditorSceneBase scene) => null;
+        public virtual IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => null;
 
         public struct BoundingBox
         {
@@ -241,7 +241,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         bool ProvidesProperty(EditorSceneBase scene);
 
-        IPropertyProvider GetPropertyProvider(EditorSceneBase scene);
+        IObjectUIProvider GetPropertyProvider(EditorSceneBase scene);
 
         void ListChanged(IList list);
     }

@@ -83,11 +83,11 @@
     <Compile Include="Abstract Classes\AbstractEventHandlingObj.cs" />
     <Compile Include="Abstract Classes\AbstractGlDrawable.cs" />
     <Compile Include="Abstract Classes\AbstractPropertyContainer.cs" />
-    <Compile Include="ObjectPropertyControl.cs">
+    <Compile Include="ObjectUIControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ObjectPropertyControl.Designer.cs">
-      <DependentUpon>ObjectPropertyControl.cs</DependentUpon>
+    <Compile Include="ObjectUIControl.Designer.cs">
+      <DependentUpon>ObjectUIControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -96,6 +96,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Renderers.cs" />
+    <Compile Include="SceneListView.Designer.cs">
+      <DependentUpon>SceneListView.cs</DependentUpon>
+    </Compile>
     <Compile Include="SceneListView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -105,8 +108,8 @@
     <Content Include="GL_Core\Resources\TextureSheet.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ObjectPropertyControl.resx">
-      <DependentUpon>ObjectPropertyControl.cs</DependentUpon>
+    <EmbeddedResource Include="ObjectUIControl.resx">
+      <DependentUpon>ObjectUIControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

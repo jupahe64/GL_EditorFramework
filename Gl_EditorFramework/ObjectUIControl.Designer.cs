@@ -1,6 +1,6 @@
 ﻿namespace GL_EditorFramework
 {
-    partial class ObjectPropertyControl
+    partial class ObjectUIControl
     {
         /// <summary> 
         /// Required designer variable.
