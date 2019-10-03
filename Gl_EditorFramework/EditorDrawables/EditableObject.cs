@@ -29,8 +29,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         public abstract bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively);
 
-        public abstract bool IsSelected();
-
         public abstract bool IsSelected(int partIndex);
 
         public abstract void GetSelectionBox(ref BoundingBox boundingBox);
@@ -175,8 +173,6 @@ namespace GL_EditorFramework.EditorDrawables
         bool Visible { get; set; }
 
         bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively);
-
-        bool IsSelected();
 
         bool IsSelected(int partIndex);
 

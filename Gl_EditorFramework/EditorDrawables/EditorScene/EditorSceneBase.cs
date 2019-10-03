@@ -140,13 +140,158 @@ namespace GL_EditorFramework.EditorDrawables
         }
 
         /// <summary>
+        /// Defines how the selection behaves to just added objects
+        /// </summary>
+        public enum SelectionBehavior
+        {
+            /// <summary>
+            /// Adds all added objects to the selection
+            /// </summary>
+            ADD,
+            /// <summary>
+            /// Only Selects the Added objects
+            /// </summary>
+            CHANGE,
+            /// <summary>
+            /// Keeps all added objects unselected
+            /// </summary>
+            KEEP
+        }
+
+        /// <summary>
         /// Adds one or more objects to a list, this action is undoable
         /// </summary>
         /// <param name="list">The list the objects are added to</param>
         /// <param name="objs">The objects which are added to the list</param>
         public void Add(IList list, params IEditableObject[] objs)
         {
-            Add(list, list == CurrentList, objs);
+            Add(list, SelectionBehavior.CHANGE, objs);
+        }
+
+        /// <summary>
+        /// Adds one or more objects to a list, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are added to</param>
+        /// <param name="objs">The objects which are added to the list</param>
+        /// /// <param name="selectionBehavior">Defines how the selection behaves after adding the objects</param>
+        public void Add(IList list, SelectionBehavior selectionBehavior, params IEditableObject[] objs)
+        {
+            switch (selectionBehavior)
+            {
+                case SelectionBehavior.ADD:
+                    uint var = REDRAW_PICKING;
+
+                    foreach (IEditableObject obj in objs)
+                    {
+                        list.Add(obj);
+                        var |= obj.SelectDefault(control, SelectedObjects);
+                    }
+
+                    UpdateSelection(var);
+                    break;
+
+                case SelectionBehavior.CHANGE:
+                    var = REDRAW_PICKING;
+                    foreach (IEditableObject selected in SelectedObjects)
+                    {
+                        var |= selected.DeselectAll(control, null);
+                    }
+                    SelectedObjects.Clear();
+
+                    foreach (IEditableObject obj in objs)
+                    {
+                        list.Add(obj);
+                        var |= obj.SelectDefault(control, SelectedObjects);
+                    }
+
+                    UpdateSelection(var);
+                    break;
+
+                case SelectionBehavior.KEEP:
+                    foreach (IEditableObject obj in objs)
+                        list.Add(obj);
+
+                    control.Refresh();
+                    control.DrawPicking();
+                    break;
+            }
+
+            foreach (IEditableObject obj in GetObjects())
+                obj.ListChanged(list);
+
+            AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
+        }
+
+        /// <summary>
+        /// Inserts one or more objects into a list at a specified index, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are inserted into</param>
+        /// <param name="objs">The objects which are inserted into the list</param>
+        /// <param name="index">The index at which the objects are inserted</param>
+        /// <param name="selectionBehavior">Defines how the selection behaves after inserting the objects</param>
+        public void InsertAt(IList list, int index, params IEditableObject[] objs)
+        {
+            InsertAt(list, index, SelectionBehavior.CHANGE, objs);
+        }
+
+        /// <summary>
+        /// Inserts one or more objects into a list at a specified index, this action is undoable
+        /// </summary>
+        /// <param name="list">The list the objects are inserted into</param>
+        /// <param name="objs">The objects which are inserted into the list</param>
+        /// <param name="index">The index at which the objects are inserted</param>
+        /// <param name="selectionBehavior">Defines how the selection behaves after inserting the objects</param>
+        public void InsertAt(IList list, int index, SelectionBehavior selectionBehavior, params IEditableObject[] objs)
+        {
+            switch (selectionBehavior)
+            {
+                case SelectionBehavior.ADD:
+                    uint var = REDRAW_PICKING;
+                    foreach (IEditableObject obj in objs)
+                    {
+                        list.Insert(index, obj);
+
+                        var |= obj.SelectDefault(control, SelectedObjects);
+                        index++;
+                    }
+
+                    UpdateSelection(var);
+                    break;
+
+                case SelectionBehavior.CHANGE:
+                    var = REDRAW_PICKING;
+                    foreach (IEditableObject selected in SelectedObjects)
+                    {
+                        var |= selected.DeselectAll(control, null);
+                    }
+                    SelectedObjects.Clear();
+
+                    foreach (IEditableObject obj in objs)
+                    {
+                        list.Insert(index, obj);
+
+                        var |= obj.SelectDefault(control, SelectedObjects);
+                        index++;
+                    }
+
+                    UpdateSelection(var);
+                    break;
+
+                case SelectionBehavior.KEEP:
+                    foreach (IEditableObject obj in objs)
+                    {
+                        list.Insert(index, obj);
+                        index++;
+                    }
+                    control.Refresh();
+                    control.DrawPicking();
+                    break;
+            }
+
+            foreach (IEditableObject obj in GetObjects())
+                obj.ListChanged(list);
+
+            AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
         }
 
         /// <summary>
@@ -156,107 +301,23 @@ namespace GL_EditorFramework.EditorDrawables
         /// <param name="objs">The objects which are deleted from the list</param>
         public void Delete(IList list, params IEditableObject[] objs)
         {
-            Delete(list, list == CurrentList, objs);
-        }
+            uint var = 0;
 
-        /// <summary>
-        /// Inserts one or more objects into a list at a specified index, this action is undoable
-        /// </summary>
-        /// <param name="list">The list the objects are inserted into</param>
-        /// <param name="objs">The objects which are inserted into the list</param>
-        /// <param name="index">The index at which the objects are inserted</param>
-        public void InsertAt(IList list, int index, params IEditableObject[] objs)
-        {
-            InsertAt(list, list == CurrentList, index, objs);
-        }
+            RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objs.Length];
 
-        /// <summary>
-        /// Adds one or more objects to a list, this action is undoable
-        /// </summary>
-        /// <param name="list">The list the objects are added to</param>
-        /// <param name="objs">The objects which are added to the list</param>
-        public void Add(IList list, bool updateSelection, params IEditableObject[] objs)
-        {
-            if (updateSelection)
+            int index = 0;
+
+            foreach (IEditableObject obj in objs)
             {
-                uint var = 0;
-
-                foreach (IEditableObject selected in SelectedObjects)
-                {
-                    var |= selected.DeselectAll(control, null);
-                }
-                SelectedObjects.Clear();
-
-                foreach (IEditableObject obj in objs)
-                    list.Add(obj);
-
-                foreach (IEditableObject obj in GetObjects())
-                    obj.ListChanged(list);
-
-                foreach (IEditableObject obj in objs)
-                    var |= obj.SelectDefault(control, SelectedObjects);
-
-                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo []{new RevertableAddition.AddInListInfo(objs, list)}, new RevertableAddition.SingleAddInListInfo[0]));
-
-                UpdateSelection(var);
-            }
-            else
-            {
-                foreach (IEditableObject obj in objs)
-                    list.Add(obj);
-
-                foreach (IEditableObject obj in GetObjects())
-                    obj.ListChanged(list);
-
-                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
-            }
-        }
-
-        /// <summary>
-        /// Deletes one or more objects from a list, this action is undoable
-        /// </summary>
-        /// <param name="list">The list the objects are deleted from</param>
-        /// <param name="objs">The objects which are deleted from the list</param>
-        public void Delete(IList list, bool updateSelection, params IEditableObject[] objs)
-        {
-            if (updateSelection)
-            {
-                uint var = 0;
-
-                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objs.Length];
-
-                int index = 0;
-
-                foreach (IEditableObject obj in objs)
-                {
-                    infos[index] = new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj));
-                    list.Remove(obj);
-                    var |= obj.DeselectAll(control, SelectedObjects);
-                    index++;
-                }
-
-                AddToUndo(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
-
-                UpdateSelection(var);
-            }
-            else
-            {
-                RevertableDeletion.DeleteInfo[] infos = new RevertableDeletion.DeleteInfo[objs.Length];
-
-                int index = 0;
-
-                foreach (IEditableObject obj in objs)
-                {
-                    infos[index] = new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj));
-                    list.Remove(obj);
-                    index++;
-                }
-
-                AddToUndo(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
+                infos[index] = new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj));
+                list.Remove(obj);
+                var |= obj.DeselectAll(control, SelectedObjects);
+                index++;
             }
 
-            foreach (IEditableObject obj in GetObjects())
-                obj.ListChanged(list);
+            AddToUndo(new RevertableDeletion(new RevertableDeletion.DeleteInListInfo[] { new RevertableDeletion.DeleteInListInfo(infos, list) }, new RevertableDeletion.SingleDeleteInListInfo[0]));
+
+            UpdateSelection(var);
         }
 
         public class DeletionManager
@@ -317,49 +378,6 @@ namespace GL_EditorFramework.EditorDrawables
             UpdateSelection(var);
 
             AddToUndo(new RevertableDeletion(infos.ToArray(), singleInfos.ToArray()));
-        }
-
-        /// <summary>
-        /// Inserts one or more objects into a list at a specified index, this action is undoable
-        /// </summary>
-        /// <param name="list">The list the objects are inserted into</param>
-        /// <param name="objs">The objects which are inserted into the list</param>
-        /// <param name="index">The index at which the objects are inserted</param>
-        /// <param name="updateSelection">weither to update the selection to include </param>
-        public void InsertAt(IList list, bool updateSelection, int index, params IEditableObject[] objs)
-        {
-            if (updateSelection)
-            {
-                uint var = 0;
-
-                foreach (IEditableObject selected in SelectedObjects)
-                {
-                    var |= selected.DeselectAll(control, null);
-                }
-                SelectedObjects.Clear();
-
-                foreach (IEditableObject obj in objs)
-                {
-                    list.Insert(index, obj);
-                    
-                    var |= obj.SelectDefault(control, SelectedObjects);
-                    index++;
-                }
-
-                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
-
-                UpdateSelection(var);
-            }
-            else
-            {
-                foreach (IEditableObject obj in objs)
-                {
-                    list.Insert(index, obj);
-                    index++;
-                }
-
-                AddToUndo(new RevertableAddition(new RevertableAddition.AddInListInfo[] { new RevertableAddition.AddInListInfo(objs, list) }, new RevertableAddition.SingleAddInListInfo[0]));
-            }
         }
 
         public void ReorderObjects(IList list, int originalIndex, int count, int offset)

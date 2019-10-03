@@ -26,8 +26,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         protected bool Selected = false;
 
-        public override bool IsSelected() => Selected;
-
         public override bool IsSelected(int partIndex) => Selected;
 
         protected static Vector4 Color = new Vector4(0f, 0.25f, 1f, 1f);

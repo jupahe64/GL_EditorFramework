@@ -40,7 +40,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             this.pathPoints = pathPoints;
             foreach (PathPoint point in pathPoints)
-                point.path = this;
+                point.Path = this;
         }
 
         public override void ListChanged(IList list)
@@ -48,7 +48,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (list == pathPoints)
             {
                 foreach (PathPoint point in pathPoints)
-                    point.path = this;
+                    point.Path = this;
             }
         }
 
@@ -1010,11 +1010,6 @@ namespace GL_EditorFramework.EditorDrawables
             throw new Exception("Invalid partIndex");
         }
 
-        public override bool IsSelected()
-        {
-            return false;
-        }
-
         public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
         {
             selectedObjects?.Add(this);
@@ -1368,7 +1363,7 @@ namespace GL_EditorFramework.EditorDrawables
                 this.controlPoint2 = controlPoint2;
             }
 
-            public Path path { get; internal set; }
+            public Path Path { get; internal set; }
 
             public static System.Reflection.FieldInfo FI_position => typeof(PathPoint).GetField("position");
             public Vector3 position;
@@ -1432,8 +1427,6 @@ namespace GL_EditorFramework.EditorDrawables
                 throw new Exception("Invalid partIndex");
             }
 
-            public override bool IsSelected() => Selected;
-
             public override bool IsSelected(int partIndex) => Selected;
 
             public override void GetSelectionBox(ref BoundingBox boundingBox)
@@ -1462,7 +1455,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = true;
                 selectedObjects?.Add(this);
-                selectedObjects?.Add(path);
+                selectedObjects?.Add(Path);
                 return REDRAW;
             }
 
@@ -1470,7 +1463,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = true;
                 selectedObjects?.Add(this);
-                selectedObjects?.Add(path);
+                selectedObjects?.Add(Path);
                 return REDRAW;
             }
 
@@ -1480,7 +1473,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Selected = true;
                     selectedObjects?.Add(this);
-                    selectedObjects?.Add(path);
+                    selectedObjects?.Add(Path);
                 }
                 return REDRAW;
             }
@@ -1491,7 +1484,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Selected = false;
                     selectedObjects?.Remove(this);
-                    selectedObjects?.Remove(path);
+                    selectedObjects?.Remove(Path);
                 }
                 return REDRAW;
             }
@@ -1500,7 +1493,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 Selected = false;
                 selectedObjects?.Remove(this);
-                selectedObjects?.Remove(path);
+                selectedObjects?.Remove(Path);
                 return REDRAW;
             }
 
