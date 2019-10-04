@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using GL_EditorFramework;
 using GL_EditorFramework.EditorDrawables;
 using OpenTK;
+using static GL_EditorFramework.Framework;
 using WinInput = System.Windows.Input;
 
 namespace Example
@@ -143,13 +144,21 @@ namespace Example
             //add event handlers to sceneListView
             sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
             sceneListView1.ItemsMoved += SceneListView1_ItemsMoved;
+            sceneListView1.ListExited += SceneListView1_ListExited;
 
             //auto select the 5th object for testing purposes
             scene.ToogleSelected(scene.objects[4], true);
             Scene_SelectionChanged(this, null);
         }
 
-        private void Scene_ListEntered(object sender, ListEnteredEventArgs e)
+        private void SceneListView1_ListExited(object sender, ListEventArgs e)
+        {
+            scene.CurrentList = e.List;
+            //fetch availible properties for list
+            objectUIControl1.CurrentObjectUIProvider = scene.GetObjectUIProvider();
+        }
+
+        private void Scene_ListEntered(object sender, ListEventArgs e)
         {
             sceneListView1.EnterList(e.List);
             if (e.List as List<Path.PathPoint> != null)

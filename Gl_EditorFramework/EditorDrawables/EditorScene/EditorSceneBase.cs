@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditableObject;
 using System.Collections;
+using static GL_EditorFramework.Framework;
 
 namespace GL_EditorFramework.EditorDrawables
 {
@@ -36,17 +37,6 @@ namespace GL_EditorFramework.EditorDrawables
         }
     }
 
-    public delegate void ListEnteredEventHandler(object sender, ListEnteredEventArgs e);
-
-    public class ListEnteredEventArgs : EventArgs
-    {
-        public IList List { get; set; }
-        public ListEnteredEventArgs(IList list)
-        {
-            List = list;
-        }
-    }
-
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
         protected abstract IEnumerable<IEditableObject> GetObjects();
@@ -66,7 +56,7 @@ namespace GL_EditorFramework.EditorDrawables
         public event EventHandler ObjectsMoved;
         public event ListChangedEventHandler ListChanged;
         public event DictChangedEventHandler DictChanged;
-        public event ListEnteredEventHandler ListEntered;
+        public event ListEventHandler ListEntered;
 
         protected float draggingDepth;
 
@@ -93,7 +83,7 @@ namespace GL_EditorFramework.EditorDrawables
         public void EnterList(IList list)
         {
             CurrentList = list;
-            ListEntered?.Invoke(this, new ListEnteredEventArgs(list));
+            ListEntered?.Invoke(this, new ListEventArgs(list));
         }
 
         public void Refresh() => control.Refresh();

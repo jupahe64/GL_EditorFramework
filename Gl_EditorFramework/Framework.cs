@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,17 @@ namespace GL_EditorFramework
         public static float TWO_PI = (float)Math.PI*2;
         public static float PI = (float)Math.PI;
         public static float HALF_PI = (float)Math.PI/2;
+
+        public delegate void ListEventHandler(object sender, ListEventArgs e);
+
+        public class ListEventArgs : EventArgs
+        {
+            public IList List { get; set; }
+            public ListEventArgs(IList list)
+            {
+                List = list;
+            }
+        }
 
         public static Quaternion QFromEulerAnglesDeg(Vector3 eulerAngles) => new Quaternion(
             (float)(Math.PI * eulerAngles.X / 180.0),

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using System.Collections;
+using static GL_EditorFramework.Framework;
 
 namespace GL_EditorFramework
 {
@@ -23,7 +24,7 @@ namespace GL_EditorFramework
         public event SelectionChangedEventHandler SelectionChanged;
         public event ItemsMovedEventHandler ItemsMoved;
         public event EventHandler CurrentListChanged;
-        public event HandledEventHandler ListExit;
+        public event ListEventHandler ListExited;
 
         int fontHeight;
 
@@ -55,7 +56,6 @@ namespace GL_EditorFramework
             {
                 CurrentRootListName = listName;
                 listStack.Clear();
-                listStack.Push(RootLists[listName]);
                 listView.CurrentList = RootLists[listName];
             }
         }
@@ -78,7 +78,7 @@ namespace GL_EditorFramework
             if (listStack == null)
                 return;
 
-            listStack.Push(list);
+            listStack.Push(listView.CurrentList);
             listView.CurrentList = list;
 
             rootListChangePanel.Visible = false;
@@ -92,8 +92,8 @@ namespace GL_EditorFramework
         {
             if (listStack.Count==0)
                 return;
-
-            listView.CurrentList = RootLists[CurrentRootListName];
+            
+            listView.CurrentList = listStack.Pop();
 
             rootListChangePanel.Visible = true;
             btnBack.Visible = false;
@@ -279,10 +279,9 @@ namespace GL_EditorFramework
 
         private void BtnBack_Click(object sender, EventArgs e)
         {
-            HandledEventArgs args = new HandledEventArgs();
-            ListExit?.Invoke(this, args);
-            if(!args.Handled)
-                ExitList();
+            ExitList();
+            ListEventArgs args = new ListEventArgs(listView.CurrentList);
+            ListExited?.Invoke(this, args);
         }
     }
 
