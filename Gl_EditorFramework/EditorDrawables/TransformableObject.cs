@@ -173,9 +173,9 @@ namespace GL_EditorFramework.EditorDrawables
                     obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
 
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
-                    rot = control.Vector3Input(rot, "Rotation", 45, 18);
+                    rot = control.Vector3Input(rot, "Rotation", 45, 18, -180, 180, true);
                 else
-                    rot = control.Vector3Input(rot, "Rotation", 5, 2);
+                    rot = control.Vector3Input(rot, "Rotation", 5, 2, -180, 180, true);
 
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                     obj.scale = control.Vector3Input(obj.scale, "Scale", 1, 16);

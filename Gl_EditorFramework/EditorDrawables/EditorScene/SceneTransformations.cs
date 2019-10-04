@@ -306,13 +306,14 @@ namespace GL_EditorFramework.EditorDrawables
 
                 vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
 
+                //determine weithert scrolling should be allowed based on the current axisRestriction and camera orientation
                 if (axisRestriction == AxisRestriction.NONE ||
-                    (axisRestriction == AxisRestriction.X && (Math.Round(vec.X, 7) == 1 || Math.Round(vec.X, 7) == -1)) ||
-                    (axisRestriction == AxisRestriction.Y && (Math.Round(vec.Y, 7) == 1 || Math.Round(vec.Y, 7) == -1)) ||
-                    (axisRestriction == AxisRestriction.Z && (Math.Round(vec.Z, 7) == 1 || Math.Round(vec.Z, 7) == -1)) ||
-                    (axisRestriction == AxisRestriction.YZ && Math.Round(vec.X, 7) == 0) ||
-                    (axisRestriction == AxisRestriction.XZ && Math.Round(vec.Y, 7) == 0) ||
-                    (axisRestriction == AxisRestriction.YZ && Math.Round(vec.Z, 7) == 0)
+                    (axisRestriction == AxisRestriction.X && (Math.Round(vec.X, 7) == 1 || Math.Round(vec.X, 7) == -1)) || //camera facing left/right
+                    (axisRestriction == AxisRestriction.Y && (Math.Round(vec.Y, 7) == 1 || Math.Round(vec.Y, 7) == -1)) || //camera facing up/down
+                    (axisRestriction == AxisRestriction.Z && (Math.Round(vec.Z, 7) == 1 || Math.Round(vec.Z, 7) == -1)) || //camera facing forward/backward
+                    (axisRestriction == AxisRestriction.YZ && Math.Round(vec.X, 7) == 0) || //camera facing up/down/forward/backward
+                    (axisRestriction == AxisRestriction.XZ && Math.Round(vec.Y, 7) == 0) || //camera facing left/right/forward/backward
+                    (axisRestriction == AxisRestriction.YZ && Math.Round(vec.Z, 7) == 0)    //camera facing left/right/up/down
                     )
                 {
                     allowScrolling = true;

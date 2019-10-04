@@ -331,7 +331,22 @@ namespace GL_EditorFramework
 
         #region Availible UI Elements
         float valueBeforeDrag;
-        public float NumberInput(float number, string name, float increment = 1, int incrementDragDivider = 8)
+
+        private static float Clamped(float value, float min, float max, bool wrapAround)
+        {
+            if (wrapAround)
+            {
+                float span = max - min;
+                return min + (((value - min) % span + span) % span);
+            }
+            else
+            {
+                return Math.Min(Math.Max(min, value), max);
+            }
+        }
+
+        public float NumberInput(float number, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
             switch (eventType)
             {
@@ -380,7 +395,7 @@ namespace GL_EditorFramework
 
                     currentY += 20;
                     index++;
-                    return number;
+                    return Clamped(number, min, max, wrapAround);
 
                 case EventType.DRAG_END:
                     if (dragIndex == index)
@@ -412,7 +427,7 @@ namespace GL_EditorFramework
 
                     currentY += 20;
                     index++;
-                    return number;
+                    return Clamped(number, min, max, wrapAround);
 
                 case EventType.DRAG_ABORT:
                     if (dragIndex == index)
@@ -449,7 +464,8 @@ namespace GL_EditorFramework
             "Z"
         };
 
-        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1, int incrementDragDivider = 8)
+        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
             int width = (usableWidth - 20) / 3;
 
@@ -516,7 +532,7 @@ namespace GL_EditorFramework
                         {
                             changeTypes |= VALUE_CHANGED;
 
-                            vector[i] = valueBeforeDrag + (mousePos.X - dragStarPos.X) / incrementDragDivider * increment;
+                            vector[i] = Clamped(valueBeforeDrag + (mousePos.X - dragStarPos.X) / incrementDragDivider * increment, min, max, wrapAround);
                         }
 
                         if (focusedIndex == index)
@@ -560,7 +576,7 @@ namespace GL_EditorFramework
                         if (focusedIndex == index && float.TryParse(textBox1.Text, out float parsed))
                         {
                             changeTypes |= VALUE_SET;
-                            vector[i] = parsed;
+                            vector[i] = Clamped(parsed, min, max, wrapAround);
                         }
                         DrawField(15 + width * i, 30 + width * i, currentY, width - 20, coordNames[i], vector[i].ToString(),
                             (focusedIndex == index) ? SystemBrushes.ActiveCaption : SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight);
@@ -729,8 +745,12 @@ namespace GL_EditorFramework
     /// </summary>
     public interface IObjectUIControl
     {
-        float NumberInput(float number, string name, float increment = 1f, int incrementDragDivider = 8);
-        OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, float increment = 1f, int incrementDragDivider = 8);
+        float NumberInput(float number, string name, 
+            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+
+        OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
+            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+
         bool Button(string name);
         bool Link(string name);
         bool CheckBox(string name, bool isChecked);
