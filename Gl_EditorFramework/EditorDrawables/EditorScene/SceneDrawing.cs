@@ -31,7 +31,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         protected int xrayPickingIndex;
 
-        public bool XRaySelection = true;
+        public bool XRaySelection = false;
 
         protected bool drawSelection = false;
         protected bool drawOthers = false;
