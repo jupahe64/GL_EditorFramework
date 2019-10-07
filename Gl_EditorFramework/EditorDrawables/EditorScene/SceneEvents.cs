@@ -396,7 +396,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool selectionHasChanged = false;
 
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+            if ((CurrentAction != NoAction || ExclusiveAction != NoAction) && e.KeyCode != Keys.V)
             {
                 CurrentAction.KeyDown(e);
                 ExclusiveAction.KeyDown(e);
@@ -484,11 +484,8 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 var = REDRAW;
             }
-            else if (e.Control && e.KeyCode == Keys.X) {
-                XRaySelection = XRaySelection ? false : true ;
-                control.Refresh();
-                var = REDRAW_PICKING;
-            }
+            else if (e.KeyCode == Keys.V)
+                XRaySelection = true;
 
             foreach (IEditableObject obj in GetObjects())
             {
@@ -508,6 +505,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint KeyUp(KeyEventArgs e, GL_ControlBase control)
         {
+            if (e.KeyCode == Keys.V)
+                XRaySelection = false;
+
             uint var = 0;
             foreach (IEditableObject obj in GetObjects())
             {
