@@ -484,6 +484,11 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 var = REDRAW;
             }
+            else if (e.Control && e.KeyCode == Keys.X) {
+                XRaySelection = XRaySelection ? false : true ;
+                control.Refresh();
+                var = REDRAW_PICKING;
+            }
 
             foreach (IEditableObject obj in GetObjects())
             {
