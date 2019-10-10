@@ -67,7 +67,7 @@ namespace GL_EditorFramework
     {
         public static Vector3 ToEulerAnglesDeg(this Quaternion q) => new Vector3(
             (float)(180 * Math.Atan2(-2 * (q.Y * q.Z - q.W * q.X), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z) / Math.PI),
-            (float)(180 * Math.Asin(2 * (q.X * q.Z + q.W * q.Y)) / Math.PI),
+            (float)(180 * Math.Asin(Math.Min(Math.Max(-1,2 * (q.X * q.Z + q.W * q.Y)),1)) / Math.PI),
             (float)(180 * Math.Atan2(-2 * (q.X * q.Y - q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z) / Math.PI)
         );
     }
