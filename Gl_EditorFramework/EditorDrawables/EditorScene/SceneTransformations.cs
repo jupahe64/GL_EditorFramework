@@ -45,11 +45,33 @@ namespace GL_EditorFramework.EditorDrawables
                 return newPos;
             }
 
-            public virtual Quaternion NewRot(Quaternion rot) => rot;
+            public virtual Matrix3 NewRot(Matrix3 rot) => rot;
 
-            public Quaternion NewRot(Quaternion rot, out Quaternion? prevRot)
+            public Vector3 NewRot(Vector3 rot, out Vector3? prevRot)
             {
-                Quaternion newRot = NewRot(rot);
+                Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(rot);
+
+                Matrix3 newRot = NewRot(rotMtx);
+                if (newRot == rotMtx)
+                {
+                    prevRot = null;
+                    return rot;
+                }
+                else
+                {
+                    prevRot = rot;
+                    
+                    return newRot.ExtractDegreeEulerAngles()+new Vector3(
+                        (float)Math.Round(rot.X / 360f) * 360,
+                        (float)Math.Round(rot.Y / 360f) * 360,
+                        (float)Math.Round(rot.Z / 360f) * 360
+                        );
+                }
+            }
+
+            public Matrix3 NewRot(Matrix3 rot, out Matrix3? prevRot)
+            {
+                Matrix3 newRot = NewRot(rot);
                 if (newRot == rot)
                     prevRot = null;
                 else
@@ -417,9 +439,9 @@ namespace GL_EditorFramework.EditorDrawables
 
             Point centerPoint;
 
-            Quaternion deltaRotation;
+            Matrix3 deltaRotation;
 
-            public override Quaternion NewRot(Quaternion rot) => deltaRotation * rot;
+            public override Matrix3 NewRot(Matrix3 rot) =>  rot * deltaRotation;
 
             public override Vector3 NewIndividualPos(Vector3 pos) => Vector3.Transform(pos, deltaRotation);
 
@@ -538,7 +560,7 @@ namespace GL_EditorFramework.EditorDrawables
                 else if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                     angle = Math.Round(angle / eighthPI) * eighthPI;
 
-                deltaRotation = Quaternion.FromAxisAngle(vec, (float)angle);
+                deltaRotation = Matrix3.CreateFromAxisAngle(vec, (float)angle);
                 
             }
 
@@ -908,7 +930,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public class ResetRot : AbstractTransformAction
         {
-            public override Quaternion NewRot(Quaternion rot) => Quaternion.Identity;
+            public override Matrix3 NewRot(Matrix3 rot) => Matrix3.Identity;
         }
 
         public class ResetScale : AbstractTransformAction
@@ -919,7 +941,7 @@ namespace GL_EditorFramework.EditorDrawables
         public class PropertyChanges : AbstractTransformAction
         {
             public Vector3 translation = Vector3.Zero;
-            public Quaternion? rotOverride = null;
+            public Matrix3? rotOverride = null;
             public Vector3? scaleOverride = null;
 
             public override Vector3 NewPos(Vector3 pos)
@@ -927,7 +949,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return pos+translation;
             }
 
-            public override Quaternion NewRot(Quaternion rot)
+            public override Matrix3 NewRot(Matrix3 rot)
             {
                 if (rotOverride.HasValue)
                     return rotOverride.Value;

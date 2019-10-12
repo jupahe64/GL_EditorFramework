@@ -26,11 +26,10 @@ namespace GL_EditorFramework
             }
         }
 
-        public static Quaternion QFromEulerAnglesDeg(Vector3 eulerAngles) => new Quaternion(
-            (float)(Math.PI * eulerAngles.X / 180.0),
-            (float)(Math.PI * eulerAngles.Y / 180.0),
-            (float)(Math.PI * eulerAngles.Z / 180.0)
-        );
+        public static Matrix3 Mat3FromEulerAnglesDeg(Vector3 eulerAngles) =>
+            Matrix3.CreateRotationX(PI * eulerAngles.X / 180f) *
+            Matrix3.CreateRotationY(PI * eulerAngles.Y / 180f) *
+            Matrix3.CreateRotationZ(PI * eulerAngles.Z / 180f);
 
         public static void Initialize()
         {
@@ -65,10 +64,32 @@ namespace GL_EditorFramework
 
     public static class Extensions
     {
-        public static Vector3 ToEulerAnglesDeg(this Quaternion q) => new Vector3(
-            (float)(180 * Math.Atan2(-2 * (q.Y * q.Z - q.W * q.X), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z) / Math.PI),
-            (float)(180 * Math.Asin(Math.Min(Math.Max(-1,2 * (q.X * q.Z + q.W * q.Y)),1)) / Math.PI),
-            (float)(180 * Math.Atan2(-2 * (q.X * q.Y - q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z) / Math.PI)
-        );
+        public static Vector3 ExtractDegreeEulerAngles(this Matrix3 mtx)
+        {
+            if (mtx.M13 - 1.0 < -0.0001)
+            {
+                if (mtx.M13 + 1.0 > 0.0001)
+                {
+                    return new Vector3(
+                         180f * (float)Math.Atan2(mtx.M23, mtx.M33) / MathHelper.Pi,
+                        -180f * (float)Math.Asin(mtx.M13)           / MathHelper.Pi,
+                         180f * (float)Math.Atan2(mtx.M12, mtx.M11) / MathHelper.Pi);
+                }
+                else
+                {
+                    return new Vector3(
+                        180f * (float)Math.Atan2(mtx.M21, mtx.M31),
+                        90,
+                        0f);
+                }
+            }
+            else
+            {
+                return new Vector3(
+                        180f * (float)Math.Atan2(mtx.M21, mtx.M31),
+                        90,
+                        0f);
+            }
+        }
     }
 }

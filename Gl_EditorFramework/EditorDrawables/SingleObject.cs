@@ -215,7 +215,7 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
+        public override void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
         {
             prevPos = null;
             prevRot = null;

@@ -71,8 +71,6 @@ namespace GL_EditorFramework.EditorDrawables
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, pathPointBuffer);
 
-            Quaternion rotation = editorScene.CurrentAction.NewRot(Quaternion.Identity);
-
             Vector3 scale = editorScene.CurrentAction.NewScale(Vector3.One);
 
             float[] data = new float[pathPoints.Count * 12]; //px, py, pz, pCol, cp1x, cp1y, cp1z, cp1Col,  cp2x, cp2y, cp2z, cp2Col
@@ -127,7 +125,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint1 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.position) + editorScene.CurrentAction.NewIndividualPos(point.controlPoint1 * scale);
                     else
                         pos = point.position + point.controlPoint1;
 
@@ -151,7 +149,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint2 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.position) + editorScene.CurrentAction.NewIndividualPos(point.controlPoint2 * scale);
                     else
                         pos = point.position + point.controlPoint2;
 
@@ -233,7 +231,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint1 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.position) + editorScene.CurrentAction.NewIndividualPos(point.controlPoint1 * scale);
                     else
                         pos = point.position + point.controlPoint1;
 
@@ -260,7 +258,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.position + point.controlPoint2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.position) + rotation * (point.controlPoint2 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.position) + editorScene.CurrentAction.NewIndividualPos(point.controlPoint2 * scale);
                     else
                         pos = point.position + point.controlPoint2;
 
@@ -304,8 +302,6 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             GL.Disable(EnableCap.Texture2D);
-
-            Quaternion rotation = editorScene.CurrentAction.NewRot(Quaternion.Identity);
 
             Vector3 scale = editorScene.CurrentAction.NewScale(Vector3.One);
 
@@ -364,7 +360,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + rotation * (scale * point.controlPoint1)));
+                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.controlPoint1)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
@@ -391,7 +387,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + rotation * (scale * point.controlPoint2)));
+                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.controlPoint2)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
@@ -443,7 +439,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + rotation * (scale * point.controlPoint1)));
+                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.controlPoint1)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
@@ -467,7 +463,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + rotation * (scale * point.controlPoint2)));
+                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.controlPoint2)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
@@ -1108,7 +1104,7 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int _part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
+        public override void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int _part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
         {
             _part--;
             foreach (PathPoint point in pathPoints)
@@ -1497,7 +1493,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return REDRAW;
             }
 
-            public override void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int _part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
+            public override void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int _part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
             {
                 prevPos = null;
                 prevRot = null;

@@ -56,7 +56,7 @@ namespace GL_EditorFramework.EditorDrawables
         public abstract uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
         public abstract uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects);
 
-        public virtual void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale)
+        public virtual void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
         {
             prevPos = null;
             prevRot = null;
@@ -148,8 +148,8 @@ namespace GL_EditorFramework.EditorDrawables
         public struct LocalOrientation
         {
             public Vector3 Origin;
-            public Quaternion Rotation;
-            public LocalOrientation(Vector3 origin, Quaternion rotation)
+            public Matrix3 Rotation;
+            public LocalOrientation(Vector3 origin, Matrix3 rotation)
             {
                 Origin = origin;
                 Rotation = rotation;
@@ -158,7 +158,7 @@ namespace GL_EditorFramework.EditorDrawables
             public LocalOrientation(Vector3 origin)
             {
                 Origin = origin;
-                Rotation = Quaternion.Identity;
+                Rotation = Matrix3.Identity;
             }
         }
 
@@ -195,7 +195,7 @@ namespace GL_EditorFramework.EditorDrawables
         uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
         uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects);
 
-        void SetTransform(Vector3? pos, Quaternion? rot, Vector3? scale, int part, out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale);
+        void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale);
 
         void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos);
 

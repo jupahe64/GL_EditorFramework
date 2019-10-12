@@ -84,7 +84,7 @@ namespace GL_EditorFramework.EditorDrawables
                 for (int i = 0; i < posInfos.Length; i++)
                 {
                     posInfos[i].obj.SetTransform(posInfos[i].pos, null, null, posInfos[i].part, 
-                        out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale);
+                        out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale);
 
                     revertable.posInfos[i] = new PosInfo(
                         posInfos[i].obj,
@@ -135,7 +135,7 @@ namespace GL_EditorFramework.EditorDrawables
                 for (int i = 0; i < rotInfos.Length; i++)
                 {
                     rotInfos[i].obj.SetTransform(rotInfos[i].pos, rotInfos[i].rot, null, rotInfos[i].part,
-                        out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale);
+                        out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale);
 
                     revertable.rotInfos[i] = new RotInfo(
                         rotInfos[i].obj,
@@ -148,7 +148,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             struct RotInfo
             {
-                public RotInfo(IEditableObject obj, int part, Vector3? pos, Quaternion? rot)
+                public RotInfo(IEditableObject obj, int part, Vector3? pos, Vector3? rot)
                 {
                     this.obj = obj;
                     this.part = part;
@@ -159,7 +159,7 @@ namespace GL_EditorFramework.EditorDrawables
                 public readonly IEditableObject obj;
                 public readonly int part;
                 public readonly Vector3? pos;
-                public readonly Quaternion? rot;
+                public readonly Vector3? rot;
             }
         }
 
@@ -188,7 +188,7 @@ namespace GL_EditorFramework.EditorDrawables
                 for (int i = 0; i < scaleInfos.Length; i++)
                 {
                     scaleInfos[i].obj.SetTransform(scaleInfos[i].pos, null, scaleInfos[i].scale, scaleInfos[i].part,
-                        out Vector3? prevPos, out Quaternion? prevRot, out Vector3? prevScale);
+                        out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale);
 
                     revertable.scaleInfos[i] = new ScaleInfo(
                         scaleInfos[i].obj,
@@ -221,9 +221,9 @@ namespace GL_EditorFramework.EditorDrawables
             public readonly IEditableObject obj;
             public readonly int part;
             public readonly Vector3? position;
-            public readonly Quaternion? rotation;
+            public readonly Vector3? rotation;
             public readonly Vector3? scale;
-            public TransformChangeInfo(IEditableObject obj, int part, Vector3? position, Quaternion? rotation, Vector3? scale)
+            public TransformChangeInfo(IEditableObject obj, int part, Vector3? position, Vector3? rotation, Vector3? scale)
             {
                 this.obj = obj;
                 this.part = part;
@@ -248,7 +248,7 @@ namespace GL_EditorFramework.EditorDrawables
                 changedPosScales = 0;
             }
 
-            public void Add(IEditableObject obj, int part, Vector3? position, Quaternion? rotation, Vector3? scale)
+            public void Add(IEditableObject obj, int part, Vector3? position, Vector3? rotation, Vector3? scale)
             {
                 if (position.HasValue)
                     changedPositions++;
