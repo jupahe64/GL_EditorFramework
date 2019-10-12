@@ -113,7 +113,7 @@ namespace Example
             
             for (int i = 5; i<10000; i++)
             {
-                scene.objects.Add(obj = new TransformableObject(new Vector3(i,0,0), Quaternion.Identity, Vector3.One));
+                scene.objects.Add(obj = new TransformableObject(new Vector3(i,0,0), Vector3.Zero, Vector3.One));
             }
             #endregion
 
@@ -240,7 +240,7 @@ namespace Example
             }
             else
                 //add new TransformableObject to the scene
-                scene.Add(scene.CurrentList, new TransformableObject(Vector3.Zero, Quaternion.Identity, Vector3.One));
+                scene.Add(scene.CurrentList, new TransformableObject(Vector3.Zero, Vector3.Zero, Vector3.One));
 
 
             sceneListView1.UpdateAutoScrollHeight();

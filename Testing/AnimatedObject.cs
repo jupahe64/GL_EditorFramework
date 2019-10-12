@@ -10,6 +10,8 @@ using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
+using WinInput = System.Windows.Input;
 
 namespace Example
 {
@@ -221,6 +223,54 @@ namespace Example
                 control.DetachPickingRedrawer();
             }
             return 0;
+        }
+
+        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this, scene);
+
+        public new class PropertyProvider : IObjectUIProvider
+        {
+            Vector3 prevPos;
+            string testString = "";
+            SingleObject obj;
+            EditorSceneBase scene;
+            public PropertyProvider(SingleObject obj, EditorSceneBase scene)
+            {
+                this.obj = obj;
+                this.scene = scene;
+            }
+
+            public void DoUI(IObjectUIControl control)
+            {
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    obj.Position = control.Vector3Input(obj.Position, "Position", 1, 16);
+                else
+                    obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
+
+                testString = control.TextInput(testString, "Test");
+            }
+
+            public void OnValueChangeStart()
+            {
+                prevPos = obj.Position;
+            }
+
+            public void OnValueChanged()
+            {
+                scene.Refresh();
+            }
+
+            public void OnValueSet()
+            {
+                if (prevPos != obj.Position)
+                    scene.AddToUndo(new RevertableFieldChange(SingleObject.FI_Position, obj, prevPos));
+
+                scene.Refresh();
+            }
+
+            public void UpdateProperties()
+            {
+
+            }
         }
     }
 }

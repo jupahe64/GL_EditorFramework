@@ -288,7 +288,7 @@ namespace GL_EditorFramework
             changeTypes = 0;
         }
 
-        private void DrawField(int textX, int fieldX, int y, int width, string name, string value, Brush outline, Brush background)
+        private void DrawField(int textX, int fieldX, int y, int width, string name, string value, Brush outline, Brush background, bool isCentered = true)
         {
             g.FillRectangle(outline, fieldX, y, width, textBoxHeight + 2);
             g.FillRectangle(background, fieldX + 1, y + 1, width - 2, textBoxHeight);
@@ -301,19 +301,24 @@ namespace GL_EditorFramework
                 width - 2,
                 textBoxHeight));
 
-            g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
+            if(isCentered)
+                g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
                 fieldX + 1 + (width - (int)g.MeasureString(value, textBox1.Font).Width) / 2, y);
+            else
+                g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
+                fieldX + 1, y);
 
             g.ResetClip();
         }
 
-        private void PrepareFieldForInput(int fieldX, int y, int width, string name, string value)
+        private void PrepareFieldForInput(int fieldX, int y, int width, string name, string value, bool isNumericInput = true, bool isCentered = true)
         {
             int stringWidth = (int)g.MeasureString(name, textBox1.Font).Width;
 
             textBox1.Text = value;
             textBox1.Location = new Point(fieldX + 1, y + 1);
             textBox1.Width = width - 2;
+            textBox1.TextAlign = isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left;
             textBox1.Visible = true;
             textBox1.Focus();
 
@@ -321,6 +326,11 @@ namespace GL_EditorFramework
             int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
 
             textBox1.Select(Math.Max(0, num), 0);
+
+            if (isNumericInput)
+                textBox1.KeyPress += TextBox1_KeyPress;
+            else
+                textBox1.KeyPress -= TextBox1_KeyPress;
 
             focusedIndex = index;
 
@@ -717,6 +727,51 @@ namespace GL_EditorFramework
 
             return isChecked;
         }
+
+        public string TextInput(string text, string name)
+        {
+            switch (eventType)
+            {
+                case EventType.CLICK:
+                    if (new Rectangle(usableWidth - 109, currentY + 1, 98, textBoxHeight - 2).Contains(mousePos))
+                    {
+                        DrawField(15, usableWidth - 110, currentY, 100, name, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight, false);
+                        PrepareFieldForInput(usableWidth - 110, currentY, 100, name, text, false, false);
+                    }
+                    else
+                        DrawField(15, usableWidth - 110, currentY, 100, name, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    currentY += 20;
+                    index++;
+                    return text;
+
+                case EventType.LOST_FOCUS:
+                    if (focusedIndex == index)
+                    {
+                        changeTypes |= VALUE_SET;
+                        text = textBox1.Text;
+                    }
+
+                    if (focusedIndex == index)
+                        DrawField(15, usableWidth - 110, currentY, 100, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                    else
+                        DrawField(15, usableWidth - 110, currentY, 90, name, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    currentY += 20;
+                    index++;
+                    return text;
+
+                default: //EventType.DRAW
+                    if (focusedIndex == index)
+                        DrawField(15, usableWidth - 110, currentY, 100, name, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                    else
+                        DrawField(15, usableWidth - 110, currentY, 100, name, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    currentY += 20;
+                    index++;
+                    return text;
+            }
+        }
         #endregion
 
         static Color MixedColor(Color color1, Color color2)
@@ -754,6 +809,7 @@ namespace GL_EditorFramework
         bool Button(string name);
         bool Link(string name);
         bool CheckBox(string name, bool isChecked);
+        string TextInput(string text, string name);
     }
 
     /// <summary>
