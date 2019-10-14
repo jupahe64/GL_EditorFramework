@@ -231,6 +231,8 @@ namespace Example
         {
             Vector3 prevPos;
             string testString = "";
+            string testString2 = "";
+            float testNumber = 0;
             SingleObject obj;
             EditorSceneBase scene;
             public PropertyProvider(SingleObject obj, EditorSceneBase scene)
@@ -246,7 +248,16 @@ namespace Example
                 else
                     obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
 
+                control.PlainText("These are only for testing:");
                 testString = control.TextInput(testString, "Test");
+                testString2 = control.FullWidthTextInput(testString2, "Long Test");
+                testNumber = control.NumberInput(testNumber, "Test4");
+                control.NumberInput(0, "Test3.5");
+                control.Link("Just some Link");
+
+                control.DoubleButton("Add", "Remove");
+                control.TripleButton("Add", "Remove", "Insert");
+                control.QuadripleButton("+", "-", "*","/");
             }
 
             public void OnValueChangeStart()
