@@ -36,7 +36,7 @@ namespace Example
             #region Create scene and add objects to it
             scene = new EditorScene();
             
-            scene.objects.Add(obj = new AnimatedObject(new Vector3(0, -4, 0)));
+            scene.objects.Add(obj = new ExampleObject(new Vector3(0, -4, 0)));
 
             List<Path.PathPoint> pathPoints = new List<Path.PathPoint>
             {

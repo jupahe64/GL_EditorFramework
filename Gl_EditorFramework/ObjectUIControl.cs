@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Collections;
+using System.Collections.Specialized;
 
 namespace GL_EditorFramework
 {
@@ -74,8 +76,6 @@ namespace GL_EditorFramework
         Timer doubleClickTimer = new Timer();
         bool acceptDoubleClick = false;
 
-        float[] values = new float[3];
-
         bool mouseDown = false;
 
         int focusedIndex = -1;
@@ -104,9 +104,6 @@ namespace GL_EditorFramework
             textBox1.Visible = false;
             textBoxHeight = textBox1.Height;
             textBox1.KeyPress += TextBox1_KeyPress;
-            textBox1.KeyDown += TextBox1_KeyDown;
-            textBox1.LostFocus += TextBox1_LostFocus;
-            textBox1.MouseClick += TextBox1_MouseClick;
         }
 
         private void TextBox1_MouseClick(object sender, MouseEventArgs e)
@@ -149,12 +146,47 @@ namespace GL_EditorFramework
             changeTypes = 0;
         }
 
+        private void ComboBox1_LostFocus(object sender, EventArgs e)
+        {
+            if (focusedIndex == -1)
+                return;
+
+            eventType = EventType.LOST_FOCUS;
+            comboBox1.Visible = false;
+            
+            Refresh();
+            
+            focusedIndex = -1;
+
+            eventType = EventType.DRAW;
+
+            if ((changeTypes & VALUE_CHANGE_START) > 0)
+                objectUIProvider?.OnValueChangeStart();
+            if ((changeTypes & VALUE_CHANGED) > 0)
+                objectUIProvider?.OnValueChanged();
+            if ((changeTypes & VALUE_SET) > 0)
+                objectUIProvider?.OnValueSet();
+
+            changeTypes = 0;
+
+            AutoScrollMinSize = new Size(0, autoScrollRestoreHeight);
+            AutoScrollPosition = new Point(0, -autoScrollRestoreY);
+        }
+
         private void TextBox1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Return && textBox1.Focused)
+            {
                 Focus();
+                e.SuppressKeyPress = true;
+            }
         }
 
+        private void ComboBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Return && comboBox1.Focused)
+                Focus();
+        }
         private int currentY;
 
         private void TextBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -164,7 +196,8 @@ namespace GL_EditorFramework
             string numberGroupSeparator = numberFormat.NumberGroupSeparator;
             string negativeSign = numberFormat.NegativeSign;
             string text = e.KeyChar.ToString();
-            if (!char.IsDigit(e.KeyChar) && !text.Equals(numberDecimalSeparator) && !text.Equals(numberGroupSeparator) && !text.Equals(negativeSign) && e.KeyChar != '\b' && (ModifierKeys & (Keys.Control | Keys.Alt)) == Keys.None)
+            if (!char.IsDigit(e.KeyChar) && !text.Equals(numberDecimalSeparator) && !text.Equals(numberGroupSeparator) && !text.Equals(negativeSign) && 
+                e.KeyChar != '\b' && (ModifierKeys & (Keys.Control | Keys.Alt)) == Keys.None)
             {
                 e.Handled = true;
             }
@@ -191,6 +224,12 @@ namespace GL_EditorFramework
 
             g = e.Graphics;
 
+            if (comboBox1.Visible)
+            {
+                g.DrawString(comboBoxName, textBox1.Font, SystemBrushes.ControlText, 10, 10);
+                return;
+            }
+
             currentY = 10 + AutoScrollPosition.Y;
 
             index = 0;
@@ -202,6 +241,9 @@ namespace GL_EditorFramework
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            if (comboBox1.Visible)
+                return;
+
             if (e.Button == MouseButtons.Left)
             {
                 mouseDown = true;
@@ -730,6 +772,97 @@ namespace GL_EditorFramework
             currentY += 20;
             return text;
         }
+
+        public object ChoicePicker(string name, object value, IList values)
+        {
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
+            DrawField(usableWidth - 130, currentY, 120, value.ToString(), SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+
+            float arrowWidth = g.MeasureString(">", textBox1.Font).Width;
+            
+            int index = values.IndexOf(value);
+            if(index > 0)
+            {
+                g.DrawString("<", textBox1.Font, SystemBrushes.ControlText, usableWidth - 129, currentY);
+                if (eventType == EventType.CLICK && new Rectangle(usableWidth - 129, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
+                    value = values[index - 1];
+            }                                                  
+
+            if (index < values.Count - 1)
+            {
+                g.DrawString(">", textBox1.Font, SystemBrushes.ControlText, usableWidth - 11 - arrowWidth, currentY);
+                if (eventType == EventType.CLICK && new Rectangle(usableWidth - 11 - (int)arrowWidth, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
+                    value = values[index + 1];
+            }
+
+            currentY += 20;
+            return value;
+        }
+
+        int autoScrollRestoreHeight;
+        int autoScrollRestoreY;
+        string comboBoxName;
+
+        public string AdvancedTextInput(string name, string text, object[] recommendations)
+        {
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
+            currentY += 20;
+
+            switch (eventType)
+            {
+                case EventType.CLICK:
+                    if (new Rectangle(11, currentY+1, usableWidth - 22, textBoxHeight - 2).Contains(mousePos))
+                    {
+                        comboBoxName = name;
+                        autoScrollRestoreHeight = AutoScrollMinSize.Height;
+                        autoScrollRestoreY = AutoScrollPosition.Y;
+                        AutoScrollMinSize = new Size();
+                        comboBox1.Text = text;
+                        comboBox1.Items.Clear();
+                        if(recommendations!=null && recommendations.Length!=0)
+                            comboBox1.Items.AddRange(recommendations);
+                        comboBox1.Visible = true;
+                        comboBox1.Focus();
+                        Invalidate();
+                        focusedIndex = index;
+                    }
+                    else
+                        DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    break;
+
+                case EventType.LOST_FOCUS:
+                    if (focusedIndex == index)
+                    {
+                        changeTypes |= VALUE_SET;
+                        text = comboBox1.Text;
+                    }
+
+                    if (focusedIndex == index)
+                        DrawField(10, currentY, usableWidth - 20, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                    else
+                        DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    break;
+
+                default:
+                    if (focusedIndex == index)
+                        DrawField(10, currentY, usableWidth - 20, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                    else
+                        DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    break;
+            }
+
+            index++;
+            currentY += 20;
+            return text;
+        }
+
+        public void Spacing(int amount)
+        {
+            currentY += amount;
+        }
         #endregion
 
         static Color MixedColor(Color color1, Color color2)
@@ -773,6 +906,9 @@ namespace GL_EditorFramework
         bool CheckBox(string name, bool isChecked);
         string TextInput(string text, string name);
         string FullWidthTextInput(string text, string name);
+        object ChoicePicker(string name, object value, IList values);
+        string AdvancedTextInput(string name, string text, object[] recommendations);
+        void Spacing(int amount);
     }
 
     /// <summary>

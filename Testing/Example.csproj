@@ -54,7 +54,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AnimatedObject.cs" />
+    <Compile Include="ExampleObject.cs" />
     <Compile Include="ExampleEditor.cs">
       <SubType>Form</SubType>
     </Compile>

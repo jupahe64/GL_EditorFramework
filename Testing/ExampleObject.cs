@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -17,9 +18,9 @@ namespace Example
 {
     //This class is supposed to show of some very basic animation stuff you could do with this framework
     //but it's highly recommended to add members like startTime and isPlaying if you want to make your own animated object class
-    class AnimatedObject : SingleObject
+    class ExampleObject : SingleObject
     {
-        public AnimatedObject(Vector3 pos) : base(pos)
+        public ExampleObject(Vector3 pos) : base(pos)
         {
 
         }
@@ -230,15 +231,37 @@ namespace Example
         public new class PropertyProvider : IObjectUIProvider
         {
             Vector3 prevPos;
-            string testString = "";
-            string testString2 = "";
-            float testNumber = 0;
+            string text = "";
+            string longText = "";
+            float number = 0;
             SingleObject obj;
             EditorSceneBase scene;
+
+            EnemyType enemyType = EnemyType.Stone;
+            EnemyType enemyType2 = EnemyType.Fire;
+            string objectType = "AnimatedObject";
+
+            static readonly object[] objectTypes = new object[]
+            {
+                "SingleObject",
+                "Transformable",
+                "Path",
+                "AnimatedObject"
+            };
+
             public PropertyProvider(SingleObject obj, EditorSceneBase scene)
             {
                 this.obj = obj;
                 this.scene = scene;
+            }
+
+            enum EnemyType
+            {
+                Fire,
+                Water,
+                Grass,
+                Stone,
+                Air
             }
 
             public void DoUI(IObjectUIControl control)
@@ -248,16 +271,20 @@ namespace Example
                 else
                     obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
 
-                control.PlainText("These are only for testing:");
-                testString = control.TextInput(testString, "Test");
-                testString2 = control.FullWidthTextInput(testString2, "Long Test");
-                testNumber = control.NumberInput(testNumber, "Test4");
-                control.NumberInput(0, "Test3.5");
+                control.Spacing(30);
+                control.PlainText("These are only for demonstration:");
+                text = control.TextInput(text, "TextInput");
+                longText = control.FullWidthTextInput(longText, "Long Text Input");
+                number = control.NumberInput(number, "Number Input");
                 control.Link("Just some Link");
 
                 control.DoubleButton("Add", "Remove");
                 control.TripleButton("Add", "Remove", "Insert");
                 control.QuadripleButton("+", "-", "*","/");
+                enemyType =  (EnemyType)control.ChoicePicker("Enemy1 Type", enemyType,  Enum.GetValues(typeof(EnemyType)));
+                enemyType2 = (EnemyType)control.ChoicePicker("Enemy2 Type", enemyType2, Enum.GetValues(typeof(EnemyType)));
+                
+                objectType = control.AdvancedTextInput("Object Type", objectType, objectTypes);
             }
 
             public void OnValueChangeStart()
