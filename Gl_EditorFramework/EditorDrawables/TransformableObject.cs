@@ -18,17 +18,17 @@ namespace GL_EditorFramework.EditorDrawables
         public TransformableObject(Vector3 pos, Vector3 rot, Vector3 scale)
             : base(pos)
         {
-            rotation = rot;
-            this.scale = scale;
+            Rotation = rot;
+            this.Scale = scale;
         }
 
         public override string ToString() => "block";
 
-        public static System.Reflection.FieldInfo FI_Rotation => typeof(TransformableObject).GetField("rotation");
-        public Vector3 rotation = Vector3.Zero;
+        [PropertyCapture.Undoable]
+        public Vector3 Rotation { get; set; } = Vector3.Zero;
 
-        public static System.Reflection.FieldInfo FI_Scale => typeof(TransformableObject).GetField("scale");
-        public Vector3 scale = new Vector3(1, 1, 1);
+        [PropertyCapture.Undoable]
+        public Vector3 Scale { get; set; } = new Vector3(1, 1, 1);
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
@@ -40,10 +40,10 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(rotation);
+            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(scale) : scale) * 0.5f) *
+                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale) : Scale) * 0.5f) *
                 new Matrix4(Selected ? editorScene.CurrentAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
@@ -78,10 +78,10 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(rotation);
+            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(scale) : scale) * 0.5f) *
+                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale) : Scale) * 0.5f) *
                 new Matrix4(Selected ? editorScene.CurrentAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
@@ -107,12 +107,12 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override LocalOrientation GetLocalOrientation(int partIndex)
         {
-            return new LocalOrientation(Position, Framework.Mat3FromEulerAnglesDeg(rotation));
+            return new LocalOrientation(Position, Framework.Mat3FromEulerAnglesDeg(Rotation));
         }
 
         public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
         {
-            localOrientation = new LocalOrientation(Position, Framework.Mat3FromEulerAnglesDeg(rotation));
+            localOrientation = new LocalOrientation(Position, Framework.Mat3FromEulerAnglesDeg(Rotation));
             dragExclusively = false;
             return Selected;
         }
@@ -131,14 +131,14 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (rot.HasValue)
             {
-                prevRot = rotation;
-                rotation = rot.Value;
+                prevRot = Rotation;
+                Rotation = rot.Value;
             }
 
             if (scale.HasValue)
             {
-                prevScale = this.scale;
-                this.scale = scale.Value;
+                prevScale = this.Scale;
+                this.Scale = scale.Value;
             }
         }
 
@@ -146,11 +146,11 @@ namespace GL_EditorFramework.EditorDrawables
         {
             Position = transformAction.NewPos(Position, out Vector3? prevPos);
 
-            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(rotation);
+            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
 
-            rotation = transformAction.NewRot(rotation, out Vector3? prevRot);
+            Rotation = transformAction.NewRot(Rotation, out Vector3? prevRot);
 
-            scale = transformAction.NewScale(scale, out Vector3? prevScale);
+            Scale = transformAction.NewScale(Scale, out Vector3? prevScale);
             infos.Add(this, 0, prevPos, prevRot, prevScale);
         }
 
@@ -158,9 +158,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public new class PropertyProvider : IObjectUIProvider
         {
-            Vector3 prevPos;
-            Vector3 prevRot;
-            Vector3 prevScale;
+            PropertyCapture? capture = null;
 
             TransformableObject obj;
             EditorSceneBase scene;
@@ -178,21 +176,19 @@ namespace GL_EditorFramework.EditorDrawables
                     obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
 
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
-                    obj.rotation = control.Vector3Input(obj.rotation, "Rotation", 45, 18, -180, 180, true);
+                    obj.Rotation = control.Vector3Input(obj.Rotation, "Rotation", 45, 18, -180, 180, true);
                 else
-                    obj.rotation = control.Vector3Input(obj.rotation, "Rotation", 5, 2, -180, 180, true);
+                    obj.Rotation = control.Vector3Input(obj.Rotation, "Rotation", 5, 2, -180, 180, true);
 
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
-                    obj.scale = control.Vector3Input(obj.scale, "Scale", 1, 16);
+                    obj.Scale = control.Vector3Input(obj.Scale, "Scale", 1, 16);
                 else
-                    obj.scale = control.Vector3Input(obj.scale, "Scale", 0.125f, 2);
+                    obj.Scale = control.Vector3Input(obj.Scale, "Scale", 0.125f, 2);
             }
 
             public void OnValueChangeStart()
             {
-                prevPos = obj.Position;
-                prevRot = obj.rotation;
-                prevScale = obj.scale;
+                capture = new PropertyCapture(obj);
             }
 
             public void OnValueChanged()
@@ -202,13 +198,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             public void OnValueSet()
             {
-                if (prevPos != obj.Position)
-                    scene.AddToUndo(new RevertableFieldChange(SingleObject.FI_Position, obj, prevPos));
-                if (prevRot != obj.rotation)
-                    scene.AddToUndo(new RevertableFieldChange(TransformableObject.FI_Rotation, obj, prevRot));
-                if (prevScale != obj.scale)
-                    scene.AddToUndo(new RevertableFieldChange(TransformableObject.FI_Scale, obj, prevScale));
-
+                capture?.HandleUndo(scene);
+                capture = null;
                 scene.Refresh();
             }
 

@@ -21,8 +21,8 @@ namespace GL_EditorFramework.EditorDrawables
     public class SingleObject : EditableObject
     {
 
-        public static System.Reflection.FieldInfo FI_Position => typeof(SingleObject).GetField("Position");
-        public Vector3 Position = new Vector3(0, 0, 0);
+        [PropertyCapture.Undoable]
+        public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
 
         protected bool Selected = false;
 
@@ -246,7 +246,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public class PropertyProvider : IObjectUIProvider
         {
-            Vector3 prevPos;
+            PropertyCapture? capture = null;
 
             SingleObject obj;
             EditorSceneBase scene;
@@ -266,7 +266,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public void OnValueChangeStart()
             {
-                prevPos = obj.Position;
+                capture = new PropertyCapture(obj);
             }
 
             public void OnValueChanged()
@@ -276,9 +276,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             public void OnValueSet()
             {
-                if (prevPos != obj.Position)
-                    scene.AddToUndo(new RevertableFieldChange(SingleObject.FI_Position, obj, prevPos));
-
+                capture?.HandleUndo(scene);
+                capture = null;
                 scene.Refresh();
             }
 

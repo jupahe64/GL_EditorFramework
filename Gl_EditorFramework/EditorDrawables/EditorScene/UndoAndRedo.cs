@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -660,25 +661,61 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
         #endregion
-
-
-        public struct RevertableFieldChange : IRevertable
+        
+        public struct PropertyCapture
         {
-            readonly System.Reflection.FieldInfo field;
+            public class Undoable : Attribute { }
+
+            struct CapturedProperty
+            {
+                readonly public PropertyInfo info;
+                readonly public object value;
+
+                public CapturedProperty(PropertyInfo info, object value)
+                {
+                    this.info = info;
+                    this.value = value;
+                }
+            }
+
+            CapturedProperty[] capturedProperties;
+            readonly object obj;
+
+            public PropertyCapture(object obj)
+            {
+                capturedProperties = obj.GetType().GetProperties().Where(p => p.CustomAttributes.Count(a => a.AttributeType == typeof(Undoable)) > 0).Select(
+                    ap => new CapturedProperty(ap, ap.GetValue(obj))).ToArray();
+
+                this.obj = obj;
+            }
+
+            public void HandleUndo(EditorSceneBase scene)
+            {
+                foreach(CapturedProperty cp in capturedProperties)
+                {
+                    if (!cp.info.GetValue(obj).Equals(cp.value))
+                        scene.AddToUndo(new RevertablePropertyChange(cp.info, obj, cp.value));
+                }
+            }
+        }
+
+        public struct RevertablePropertyChange : IRevertable
+        {
+            readonly PropertyInfo property;
             readonly object obj;
             readonly object prevValue;
-            public RevertableFieldChange(System.Reflection.FieldInfo field, object obj, object prevValue)
+            public RevertablePropertyChange(PropertyInfo property, object obj, object prevValue)
             {
-                this.field = field;
+                this.property = property;
                 this.obj = obj;
                 this.prevValue = prevValue;
             }
 
             public IRevertable Revert(EditorSceneBase scene)
             {
-                object currentValue = field.GetValue(obj);
-                field.SetValue(obj, prevValue);
-                return new RevertableFieldChange(field, obj, currentValue);
+                object currentValue = property.GetValue(obj);
+                property.SetValue(obj, prevValue);
+                return new RevertablePropertyChange(property, obj, currentValue);
             }
         }
     }

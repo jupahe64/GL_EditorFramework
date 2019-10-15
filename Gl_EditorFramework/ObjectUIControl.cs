@@ -213,6 +213,7 @@ namespace GL_EditorFramework
         {
             base.OnResize(e);
             usableWidth = Width - 15;
+            Refresh();
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -375,6 +376,8 @@ namespace GL_EditorFramework
                 textBox1.KeyPress -= TextBox1_KeyPress;
 
             focusedIndex = index;
+
+            changeTypes |= VALUE_CHANGE_START;
 
             acceptDoubleClick = true;
             doubleClickTimer.Start();
@@ -784,15 +787,27 @@ namespace GL_EditorFramework
             if(index > 0)
             {
                 g.DrawString("<", textBox1.Font, SystemBrushes.ControlText, usableWidth - 129, currentY);
-                if (eventType == EventType.CLICK && new Rectangle(usableWidth - 129, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
-                    value = values[index - 1];
+                if (new Rectangle(usableWidth - 129, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
+                {
+                    if (eventType == EventType.DRAG_START)
+                        changeTypes |= VALUE_CHANGE_START;
+
+                    if (eventType == EventType.CLICK)
+                        value = values[index - 1];
+                }
             }                                                  
 
             if (index < values.Count - 1)
             {
                 g.DrawString(">", textBox1.Font, SystemBrushes.ControlText, usableWidth - 11 - arrowWidth, currentY);
-                if (eventType == EventType.CLICK && new Rectangle(usableWidth - 11 - (int)arrowWidth, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
-                    value = values[index + 1];
+                if (new Rectangle(usableWidth - 11 - (int)arrowWidth, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
+                {
+                    if (eventType == EventType.DRAG_START)
+                        changeTypes |= VALUE_CHANGE_START;
+
+                    if (eventType == EventType.CLICK)
+                        value = values[index + 1];
+                }
             }
 
             currentY += 20;
@@ -825,6 +840,7 @@ namespace GL_EditorFramework
                         comboBox1.Focus();
                         Invalidate();
                         focusedIndex = index;
+                        changeTypes |= VALUE_CHANGE_START;
                     }
                     else
                         DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
