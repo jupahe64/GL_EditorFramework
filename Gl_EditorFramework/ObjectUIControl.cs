@@ -355,7 +355,7 @@ namespace GL_EditorFramework
 
             if(isCentered)
                 g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
-                x + 1 + (width - (int)g.MeasureString(value, textBox1.Font).Width) / 2, y);
+                x + 1 + (width - (int)Math.Ceiling(g.MeasureString(value, textBox1.Font).Width)) / 2, y);
             else
                 g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
                 x + 1, y);
@@ -765,7 +765,7 @@ namespace GL_EditorFramework
         {
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
 
-            if (new Rectangle(usableWidth - 29, currentY + 1, 18, textBoxHeight - 2).Contains(mousePos))
+            if (new Rectangle(usableWidth - 10 - (textBoxHeight + 2), currentY, textBoxHeight + 2, textBoxHeight + 2).Contains(mousePos))
             {
                 if (eventType == EventType.DRAG_START)
                     changeTypes |= VALUE_CHANGE_START;
@@ -776,11 +776,11 @@ namespace GL_EditorFramework
                     changeTypes |= VALUE_SET;
                 }
 
-                DrawField(usableWidth - 30, currentY, 20, isChecked ? "✔" : "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+                DrawField(usableWidth - 10 - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight);
             }
             else
             {
-                DrawField(usableWidth - 30, currentY, 20, isChecked ? "✔" : "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+                DrawField(usableWidth - 10 - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
             }
 
             currentY += 20;
