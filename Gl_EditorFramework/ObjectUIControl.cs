@@ -23,7 +23,7 @@ namespace GL_EditorFramework
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         protected static extern IntPtr SendMessage(HandleRef hWnd, int msg, int wParam, int lParam);
 
-        public Font HeaderFont;
+        public Font HeadingFont;
         public Font LinkFont;
 
         enum EventType
@@ -94,7 +94,7 @@ namespace GL_EditorFramework
 
             InitializeComponent();
 
-            HeaderFont = new Font(textBox1.Font.FontFamily, 10);
+            HeadingFont = new Font(Font.FontFamily, 10);
 
             LinkFont = new Font(textBox1.Font, FontStyle.Underline);
 
@@ -235,9 +235,16 @@ namespace GL_EditorFramework
 
             index = 0;
 
-            objectUIProvider.DoUI(this);
+            try
+            {
+                objectUIProvider.DoUI(this);
 
-            AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y);
+                AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y);
+            }
+            catch(ControlInvalidatedException) //this Control has been invalidated
+            {
+                AutoScrollMinSize = new Size();
+            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -599,7 +606,7 @@ namespace GL_EditorFramework
             const int nameWidth = 13;
             int width = (usableWidth - 20 - space * 2) / 3;
 
-            g.DrawString(name, HeaderFont, SystemBrushes.ControlText, 10, currentY);
+            g.DrawString(name, HeadingFont, SystemBrushes.ControlText, 10, currentY);
             currentY += 20;
 
             g.DrawString("X", textBox1.Font, SystemBrushes.ControlText, 10, currentY);
@@ -748,6 +755,12 @@ namespace GL_EditorFramework
             currentY += 20;
         }
 
+        public void Heading(string text)
+        {
+            g.DrawString(text, HeadingFont, SystemBrushes.ControlText, 10, currentY);
+            currentY += 20;
+        }
+
         public bool CheckBox(string name, bool isChecked)
         {
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
@@ -837,6 +850,8 @@ namespace GL_EditorFramework
         int autoScrollRestoreY;
         string comboBoxName;
 
+        class ControlInvalidatedException : Exception { }
+
         public string AdvancedTextInput(string name, string text, object[] recommendations)
         {
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
@@ -850,7 +865,6 @@ namespace GL_EditorFramework
                         comboBoxName = name;
                         autoScrollRestoreHeight = AutoScrollMinSize.Height;
                         autoScrollRestoreY = AutoScrollPosition.Y;
-                        AutoScrollMinSize = new Size();
                         comboBox1.Text = text;
                         comboBox1.Items.Clear();
                         if(recommendations!=null && recommendations.Length!=0)
@@ -860,6 +874,7 @@ namespace GL_EditorFramework
                         Invalidate();
                         focusedIndex = index;
                         changeTypes |= VALUE_CHANGE_START;
+                        throw new ControlInvalidatedException();
                     }
                     else
                         DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
@@ -932,12 +947,16 @@ namespace GL_EditorFramework
         OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
             float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
 
+        OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
+            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+
         bool Button(string name);
         int DoubleButton(string name, string name2);
         int TripleButton(string name, string name2, string name3);
         int QuadripleButton(string name, string name2, string name3, string name4);
         bool Link(string name);
         void PlainText(string text);
+        void Heading(string text);
         bool CheckBox(string name, bool isChecked);
         string TextInput(string text, string name);
         string FullWidthTextInput(string text, string name);

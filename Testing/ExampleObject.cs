@@ -273,7 +273,7 @@ namespace Example
                     obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
 
                 control.Spacing(30);
-                control.PlainText("These are only for demonstration:");
+                control.Heading("Example controls");
                 text = control.TextInput(text, "TextInput");
                 longText = control.FullWidthTextInput(longText, "Long Text Input");
                 number = control.NumberInput(number, "Number Input");
@@ -286,6 +286,9 @@ namespace Example
                 enemyType2 = (EnemyType)control.ChoicePicker("Enemy2 Type", enemyType2, Enum.GetValues(typeof(EnemyType)));
                 
                 objectType = control.AdvancedTextInput("Object Type", objectType, objectTypes);
+
+                control.Spacing(30);
+                control.PlainText("Some Text");
             }
 
             public void OnValueChangeStart()
