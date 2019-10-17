@@ -402,7 +402,7 @@ namespace GL_EditorFramework
                 return Math.Min(Math.Max(min, value), max);
             }
         }
-
+        
         #region UI Elements
         float valueBeforeDrag;
         private float NumericInputField(int x, int y, int width, float number, NumberInputInfo info, bool isCentered)
@@ -548,81 +548,6 @@ namespace GL_EditorFramework
             return text;
         }
 
-        public struct NumberInputInfo
-        {
-            public readonly float increment;
-            public readonly int incrementDragDivider;
-            public readonly float min;
-            public readonly float max;
-            public readonly bool wrapAround;
-
-            public NumberInputInfo(float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
-            {
-                this.increment = increment;
-                this.incrementDragDivider = incrementDragDivider;
-                this.min = min;
-                this.max = max;
-                this.wrapAround = wrapAround;
-            }
-        }
-
-        public float NumberInput(float number, string name,
-            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
-        {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
-
-            number = NumericInputField(usableWidth - 90, currentY, 80, number, new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround),true);
-            currentY += 20;
-            return number;
-        }
-
-        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
-            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
-        {
-            NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
-
-            const int space = 2;
-            const int width = 50;
-
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
-            
-            vec.X = NumericInputField(usableWidth - 10 - width * 3 - space * 2, currentY, width, vec.X, input, true);
-            vec.Y = NumericInputField(usableWidth - 10 - width * 2 - space * 1, currentY, width, vec.Y, input, true);
-            vec.Z = NumericInputField(usableWidth - 10 - width,                 currentY, width, vec.Z, input, true);
-            
-
-            currentY += 20;
-            return vec;
-        }
-
-        public OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
-            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
-        {
-            currentY += 5;
-
-            NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
-
-            const int space = 5;
-            const int nameWidth = 13;
-            int width = (usableWidth - 20 - space * 2) / 3;
-
-            g.DrawString(name, HeadingFont, SystemBrushes.ControlText, 10, currentY);
-            currentY += 20;
-
-            g.DrawString("X", textBox1.Font, SystemBrushes.ControlText, 10, currentY);
-            vec.X = NumericInputField(10 + nameWidth, currentY, width - nameWidth, vec.X, input, true);
-
-            g.DrawString("Y", textBox1.Font, SystemBrushes.ControlText, 10 + width + space, currentY);
-            vec.Y = NumericInputField(10 + nameWidth + width + space, currentY, width - nameWidth, vec.Y, input, true);
-
-            g.DrawString("Z", textBox1.Font, SystemBrushes.ControlText, 10 + width * 2 + space * 2, currentY);
-            vec.Z = NumericInputField(10 + nameWidth + width * 2 + space * 2, currentY, width - nameWidth, vec.Z, input, true);
-
-
-            currentY += 20;
-            return vec;
-        }
-
         private bool Button(int x, int y, int width, string name)
         {
             bool clicked = false;
@@ -652,15 +577,96 @@ namespace GL_EditorFramework
 
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText,
                 x + (width - (int)g.MeasureString(name, textBox1.Font).Width) / 2, y + 3);
-            
+
             index++;
 
             return clicked;
         }
+        #endregion
 
+        public struct NumberInputInfo
+        {
+            public readonly float increment;
+            public readonly int incrementDragDivider;
+            public readonly float min;
+            public readonly float max;
+            public readonly bool wrapAround;
+
+            public NumberInputInfo(float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+            {
+                this.increment = increment;
+                this.incrementDragDivider = incrementDragDivider;
+                this.min = min;
+                this.max = max;
+                this.wrapAround = wrapAround;
+            }
+        }
+
+        const int fieldWidth = 50;
+        const int fieldSpace = 2;
+        const int beforeTwoLineSpacing = 5;
+        const int fullWidthSpace = 5;
+        const int margin = 10;
+        const int rowHeight = 20;
+
+        #region IObjectControl
+        public float NumberInput(float number, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+        {
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+
+            number = NumericInputField(usableWidth - fieldWidth-margin, currentY, fieldWidth, number, 
+                new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround),true);
+            currentY += rowHeight;
+            return number;
+        }
+
+        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+        {
+            NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
+            
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            
+            vec.X = NumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.X, input, true);
+            vec.Y = NumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Y, input, true);
+            vec.Z = NumericInputField(usableWidth - margin - fieldWidth,                      currentY, fieldWidth, vec.Z, input, true);
+            
+
+            currentY += rowHeight;
+            return vec;
+        }
+
+        public OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+        {
+            currentY += beforeTwoLineSpacing;
+
+            NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
+            
+            const int nameWidth = 13;
+            int width = (usableWidth - margin * 2 - fullWidthSpace * 2) / 3;
+
+            g.DrawString(name, HeadingFont, SystemBrushes.ControlText, margin, currentY);
+            currentY += rowHeight;
+
+            g.DrawString("X", textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            vec.X = NumericInputField(margin + nameWidth, currentY, width - nameWidth, vec.X, input, true);
+
+            g.DrawString("Y", textBox1.Font, SystemBrushes.ControlText, 10 + width + fullWidthSpace, currentY);
+            vec.Y = NumericInputField(margin + nameWidth + width + fullWidthSpace, currentY, width - nameWidth, vec.Y, input, true);
+
+            g.DrawString("Z", textBox1.Font, SystemBrushes.ControlText, 10 + width * 2 + fullWidthSpace * 2, currentY);
+            vec.Z = NumericInputField(margin + nameWidth + width * 2 + fullWidthSpace * 2, currentY, width - nameWidth, vec.Z, input, true);
+
+
+            currentY += rowHeight;
+            return vec;
+        }
+        
         public bool Button(string name)
         {
-            bool clicked = Button(10, currentY, usableWidth - 20, name);
+            bool clicked = Button(margin, currentY, usableWidth - margin * 2, name);
             currentY += 24;
 
             return clicked;
@@ -668,14 +674,13 @@ namespace GL_EditorFramework
 
         public int DoubleButton(string name, string name2)
         {
-            const int space = 5;
-            int width = (usableWidth - 20 - space) / 2;
+            int width = (usableWidth - margin * 2 - fullWidthSpace) / 2;
 
             int clickedIndex = 0;
 
-            if (Button(10,                 currentY, width, name))
+            if (Button(margin,                 currentY, width, name))
                 clickedIndex = 1;
-            if (Button(10 + width + space, currentY, width, name2))
+            if (Button(margin + width + fullWidthSpace, currentY, width, name2))
                 clickedIndex = 2;
 
             currentY += 24;
@@ -685,16 +690,15 @@ namespace GL_EditorFramework
 
         public int TripleButton(string name, string name2, string name3)
         {
-            const int space = 5;
-            int width = (usableWidth - 20 - space * 2) / 3;
+            int width = (usableWidth - margin * 2 - fullWidthSpace * 2) / 3;
 
             int clickedIndex = 0;
 
-            if (Button(10,                         currentY, width, name))
+            if (Button(margin,                         currentY, width, name))
                 clickedIndex = 1;
-            if (Button(10 + width     + space,     currentY, width, name2))
+            if (Button(margin + width     + fullWidthSpace,     currentY, width, name2))
                 clickedIndex = 2;
-            if (Button(10 + width * 2 + space * 2, currentY, usableWidth - 20 - width * 2 - space * 2, name3))
+            if (Button(margin + width * 2 + fullWidthSpace * 2, currentY, usableWidth - margin * 2 - width * 2 - fullWidthSpace * 2, name3))
                 clickedIndex = 3;
 
             currentY += 24;
@@ -704,18 +708,17 @@ namespace GL_EditorFramework
 
         public int QuadripleButton(string name, string name2, string name3, string name4)
         {
-            const int space = 5;
-            int width = (usableWidth - 20 - space * 3) / 4;
+            int width = (usableWidth - margin * 2 - fullWidthSpace * 3) / 4;
 
             int clickedIndex = 0;
 
-            if (Button(10, currentY,                         width, name))
+            if (Button(margin, currentY,                         width, name))
                 clickedIndex = 1;
-            if (Button(10 + width     + space,     currentY, width, name2))
+            if (Button(margin + width     + fullWidthSpace,     currentY, width, name2))
                 clickedIndex = 2;
-            if (Button(10 + width * 2 + space * 2, currentY, width, name3))
+            if (Button(margin + width * 2 + fullWidthSpace * 2, currentY, width, name3))
                 clickedIndex = 3;
-            if (Button(10 + width * 3 + space * 3, currentY, width, name4))
+            if (Button(margin + width * 3 + fullWidthSpace * 3, currentY, width, name4))
                 clickedIndex = 4;
 
             currentY += 24;
@@ -727,23 +730,23 @@ namespace GL_EditorFramework
         {
             bool clicked = false;
 
-            if (new Rectangle(10, currentY, (int)g.MeasureString(name, textBox1.Font).Width, textBoxHeight).Contains(mousePos))
+            if (new Rectangle(margin, currentY, (int)g.MeasureString(name, textBox1.Font).Width, textBoxHeight).Contains(mousePos))
             {
                 if (mouseDown)
-                    g.DrawString(name, LinkFont, Brushes.Red, 10, currentY);
+                    g.DrawString(name, LinkFont, Brushes.Red, margin, currentY);
                 else
-                    g.DrawString(name, LinkFont, Brushes.Blue, 10, currentY);
+                    g.DrawString(name, LinkFont, Brushes.Blue, margin, currentY);
 
                 clicked = eventType == EventType.CLICK;
             }
             else
             {
-                g.DrawString(name, LinkFont, Brushes.Blue, 10, currentY);
+                g.DrawString(name, LinkFont, Brushes.Blue, margin, currentY);
 
 
             }
 
-            currentY += 20;
+            currentY += rowHeight;
             index++;
 
             return clicked;
@@ -751,21 +754,21 @@ namespace GL_EditorFramework
 
         public void PlainText(string text)
         {
-            g.DrawString(text, Font, SystemBrushes.ControlText, 10, currentY);
-            currentY += 20;
+            g.DrawString(text, Font, SystemBrushes.ControlText, margin, currentY);
+            currentY += rowHeight;
         }
 
         public void Heading(string text)
         {
-            g.DrawString(text, HeadingFont, SystemBrushes.ControlText, 10, currentY);
-            currentY += 20;
+            g.DrawString(text, HeadingFont, SystemBrushes.ControlText, margin, currentY);
+            currentY += rowHeight;
         }
 
         public bool CheckBox(string name, bool isChecked)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
 
-            if (new Rectangle(usableWidth - 10 - (textBoxHeight + 2), currentY, textBoxHeight + 2, textBoxHeight + 2).Contains(mousePos))
+            if (new Rectangle(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, textBoxHeight + 2).Contains(mousePos))
             {
                 if (eventType == EventType.DRAG_START)
                     changeTypes |= VALUE_CHANGE_START;
@@ -776,14 +779,16 @@ namespace GL_EditorFramework
                     changeTypes |= VALUE_SET;
                 }
 
-                DrawField(usableWidth - 10 - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight);
+                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", 
+                    SystemBrushes.Highlight, SystemBrushes.ControlLightLight);
             }
             else
             {
-                DrawField(usableWidth - 10 - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", 
+                    SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
             }
 
-            currentY += 20;
+            currentY += rowHeight;
             index++;
 
             return isChecked;
@@ -791,35 +796,37 @@ namespace GL_EditorFramework
 
         public string TextInput(string text, string name)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
 
-            text = TextInputField(usableWidth - 90, currentY, 80, text, false);
+            text = TextInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth * 3 + fieldSpace * 2, text, false);
 
-            currentY += 20;
+            currentY += rowHeight;
             return text;
         }
 
         public string FullWidthTextInput(string text, string name)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
-            currentY += 20;
-            text = TextInputField(10, currentY, usableWidth - 20, text, false);
-            currentY += 20;
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            currentY += rowHeight;
+            text = TextInputField(margin, currentY, usableWidth - margin * 2, text, false);
+            currentY += rowHeight;
             return text;
         }
 
         public object ChoicePicker(string name, object value, IList values)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
-            DrawField(usableWidth - 130, currentY, 120, value.ToString(), SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
+            int width = fieldWidth * 3 + fieldSpace * 2;
+
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawField(usableWidth - width - margin, currentY, width, value.ToString(), SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
 
             float arrowWidth = g.MeasureString(">", textBox1.Font).Width;
             
             int index = values.IndexOf(value);
             if(index > 0)
             {
-                g.DrawString("<", textBox1.Font, SystemBrushes.ControlText, usableWidth - 129, currentY);
-                if (new Rectangle(usableWidth - 129, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
+                g.DrawString("<", textBox1.Font, SystemBrushes.ControlText, usableWidth - width - margin + 1, currentY);
+                if (new Rectangle(usableWidth - width - margin + 1, currentY + 1, fieldWidth, textBoxHeight - 2).Contains(mousePos))
                 {
                     if (eventType == EventType.DRAG_START)
                         changeTypes |= VALUE_CHANGE_START;
@@ -831,8 +838,8 @@ namespace GL_EditorFramework
 
             if (index < values.Count - 1)
             {
-                g.DrawString(">", textBox1.Font, SystemBrushes.ControlText, usableWidth - 11 - arrowWidth, currentY);
-                if (new Rectangle(usableWidth - 11 - (int)arrowWidth, currentY + 1, (int)arrowWidth, textBoxHeight - 2).Contains(mousePos))
+                g.DrawString(">", textBox1.Font, SystemBrushes.ControlText, usableWidth - margin - 1 - arrowWidth, currentY);
+                if (new Rectangle(usableWidth - margin - 1 - fieldWidth, currentY + 1, fieldWidth, textBoxHeight - 2).Contains(mousePos))
                 {
                     if (eventType == EventType.DRAG_START)
                         changeTypes |= VALUE_CHANGE_START;
@@ -842,7 +849,7 @@ namespace GL_EditorFramework
                 }
             }
 
-            currentY += 20;
+            currentY += rowHeight;
             return value;
         }
 
@@ -854,13 +861,13 @@ namespace GL_EditorFramework
 
         public string AdvancedTextInput(string name, string text, object[] recommendations)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
-            currentY += 20;
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            currentY += rowHeight;
 
             switch (eventType)
             {
                 case EventType.CLICK:
-                    if (new Rectangle(11, currentY+1, usableWidth - 22, textBoxHeight - 2).Contains(mousePos))
+                    if (new Rectangle(margin + 1, currentY+1, usableWidth - margin * 2 - 2, textBoxHeight - 2).Contains(mousePos))
                     {
                         comboBoxName = name;
                         autoScrollRestoreHeight = AutoScrollMinSize.Height;
@@ -877,7 +884,7 @@ namespace GL_EditorFramework
                         throw new ControlInvalidatedException();
                     }
                     else
-                        DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
 
@@ -889,23 +896,23 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawField(10, currentY, usableWidth - 20, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
                     else
-                        DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
 
                 default:
                     if (focusedIndex == index)
-                        DrawField(10, currentY, usableWidth - 20, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
                     else
-                        DrawField(10, currentY, usableWidth - 20, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
             }
 
             index++;
-            currentY += 20;
+            currentY += rowHeight;
             return text;
         }
 
