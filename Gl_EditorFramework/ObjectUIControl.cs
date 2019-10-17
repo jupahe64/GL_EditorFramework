@@ -396,7 +396,7 @@ namespace GL_EditorFramework
             }
         }
 
-        #region Availible UI Elements
+        #region UI Elements
         float valueBeforeDrag;
         private float NumericInputField(int x, int y, int width, float number, NumberInputInfo info, bool isCentered)
         {
@@ -572,6 +572,25 @@ namespace GL_EditorFramework
         public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
             float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
+            NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
+
+            const int space = 2;
+            const int width = 50;
+
+            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, 10, currentY);
+            
+            vec.X = NumericInputField(usableWidth - 10 - width * 3 - space * 2, currentY, width, vec.X, input, true);
+            vec.Y = NumericInputField(usableWidth - 10 - width * 2 - space * 1, currentY, width, vec.Y, input, true);
+            vec.Z = NumericInputField(usableWidth - 10 - width,                 currentY, width, vec.Z, input, true);
+            
+
+            currentY += 20;
+            return vec;
+        }
+
+        public OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+        {
             currentY += 5;
 
             NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
@@ -584,14 +603,14 @@ namespace GL_EditorFramework
             currentY += 20;
 
             g.DrawString("X", textBox1.Font, SystemBrushes.ControlText, 10, currentY);
-            vec.X = NumericInputField(10 + nameWidth,                         currentY, width - nameWidth, vec.X, input, true);
+            vec.X = NumericInputField(10 + nameWidth, currentY, width - nameWidth, vec.X, input, true);
 
             g.DrawString("Y", textBox1.Font, SystemBrushes.ControlText, 10 + width + space, currentY);
-            vec.Y = NumericInputField(10 + nameWidth + width     + space,     currentY, width - nameWidth, vec.Y, input, true);
+            vec.Y = NumericInputField(10 + nameWidth + width + space, currentY, width - nameWidth, vec.Y, input, true);
 
             g.DrawString("Z", textBox1.Font, SystemBrushes.ControlText, 10 + width * 2 + space * 2, currentY);
             vec.Z = NumericInputField(10 + nameWidth + width * 2 + space * 2, currentY, width - nameWidth, vec.Z, input, true);
-            
+
 
             currentY += 20;
             return vec;

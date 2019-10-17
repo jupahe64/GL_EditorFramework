@@ -234,7 +234,7 @@ namespace Example
                 //add new pathpount to path
 
                 if (points.Count > 0)
-                    scene.Add(scene.CurrentList, new Path.PathPoint(points.Last().position, Vector3.Zero, Vector3.Zero));
+                    scene.Add(scene.CurrentList, new Path.PathPoint(points.Last().Position, Vector3.Zero, Vector3.Zero));
                 else
                     scene.Add(scene.CurrentList, new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
             }

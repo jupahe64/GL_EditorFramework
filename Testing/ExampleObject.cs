@@ -230,7 +230,8 @@ namespace Example
 
         public new class PropertyProvider : IObjectUIProvider
         {
-            Vector3 prevPos;
+            PropertyCapture? capture = null;
+
             string text = "";
             string longText = "";
             float number = 0;
@@ -289,7 +290,7 @@ namespace Example
 
             public void OnValueChangeStart()
             {
-                prevPos = obj.Position;
+                capture = new PropertyCapture(obj);
             }
 
             public void OnValueChanged()
@@ -299,9 +300,8 @@ namespace Example
 
             public void OnValueSet()
             {
-                if (prevPos != obj.Position)
-                    scene.AddToUndo(new RevertableFieldChange(SingleObject.FI_Position, obj, prevPos));
-
+                capture?.HandleUndo(scene);
+                capture = null;
                 scene.Refresh();
             }
 
