@@ -151,11 +151,14 @@ namespace GL_EditorFramework
             if (focusedIndex == -1)
                 return;
 
-            eventType = EventType.LOST_FOCUS;
             comboBox1.Visible = false;
-            
+            AutoScrollMinSize = new Size(0, autoScrollRestoreHeight);
+            AutoScrollPosition = new Point(0, autoScrollRestoreY);
+
+            eventType = EventType.LOST_FOCUS;
+
             Refresh();
-            
+
             focusedIndex = -1;
 
             eventType = EventType.DRAW;
@@ -168,9 +171,6 @@ namespace GL_EditorFramework
                 objectUIProvider?.OnValueSet();
 
             changeTypes = 0;
-
-            AutoScrollMinSize = new Size(0, autoScrollRestoreHeight);
-            AutoScrollPosition = new Point(0, -autoScrollRestoreY);
         }
 
         private void TextBox1_KeyDown(object sender, KeyEventArgs e)
@@ -339,6 +339,32 @@ namespace GL_EditorFramework
             if ((changeTypes & VALUE_SET) > 0)
                 objectUIProvider?.OnValueSet();
 
+            if (textBoxRequest.HasValue)
+            {
+                SuspendLayout();
+                textBox1.Visible = true;
+
+                textBox1.Text = textBoxRequest.Value.value;
+                textBox1.TextAlign = textBoxRequest.Value.alignment;
+                textBox1.Location = new Point(textBoxRequest.Value.x, textBoxRequest.Value.y);
+                textBox1.Width = textBoxRequest.Value.width;
+                ResumeLayout();
+
+                textBox1.Focus();
+
+                int lParam = mousePos.Y - textBox1.Top << 16 | (mousePos.X - textBox1.Left & 65535);
+                int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
+
+                textBox1.Select(Math.Max(0, num), 0);
+
+                if (textBoxRequest.Value.useNumericFilter)
+                    textBox1.KeyPress += TextBox1_KeyPress;
+                else
+                    textBox1.KeyPress -= TextBox1_KeyPress;
+
+                textBoxRequest = null;
+            }
+
             changeTypes = 0;
         }
 
@@ -363,25 +389,32 @@ namespace GL_EditorFramework
             g.ResetClip();
         }
 
-        private void PrepareFieldForInput(int fieldX, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
+        struct TextBoxSetup
         {
-            textBox1.Text = value;
-            textBox1.Location = new Point(fieldX + 1, y + 1);
-            textBox1.Width = width - 2;
-            textBox1.TextAlign = isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left;
-            textBox1.Visible = true;
-            textBox1.Focus();
+            public int x;
+            public int y;
+            public int width;
+            public string value;
+            public HorizontalAlignment alignment;
+            public bool useNumericFilter;
 
-            int lParam = mousePos.Y - textBox1.Top << 16 | (mousePos.X - textBox1.Left & 65535);
-            int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
+            public TextBoxSetup(int x, int y, int width, string value, HorizontalAlignment alignment, bool useNumericFilter)
+            {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.value = value;
+                this.alignment = alignment;
+                this.useNumericFilter = useNumericFilter;
+            }
+        }
 
-            textBox1.Select(Math.Max(0, num), 0);
+        TextBoxSetup? textBoxRequest;
 
-            if (isNumericInput)
-                textBox1.KeyPress += TextBox1_KeyPress;
-            else
-                textBox1.KeyPress -= TextBox1_KeyPress;
-
+        private void PrepareFieldForInput(int x, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
+        {
+            textBoxRequest = new TextBoxSetup(x + 1, y + 1, width - 2, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput);
+            
             focusedIndex = index;
 
             changeTypes |= VALUE_CHANGE_START;
@@ -871,7 +904,7 @@ namespace GL_EditorFramework
                     {
                         comboBoxName = name;
                         autoScrollRestoreHeight = AutoScrollMinSize.Height;
-                        autoScrollRestoreY = AutoScrollPosition.Y;
+                        autoScrollRestoreY = -AutoScrollPosition.Y;
                         comboBox1.Text = text;
                         comboBox1.Items.Clear();
                         if(recommendations!=null && recommendations.Length!=0)
