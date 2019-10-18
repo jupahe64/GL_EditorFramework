@@ -284,7 +284,7 @@ namespace Example
                 control.QuadripleButton("+", "-", "*","/");
                 enemyType =  (EnemyType)control.ChoicePicker("Enemy1 Type", enemyType,  Enum.GetValues(typeof(EnemyType)));
                 enemyType2 = (EnemyType)control.ChoicePicker("Enemy2 Type", enemyType2, Enum.GetValues(typeof(EnemyType)));
-                
+                control.VerticalSeperator();
                 objectType = control.AdvancedTextInput("Object Type", objectType, objectTypes);
 
                 control.Spacing(30);

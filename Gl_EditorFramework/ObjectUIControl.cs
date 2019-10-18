@@ -953,6 +953,13 @@ namespace GL_EditorFramework
         {
             currentY += amount;
         }
+
+        public void VerticalSeperator()
+        {
+            g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY-2, usableWidth - margin * 2, 2);
+            g.FillRectangle(SystemBrushes.ControlDark, margin, currentY-2, usableWidth - margin * 2 - 1, 1);
+            currentY += 2;
+        }
         #endregion
 
         static Color MixedColor(Color color1, Color color2)
@@ -1003,6 +1010,7 @@ namespace GL_EditorFramework
         object ChoicePicker(string name, object value, IList values);
         string AdvancedTextInput(string name, string text, object[] recommendations);
         void Spacing(int amount);
+        void VerticalSeperator();
     }
 
     /// <summary>
