@@ -17,6 +17,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public void Undo()
         {
+            EndUndoCollection(); //just in case this wasn't called before
+
             if (undoStack.Count > 0)
             {
                 redoStack.Push(undoStack.Pop().Revert(this));
@@ -54,9 +56,124 @@ namespace GL_EditorFramework.EditorDrawables
                 ObjectsMoved?.Invoke(this, null);
         }
 
+        public interface IRevertableCollection : IRevertable
+        {
+            IEnumerable<IRevertable> GetRevertables();
+        }
+
+        public struct DoubleRevertable : IRevertableCollection
+        {
+            IRevertable first;
+            IRevertable second;
+
+            public DoubleRevertable(IRevertable first, IRevertable second)
+            {
+                this.first = first;
+                this.second = second;
+            }
+
+            public IEnumerable<IRevertable> GetRevertables()
+            {
+                if (first is IRevertableCollection)
+                {
+                    foreach (IRevertable revertable in ((IRevertableCollection)first).GetRevertables())
+                        yield return revertable;
+                }
+                else
+                    yield return first;
+
+                if (second is IRevertableCollection)
+                {
+                    foreach (IRevertable revertable in ((IRevertableCollection)first).GetRevertables())
+                        yield return revertable;
+                }
+                else
+                    yield return second;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                return new DoubleRevertable(second.Revert(scene), first.Revert(scene));
+            }
+
+
+        }
+
+        public struct MultiRevertable : IRevertableCollection
+        {
+            IRevertable[] revertables;
+
+            public MultiRevertable(IRevertable[] revertables)
+            {
+                this.revertables = revertables;
+            }
+
+            public IEnumerable<IRevertable> GetRevertables()
+            {
+                foreach(IRevertable revertable in revertables)
+                {
+                    if (revertable is IRevertableCollection)
+                    {
+                        foreach (IRevertable _revertable in ((IRevertableCollection)revertable).GetRevertables())
+                            yield return _revertable;
+                    }
+                    else
+                        yield return revertable;
+                }
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                IRevertable[] newRevertables = new IRevertable[revertables.Length];
+
+                int _i = 0;
+
+                for (int i = revertables.Length - 1; i >= 0; i--) //Revertables are meant to be reverted in the reverse order (First In Last Out)
+                {
+                    newRevertables[_i++] = revertables[i].Revert(scene);
+                }
+
+                return new MultiRevertable(newRevertables);
+            }
+        }
+        
+        List<IRevertable> undoCollection;
+
+        public void BeginUndoCollection()
+        {
+            if (undoCollection == null)
+                undoCollection = new List<IRevertable>();
+        }
+
+        public void EndUndoCollection()
+        {
+            if (undoCollection != null)
+            {
+                if (undoCollection.Count == 1)
+                    undoStack.Push(undoCollection[0]);
+                else if (undoCollection.Count == 2)
+                    undoStack.Push(new DoubleRevertable(undoCollection[0], undoCollection[1]));
+                else if (undoCollection.Count > 2)
+                    undoStack.Push(new MultiRevertable(undoCollection.ToArray()));
+
+                undoCollection = null;
+            }
+        }
+
         public void AddToUndo(IRevertable revertable)
         {
-            undoStack.Push(revertable);
+            if(undoCollection != null)
+            {
+                if (revertable is IRevertableCollection)
+                {
+                    foreach (IRevertable _revertable in ((IRevertableCollection)revertable).GetRevertables())
+                        undoCollection.Add(_revertable);
+                }
+                else
+                    undoCollection.Add(revertable);
+            }
+            else
+                undoStack.Push(revertable);
             redoStack.Clear();
         }
 
