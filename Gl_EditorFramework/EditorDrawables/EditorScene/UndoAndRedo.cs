@@ -279,7 +279,7 @@ namespace GL_EditorFramework.EditorDrawables
                 this.singleInfos = singleInfos;
             }
 
-            public IRevertable Revert(EditorSceneBase scene)
+            public IRevertable Revert(EditorSceneBase scene) //Remove added objects from their lists
             {
                 uint var = 0;
                 IList[] lists = new IList[infos.Length + singleInfos.Length];
@@ -294,7 +294,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     deleteInfos[i_deleteInfos] = new RevertableDeletion.DeleteInListInfo(new RevertableDeletion.DeleteInfo[info.objs.Length], info.list);
                     int i_info = 0;
-                    for (int i = info.objs.Length - 1; i >= 0; i--)
+                    for (int i = 0; i < info.objs.Length; i++)
                     {
                         deleteInfos[i_deleteInfos].infos[i_info++] = new RevertableDeletion.DeleteInfo(info.objs[i], info.list.IndexOf(info.objs[i]));
                         info.list.Remove(info.objs[i]);
@@ -397,7 +397,7 @@ namespace GL_EditorFramework.EditorDrawables
                 this.singleInfos = singleInfos;
             }
 
-            public IRevertable Revert(EditorSceneBase scene)
+            public IRevertable Revert(EditorSceneBase scene) //Insert all deleted objects back in
             {
                 IList[] lists = new IList[infos.Length + singleInfos.Length];
                 int i_lists = 0;
@@ -411,7 +411,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     addInfos[i_addInfos] = new RevertableAddition.AddInListInfo(new object[info.infos.Length], info.list);
                     int i_info = 0;
-                    for (int i = info.infos.Length - 1; i >= 0; i--)
+                    for (int i = info.infos.Length - 1; i >= 0; i--) //loop through backwards so the indices aren't messed up
                     {
                         addInfos[i_addInfos].objs[i_info++] = info.infos[i].obj;
                         info.list.Insert(info.infos[i].index, info.infos[i].obj);
