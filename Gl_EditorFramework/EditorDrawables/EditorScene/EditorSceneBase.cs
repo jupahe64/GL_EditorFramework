@@ -335,6 +335,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         protected void _ExecuteDeletion(DeletionManager manager)
         {
+            if (manager.dict.Count == 0)
+                return;
+
             List<RevertableDeletion.DeleteInListInfo> infos = new List<RevertableDeletion.DeleteInListInfo>();
             List<RevertableDeletion.SingleDeleteInListInfo> singleInfos = new List<RevertableDeletion.SingleDeleteInListInfo>();
 
