@@ -37,9 +37,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public abstract bool IsInRange(float range, float rangeSquared, Vector3 pos);
 
-        public abstract uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects);
+        public abstract uint SelectAll(ISet<object> selectedObjects);
 
-        public abstract uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects);
+        public abstract uint SelectDefault(ISet<object> selectedObjects);
         
         public virtual void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
@@ -54,7 +54,7 @@ namespace GL_EditorFramework.EditorDrawables
         public abstract uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
 
         public abstract uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
-        public abstract uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects);
+        public abstract uint DeselectAll(ISet<object> selectedObjects);
 
         public virtual void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
         {
@@ -182,9 +182,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         bool IsInRange(float range, float rangeSquared, Vector3 pos);
 
-        uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects);
+        uint SelectAll(ISet<object> selectedObjects);
 
-        uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects);
+        uint SelectDefault(ISet<object> selectedObjects);
 
         void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene);
 
@@ -193,7 +193,7 @@ namespace GL_EditorFramework.EditorDrawables
         uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
 
         uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
-        uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects);
+        uint DeselectAll(ISet<object> selectedObjects);
 
         void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale);
 

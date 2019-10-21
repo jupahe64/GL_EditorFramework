@@ -174,7 +174,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in objs)
                     {
                         list.Add(obj);
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(SelectedObjects);
                     }
 
                     UpdateSelection(var);
@@ -184,14 +184,14 @@ namespace GL_EditorFramework.EditorDrawables
                     var = REDRAW_PICKING;
                     foreach (IEditableObject selected in SelectedObjects)
                     {
-                        var |= selected.DeselectAll(control, null);
+                        var |= selected.DeselectAll(null);
                     }
                     SelectedObjects.Clear();
 
                     foreach (IEditableObject obj in objs)
                     {
                         list.Add(obj);
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(SelectedObjects);
                     }
 
                     UpdateSelection(var);
@@ -241,7 +241,7 @@ namespace GL_EditorFramework.EditorDrawables
                     {
                         list.Insert(index, obj);
 
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(SelectedObjects);
                         index++;
                     }
 
@@ -252,7 +252,7 @@ namespace GL_EditorFramework.EditorDrawables
                     var = REDRAW_PICKING;
                     foreach (IEditableObject selected in SelectedObjects)
                     {
-                        var |= selected.DeselectAll(control, null);
+                        var |= selected.DeselectAll(null);
                     }
                     SelectedObjects.Clear();
 
@@ -260,7 +260,7 @@ namespace GL_EditorFramework.EditorDrawables
                     {
                         list.Insert(index, obj);
 
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(SelectedObjects);
                         index++;
                     }
 
@@ -301,7 +301,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 infos[index] = new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj));
                 list.Remove(obj);
-                var |= obj.DeselectAll(control, SelectedObjects);
+                var |= obj.DeselectAll(SelectedObjects);
                 index++;
             }
 
@@ -351,7 +351,7 @@ namespace GL_EditorFramework.EditorDrawables
                 if (entry.Value.Count == 1)
                 {
                     singleInfos.Add(new RevertableDeletion.SingleDeleteInListInfo(entry.Value[0], entry.Key.IndexOf(entry.Value[0]), entry.Key));
-                    var |= entry.Value[0].DeselectAll(control, SelectedObjects);
+                    var |= entry.Value[0].DeselectAll(SelectedObjects);
                     entry.Key.Remove(entry.Value[0]);
                 }
                 else
@@ -361,7 +361,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in entry.Value)
                     {
                         deleteInfos[i++] = new RevertableDeletion.DeleteInfo(obj, entry.Key.IndexOf(obj));
-                        var |= obj.DeselectAll(control, SelectedObjects);
+                        var |= obj.DeselectAll(SelectedObjects);
                         entry.Key.Remove(obj);
                     }
                     infos.Add(new RevertableDeletion.DeleteInListInfo(deleteInfos, entry.Key));
@@ -412,11 +412,11 @@ namespace GL_EditorFramework.EditorDrawables
             uint var = 0;
             if (isSelected)
             {
-                var |= obj.SelectDefault(control, SelectedObjects);
+                var |= obj.SelectDefault(SelectedObjects);
             }
             else
             {
-                var |= obj.DeselectAll(control, SelectedObjects);
+                var |= obj.DeselectAll(SelectedObjects);
             }
         }
     }

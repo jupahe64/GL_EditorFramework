@@ -415,7 +415,7 @@ namespace GL_EditorFramework.EditorDrawables
                     {
                         deleteInfos[i_deleteInfos].infos[i_info++] = new RevertableDeletion.DeleteInfo(info.objs[i], info.list.IndexOf(info.objs[i]));
                         info.list.Remove(info.objs[i]);
-                        (info.objs[i] as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
+                        (info.objs[i] as IEditableObject)?.DeselectAll(scene.SelectedObjects);
                     }
                     lists[i_lists++] = info.list;
                     i_deleteInfos++;
@@ -430,7 +430,7 @@ namespace GL_EditorFramework.EditorDrawables
                     deleteSingleInfos[i_deleteInfos++] = new RevertableDeletion.SingleDeleteInListInfo(info.obj, info.list.IndexOf(info.obj), info.list);
                     info.list.Remove(info.obj);
                     lists[i_lists++] = info.list;
-                    (info.obj as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
+                    (info.obj as IEditableObject)?.DeselectAll(scene.SelectedObjects);
                 }
 
 
@@ -625,7 +625,7 @@ namespace GL_EditorFramework.EditorDrawables
                     {
                         deleteInfos[i_deleteInfos].infos[i_info++] = new RevertableDictDeletion.DeleteInfo(info.infos[i].obj, info.infos[i].key);
                         info.dict.Remove(info.infos[i].key);
-                        (info.infos[i].obj as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
+                        (info.infos[i].obj as IEditableObject)?.DeselectAll(scene.SelectedObjects);
                     }
                     dicts[i_dicts++] = info.dict;
                     i_deleteInfos++;
@@ -640,7 +640,7 @@ namespace GL_EditorFramework.EditorDrawables
                     deleteSingleInfos[i_deleteInfos++] = new RevertableDictDeletion.SingleDeleteInDictInfo(info.obj, info.key, info.dict);
                     info.dict.Remove(info.key);
                     dicts[i_dicts++] = info.dict;
-                    (info.obj as IEditableObject)?.DeselectAll(scene.control, scene.SelectedObjects);
+                    (info.obj as IEditableObject)?.DeselectAll(scene.SelectedObjects);
                 }
 
 
