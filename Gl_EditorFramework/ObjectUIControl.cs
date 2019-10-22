@@ -84,6 +84,8 @@ namespace GL_EditorFramework
         bool mouseWasDragged = false;
         int textBoxHeight;
 
+        bool textBoxHasNumericFilter = false;
+
         public ObjectUIControl()
         {
             SetStyle(
@@ -103,7 +105,6 @@ namespace GL_EditorFramework
 
             textBox1.Visible = false;
             textBoxHeight = textBox1.Height;
-            textBox1.KeyPress += TextBox1_KeyPress;
         }
 
         private void TextBox1_MouseClick(object sender, MouseEventArgs e)
@@ -357,10 +358,16 @@ namespace GL_EditorFramework
 
                 textBox1.Select(Math.Max(0, num), 0);
 
-                if (textBoxRequest.Value.useNumericFilter)
+                if (textBoxRequest.Value.useNumericFilter && !textBoxHasNumericFilter)
+                {
                     textBox1.KeyPress += TextBox1_KeyPress;
-                else
+                    textBoxHasNumericFilter = true;
+                }
+                else if (textBoxHasNumericFilter)
+                {
                     textBox1.KeyPress -= TextBox1_KeyPress;
+                    textBoxHasNumericFilter = false;
+                }
 
                 textBoxRequest = null;
             }
