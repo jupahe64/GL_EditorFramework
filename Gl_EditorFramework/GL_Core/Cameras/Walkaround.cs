@@ -87,7 +87,7 @@ namespace GL_EditorFramework.StandardCameras
         public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
         {
             depth = control.PickingDepth;
-            float delta = ((float)e.Delta * Math.Min(0.01f, depth / 500f));
+            float delta = (e.Delta * Math.Min(WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? 0.04f : 0.01f, depth / 500f));
             Vector3 vec;
 
             Vector2 normCoords = control.NormMouseCoords(e.Location.X, e.Location.Y);
