@@ -137,13 +137,6 @@ namespace GL_EditorFramework
 
             eventType = EventType.DRAW;
 
-            if ((changeTypes & VALUE_CHANGE_START) > 0)
-                objectUIProvider?.OnValueChangeStart();
-            if ((changeTypes & VALUE_CHANGED) > 0)
-                objectUIProvider?.OnValueChanged();
-            if ((changeTypes & VALUE_SET) > 0)
-                objectUIProvider?.OnValueSet();
-
             changeTypes = 0;
         }
 
@@ -163,13 +156,6 @@ namespace GL_EditorFramework
             focusedIndex = -1;
 
             eventType = EventType.DRAW;
-
-            if ((changeTypes & VALUE_CHANGE_START) > 0)
-                objectUIProvider?.OnValueChangeStart();
-            if ((changeTypes & VALUE_CHANGED) > 0)
-                objectUIProvider?.OnValueChanged();
-            if ((changeTypes & VALUE_SET) > 0)
-                objectUIProvider?.OnValueSet();
 
             changeTypes = 0;
         }
@@ -213,9 +199,21 @@ namespace GL_EditorFramework
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            usableWidth = Width - 15;
+            if (VScroll)
+                usableWidth = Width - SystemInformation.VerticalScrollBarWidth-2;
+            else
+                usableWidth = Width-2;
             Refresh();
         }
+
+        static Brush backBrush = new SolidBrush(MixedColor(SystemColors.ControlDark, SystemColors.Control));
+
+        static Point[] arrowDown = new Point[]
+        {
+            new Point( 2,  6),
+            new Point(18,  6),
+            new Point(10, 14)
+        };
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -232,19 +230,47 @@ namespace GL_EditorFramework
                 return;
             }
 
-            currentY = 10 + AutoScrollPosition.Y;
+            
+            //g.FillRectangle(backBrush, 0, AutoScrollPosition.Y, usableWidth, margin);
+
+            //g.FillRectangle(backBrush, 0, 0, margin / 2, Height);
+
+            //g.FillRectangle(backBrush, usableWidth - margin / 2, 0, margin / 2, Height);
+
+            currentY = margin + AutoScrollPosition.Y;
 
             index = 0;
 
             try
             {
+                int lastY = currentY - margin/2;
+                bool hovered = new Rectangle(usableWidth - margin - 20, currentY, 20, 20).Contains(mousePos);
+                g.TranslateTransform(usableWidth - margin - 20, currentY);
+                g.FillPolygon(hovered ? SystemBrushes.ControlDark : backBrush, arrowDown);
+                g.ResetTransform();
+                Heading("General");
+                Spacing(margin / 2);
                 objectUIProvider.DoUI(this);
 
-                AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y);
+                g.DrawRectangle(SystemPens.ControlDark, margin / 2, lastY, usableWidth - margin, currentY - lastY);
+
+                //g.FillRectangle(backBrush, 0, currentY, usableWidth, margin);
+
+                AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y + margin);
             }
             catch(ControlInvalidatedException) //this Control has been invalidated
             {
                 AutoScrollMinSize = new Size();
+            }
+
+            if (eventType != EventType.DRAW)
+            {
+                if ((changeTypes & VALUE_CHANGE_START) > 0)
+                    objectUIProvider?.OnValueChangeStart();
+                if ((changeTypes & VALUE_CHANGED) > 0)
+                    objectUIProvider?.OnValueChanged();
+                if ((changeTypes & VALUE_SET) > 0)
+                    objectUIProvider?.OnValueSet();
             }
         }
 
@@ -275,13 +301,6 @@ namespace GL_EditorFramework
                 eventType = EventType.DRAW;
             }
 
-            if ((changeTypes & VALUE_CHANGE_START) > 0)
-                objectUIProvider?.OnValueChangeStart();
-            if ((changeTypes & VALUE_CHANGED) > 0)
-                objectUIProvider?.OnValueChanged();
-            if ((changeTypes & VALUE_SET) > 0)
-                objectUIProvider?.OnValueSet();
-
             changeTypes = 0;
         }
 
@@ -299,13 +318,6 @@ namespace GL_EditorFramework
 
             eventType = EventType.DRAW;
             lastMousePos = e.Location;
-
-            if ((changeTypes & VALUE_CHANGE_START) > 0)
-                objectUIProvider?.OnValueChangeStart();
-            if ((changeTypes & VALUE_CHANGED) > 0)
-                objectUIProvider?.OnValueChanged();
-            if ((changeTypes & VALUE_SET) > 0)
-                objectUIProvider?.OnValueSet();
 
             changeTypes = 0;
         }
@@ -332,13 +344,6 @@ namespace GL_EditorFramework
             }
 
             eventType = EventType.DRAW;
-
-            if ((changeTypes & VALUE_CHANGE_START) > 0)
-                objectUIProvider?.OnValueChangeStart();
-            if ((changeTypes & VALUE_CHANGED) > 0)
-                objectUIProvider?.OnValueChanged();
-            if ((changeTypes & VALUE_SET) > 0)
-                objectUIProvider?.OnValueSet();
 
             if (textBoxRequest.HasValue)
             {
@@ -442,7 +447,7 @@ namespace GL_EditorFramework
                 return Math.Min(Math.Max(min, value), max);
             }
         }
-        
+
         #region UI Elements
         float valueBeforeDrag;
         private float NumericInputField(int x, int y, int width, float number, NumberInputInfo info, bool isCentered)
@@ -481,7 +486,7 @@ namespace GL_EditorFramework
                     if (dragIndex == index)
                     {
                         changeTypes |= VALUE_CHANGED;
-                        number = Clamped(valueBeforeDrag + (mousePos.X - dragStarPos.X) / info.incrementDragDivider * info.increment, 
+                        number = Clamped(valueBeforeDrag + (mousePos.X - dragStarPos.X) / info.incrementDragDivider * info.increment,
                             info.min, info.max, info.wrapAround);
                     }
                     if (focusedIndex == index)
@@ -537,7 +542,7 @@ namespace GL_EditorFramework
                     if (focusedIndex == index)
                         DrawField(x, currentY, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
                     else
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight,isCentered);
+                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
                     break;
             }
@@ -655,23 +660,23 @@ namespace GL_EditorFramework
         {
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
 
-            number = NumericInputField(usableWidth - fieldWidth-margin, currentY, fieldWidth, number, 
-                new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround),true);
+            number = NumericInputField(usableWidth - fieldWidth - margin, currentY, fieldWidth, number,
+                new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround), true);
             currentY += rowHeight;
             return number;
         }
 
-        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
+        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name,
             float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
             NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
-            
+
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
-            
+
             vec.X = NumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.X, input, true);
             vec.Y = NumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Y, input, true);
-            vec.Z = NumericInputField(usableWidth - margin - fieldWidth,                      currentY, fieldWidth, vec.Z, input, true);
-            
+            vec.Z = NumericInputField(usableWidth - margin - fieldWidth, currentY, fieldWidth, vec.Z, input, true);
+
 
             currentY += rowHeight;
             return vec;
@@ -683,7 +688,7 @@ namespace GL_EditorFramework
             currentY += beforeTwoLineSpacing;
 
             NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
-            
+
             const int nameWidth = 13;
             int width = (usableWidth - margin * 2 - fullWidthSpace * 2) / 3;
 
@@ -703,7 +708,7 @@ namespace GL_EditorFramework
             currentY += rowHeight;
             return vec;
         }
-        
+
         public bool Button(string name)
         {
             bool clicked = Button(margin, currentY, usableWidth - margin * 2, name);
@@ -718,7 +723,7 @@ namespace GL_EditorFramework
 
             int clickedIndex = 0;
 
-            if (Button(margin,                 currentY, width, name))
+            if (Button(margin, currentY, width, name))
                 clickedIndex = 1;
             if (Button(margin + width + fullWidthSpace, currentY, width, name2))
                 clickedIndex = 2;
@@ -734,9 +739,9 @@ namespace GL_EditorFramework
 
             int clickedIndex = 0;
 
-            if (Button(margin,                         currentY, width, name))
+            if (Button(margin, currentY, width, name))
                 clickedIndex = 1;
-            if (Button(margin + width     + fullWidthSpace,     currentY, width, name2))
+            if (Button(margin + width + fullWidthSpace, currentY, width, name2))
                 clickedIndex = 2;
             if (Button(margin + width * 2 + fullWidthSpace * 2, currentY, usableWidth - margin * 2 - width * 2 - fullWidthSpace * 2, name3))
                 clickedIndex = 3;
@@ -752,9 +757,9 @@ namespace GL_EditorFramework
 
             int clickedIndex = 0;
 
-            if (Button(margin, currentY,                         width, name))
+            if (Button(margin, currentY, width, name))
                 clickedIndex = 1;
-            if (Button(margin + width     + fullWidthSpace,     currentY, width, name2))
+            if (Button(margin + width + fullWidthSpace, currentY, width, name2))
                 clickedIndex = 2;
             if (Button(margin + width * 2 + fullWidthSpace * 2, currentY, width, name3))
                 clickedIndex = 3;
@@ -819,12 +824,12 @@ namespace GL_EditorFramework
                     changeTypes |= VALUE_SET;
                 }
 
-                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", 
+                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "",
                     SystemBrushes.Highlight, SystemBrushes.ControlLightLight);
             }
             else
             {
-                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "", 
+                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "",
                     SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
             }
 
@@ -861,9 +866,9 @@ namespace GL_EditorFramework
             DrawField(usableWidth - width - margin, currentY, width, value.ToString(), SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
 
             float arrowWidth = g.MeasureString(">", textBox1.Font).Width;
-            
+
             int index = values.IndexOf(value);
-            if(index > 0)
+            if (index > 0)
             {
                 g.DrawString("<", textBox1.Font, SystemBrushes.ControlText, usableWidth - width - margin + 1, currentY);
                 if (new Rectangle(usableWidth - width - margin + 1, currentY + 1, fieldWidth, textBoxHeight - 2).Contains(mousePos))
@@ -874,7 +879,7 @@ namespace GL_EditorFramework
                     if (eventType == EventType.CLICK)
                         value = values[index - 1];
                 }
-            }                                                  
+            }
 
             if (index < values.Count - 1)
             {
@@ -907,14 +912,14 @@ namespace GL_EditorFramework
             switch (eventType)
             {
                 case EventType.CLICK:
-                    if (new Rectangle(margin + 1, currentY+1, usableWidth - margin * 2 - 2, textBoxHeight - 2).Contains(mousePos))
+                    if (new Rectangle(margin + 1, currentY + 1, usableWidth - margin * 2 - 2, textBoxHeight - 2).Contains(mousePos))
                     {
                         comboBoxName = name;
                         autoScrollRestoreHeight = AutoScrollMinSize.Height;
                         autoScrollRestoreY = -AutoScrollPosition.Y;
                         comboBox1.Text = text;
                         comboBox1.Items.Clear();
-                        if(recommendations!=null && recommendations.Length!=0)
+                        if (recommendations != null && recommendations.Length != 0)
                             comboBox1.Items.AddRange(recommendations);
                         comboBox1.Visible = true;
                         comboBox1.Focus();
@@ -963,8 +968,8 @@ namespace GL_EditorFramework
 
         public void VerticalSeperator()
         {
-            g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY-2, usableWidth - margin * 2, 2);
-            g.FillRectangle(SystemBrushes.ControlDark, margin, currentY-2, usableWidth - margin * 2 - 1, 1);
+            g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY - 2, usableWidth - margin * 2, 2);
+            g.FillRectangle(SystemBrushes.ControlDark, margin, currentY - 2, usableWidth - margin * 2 - 1, 1);
             currentY += 2;
         }
         #endregion
