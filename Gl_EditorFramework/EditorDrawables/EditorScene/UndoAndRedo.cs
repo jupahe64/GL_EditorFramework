@@ -592,6 +592,26 @@ namespace GL_EditorFramework.EditorDrawables
                 public IList list;
             }
         }
+
+        public struct RevertableEntryChange : IRevertable
+        {
+            readonly int index;
+            readonly IList list;
+            readonly object prevValue;
+            public RevertableEntryChange(int index, IList list, object prevValue)
+            {
+                this.index = index;
+                this.list = list;
+                this.prevValue = prevValue;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                object currentValue = list[index];
+                list[index] = prevValue;
+                return new RevertableEntryChange(index, list, currentValue);
+            }
+        }
         #endregion
 
         #region Dictionary Operations
@@ -777,8 +797,28 @@ namespace GL_EditorFramework.EditorDrawables
                 public IDictionary dict;
             }
         }
+
+        public struct RevertableDictEntryChange : IRevertable
+        {
+            readonly string key;
+            readonly IDictionary dict;
+            readonly object prevValue;
+            public RevertableDictEntryChange(string key, IDictionary dict, object prevValue)
+            {
+                this.key = key;
+                this.dict = dict;
+                this.prevValue = prevValue;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                object currentValue = dict[key];
+                dict[key] = prevValue;
+                return new RevertableDictEntryChange(key, dict, currentValue);
+            }
+        }
         #endregion
-        
+
         public struct PropertyCapture
         {
             public class Undoable : Attribute { }
