@@ -154,9 +154,15 @@ namespace GL_EditorFramework.EditorDrawables
             infos.Add(this, 0, prevPos, prevRot, prevScale);
         }
 
-        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this, scene);
+        public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)
+        {
+            if (!Selected)
+                return false;
+            objectUIControl.AddObjectUIContainer(new PropertyProvider(this, scene), "Transform");
+            return true;
+        }
 
-        public new class PropertyProvider : IObjectUIProvider
+        public new class PropertyProvider : IObjectUIContainer
         {
             PropertyCapture? capture = null;
 

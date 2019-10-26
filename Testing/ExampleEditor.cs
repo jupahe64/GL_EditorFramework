@@ -155,7 +155,7 @@ namespace Example
         {
             scene.CurrentList = e.List;
             //fetch availible properties for list
-            objectUIControl1.CurrentObjectUIProvider = scene.GetObjectUIProvider();
+            scene.SetupObjectUIControl(objectUIControl1);
         }
 
         private void Scene_ListEntered(object sender, ListEventArgs e)
@@ -214,7 +214,9 @@ namespace Example
         private void Scene_ObjectsMoved(object sender, EventArgs e)
         {
             //update the property control because properties might have changed
-            objectUIControl1.CurrentObjectUIProvider?.UpdateProperties();
+            foreach(IObjectUIContainer objectUIContainer in objectUIControl1.ObjectUIContainers)
+                objectUIContainer.UpdateProperties();
+
             objectUIControl1.Refresh();
         }
 
@@ -224,7 +226,7 @@ namespace Example
             sceneListView1.Refresh();
 
             //fetch availible properties for selection
-            objectUIControl1.CurrentObjectUIProvider = scene.GetObjectUIProvider();
+            scene.SetupObjectUIControl(objectUIControl1);
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)

@@ -16,7 +16,7 @@ using System.Collections.Specialized;
 namespace GL_EditorFramework
 {
     /// <summary>
-    /// A control for displaying object specific UI that an <see cref="IObjectUIProvider"/> provides
+    /// A control for displaying object specific UI that an <see cref="IObjectUIContainer"/> provides
     /// </summary>
     public partial class ObjectUIControl : UserControl, IObjectUIControl
     {
@@ -45,20 +45,44 @@ namespace GL_EditorFramework
 
         EventType eventType = EventType.DRAW;
 
-        IObjectUIProvider objectUIProvider;
-
-        /// <summary>
-        /// The ObjectUIProvider used for the UI in this control
-        /// </summary>
-        public IObjectUIProvider CurrentObjectUIProvider
+        class ContainerInfo
         {
-            get => objectUIProvider;
+            public bool isExpanded;
+            public string name;
+            public IObjectUIContainer objectUIContainer;
 
-            set
+            public ContainerInfo(IObjectUIContainer objectUIContainer, string name)
             {
-                objectUIProvider = value;
-                Refresh();
+                this.isExpanded = true;
+                this.name = name;
+                this.objectUIContainer = objectUIContainer;
             }
+        }
+        
+        List<ContainerInfo> containerInfos = new List<ContainerInfo>();
+
+        public IEnumerable<IObjectUIContainer> ObjectUIContainers => containerInfos.Select(x=>x.objectUIContainer);
+
+        public void AddObjectUIContainer(IObjectUIContainer objectUIContainer, string name)
+        {
+            containerInfos.Add(new ContainerInfo(objectUIContainer,name));
+        }
+
+        public void RemoveObjectUIContainers(IObjectUIContainer objectUIContainer)
+        {
+            foreach(ContainerInfo containerInfo in containerInfos)
+            {
+                if (containerInfo.objectUIContainer == containerInfos)
+                {
+                    containerInfos.Remove(containerInfo);
+                    break;
+                }
+            }
+        }
+
+        public void ClearObjectUIContainers()
+        {
+            containerInfos.Clear();
         }
 
         Graphics g;
@@ -215,11 +239,18 @@ namespace GL_EditorFramework
             new Point(10, 14)
         };
 
+        static Point[] arrowLeft = new Point[]
+        {
+            new Point(14,  2),
+            new Point(14, 18),
+            new Point( 6, 10)
+        };
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
 
-            if (objectUIProvider == null)
+            if (containerInfos.Count == 0)
                 return;
 
             g = e.Graphics;
@@ -230,47 +261,49 @@ namespace GL_EditorFramework
                 return;
             }
 
-            
-            //g.FillRectangle(backBrush, 0, AutoScrollPosition.Y, usableWidth, margin);
-
-            //g.FillRectangle(backBrush, 0, 0, margin / 2, Height);
-
-            //g.FillRectangle(backBrush, usableWidth - margin / 2, 0, margin / 2, Height);
-
             currentY = margin + AutoScrollPosition.Y;
 
             index = 0;
 
             try
             {
-                int lastY = currentY - margin/2;
-                bool hovered = new Rectangle(usableWidth - margin - 20, currentY, 20, 20).Contains(mousePos);
-                g.TranslateTransform(usableWidth - margin - 20, currentY);
-                g.FillPolygon(hovered ? SystemBrushes.ControlDark : backBrush, arrowDown);
-                g.ResetTransform();
-                Heading("General");
-                Spacing(margin / 2);
-                objectUIProvider.DoUI(this);
+                foreach(ContainerInfo containerInfo in containerInfos)
+                {
+                    int lastY = currentY - margin / 2;
+                    bool hovered = new Rectangle(Width - margin - 20 - SystemInformation.VerticalScrollBarWidth, currentY, 20 + SystemInformation.VerticalScrollBarWidth, 20).Contains(mousePos);
 
-                g.DrawRectangle(SystemPens.ControlDark, margin / 2, lastY, usableWidth - margin, currentY - lastY);
+                    if (hovered && eventType == EventType.CLICK)
+                        containerInfo.isExpanded = !containerInfo.isExpanded;
 
-                //g.FillRectangle(backBrush, 0, currentY, usableWidth, margin);
+                    g.TranslateTransform(usableWidth - margin - 20, currentY);
+                    g.FillPolygon(hovered ? SystemBrushes.ControlDark : backBrush, containerInfo.isExpanded ? arrowDown : arrowLeft);
+                    g.ResetTransform();
+                    Heading(containerInfo.name);
+                    Spacing(margin / 2);
+
+                    if(containerInfo.isExpanded)
+                        containerInfo.objectUIContainer.DoUI(this);
+
+                    g.DrawRectangle(SystemPens.ControlDark, margin / 2, lastY, usableWidth - margin, currentY - lastY);
+
+                    Spacing(margin);
+
+                    if (eventType != EventType.DRAW)
+                    {
+                        if ((changeTypes & VALUE_CHANGE_START) > 0)
+                            containerInfo.objectUIContainer.OnValueChangeStart();
+                        if ((changeTypes & VALUE_CHANGED) > 0)
+                            containerInfo.objectUIContainer.OnValueChanged();
+                        if ((changeTypes & VALUE_SET) > 0)
+                            containerInfo.objectUIContainer.OnValueSet();
+                    }
+                }
 
                 AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y + margin);
             }
             catch(ControlInvalidatedException) //this Control has been invalidated
             {
                 AutoScrollMinSize = new Size();
-            }
-
-            if (eventType != EventType.DRAW)
-            {
-                if ((changeTypes & VALUE_CHANGE_START) > 0)
-                    objectUIProvider?.OnValueChangeStart();
-                if ((changeTypes & VALUE_CHANGED) > 0)
-                    objectUIProvider?.OnValueChanged();
-                if ((changeTypes & VALUE_SET) > 0)
-                    objectUIProvider?.OnValueSet();
             }
         }
 
@@ -324,9 +357,8 @@ namespace GL_EditorFramework
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left)
+            if (e.Button != MouseButtons.Left || containerInfos.Count == 0)
                 return;
-
             mouseDown = false;
 
             if (mouseWasDragged)
@@ -336,9 +368,6 @@ namespace GL_EditorFramework
             }
             else
             {
-                if (objectUIProvider == null)
-                    return;
-
                 eventType = EventType.CLICK;
                 Refresh();
             }
@@ -996,7 +1025,7 @@ namespace GL_EditorFramework
     }
 
     /// <summary>
-    /// A control for displaying object specific UI that an <see cref="IObjectUIProvider"/> provides
+    /// A control for displaying object specific UI that an <see cref="IObjectUIContainer"/> provides
     /// </summary>
     public interface IObjectUIControl
     {
@@ -1028,7 +1057,7 @@ namespace GL_EditorFramework
     /// <summary>
     /// A provider for object specific UI for example properties
     /// </summary>
-    public interface IObjectUIProvider
+    public interface IObjectUIContainer
     {
         void DoUI(IObjectUIControl control);
         void UpdateProperties();

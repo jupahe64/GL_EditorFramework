@@ -1236,49 +1236,44 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public override bool ProvidesProperty(EditorSceneBase scene)
+        public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)
         {
-            if (scene.SelectedObjects.Count > pathPoints.Count+1)
+            if (scene.SelectedObjects.Count > pathPoints.Count + 1)
                 return false;
-            foreach(object obj in scene.SelectedObjects)
+            foreach (object obj in scene.SelectedObjects)
             {
                 if (!pathPoints.Contains(obj) && obj != this)
                     return false;
             }
+
+            objectUIControl.AddObjectUIContainer(new PathUIContainer(this, scene), "Path");
+            
+            List<PathPoint> points = new List<PathPoint>();
+
+            foreach (IEditableObject obj in scene.SelectedObjects)
+            {
+                if (obj is PathPoint)
+                    points.Add((PathPoint)obj);
+            }
+
+            if (points.Count == 1)
+                objectUIControl.AddObjectUIContainer(new SinglePathPointUIContainer(points[0], scene), "Path Point");
+
             return true;
-
         }
 
-        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene)
-        {
-            return new PropertyProvider(this, scene);
-        }
-
-        public class PropertyProvider : IObjectUIProvider
+        public class PathUIContainer : IObjectUIContainer
         {
             PropertyCapture? pathCapture = null;
-            PropertyCapture? pointCapture = null;
 
             Path path;
-            PathPoint point;
             readonly EditorSceneBase scene;
-            public PropertyProvider(Path path, EditorSceneBase scene)
+            public PathUIContainer(Path path, EditorSceneBase scene)
             {
                 this.path = path;
 
                 List<PathPoint> points = new List<PathPoint>();
                 
-                foreach(IEditableObject obj in scene.SelectedObjects)
-                {
-                    if ((point = obj as PathPoint) != null)
-                        points.Add(point);
-                }
-
-                if (points.Count == 1)
-                    point = point ?? points.First(); //if the last selected object isn't a PathPoint, use the first selected point
-                else
-                    point = null;
-
                 this.scene = scene;
             }
 
@@ -1288,7 +1283,48 @@ namespace GL_EditorFramework.EditorDrawables
 
                 if (scene.CurrentList!= path.pathPoints && control.Button("Edit Pathpoints"))
                     scene.EnterList(path.pathPoints);
+            }
 
+            public void OnValueChangeStart()
+            {
+                pathCapture = new PropertyCapture(path);
+            }
+
+            public void OnValueChanged()
+            {
+                scene.Refresh();
+            }
+
+            public void OnValueSet()
+            {
+                pathCapture?.HandleUndo(scene);
+
+                pathCapture = null;
+
+                scene.Refresh();
+            }
+
+            public void UpdateProperties()
+            {
+
+            }
+        }
+
+        public class SinglePathPointUIContainer : IObjectUIContainer
+        {
+            PropertyCapture? pointCapture = null;
+
+            //Path path;
+            PathPoint point;
+            readonly EditorSceneBase scene;
+            public SinglePathPointUIContainer(PathPoint point, EditorSceneBase scene)
+            {
+                this.point = point;
+                this.scene = scene;
+            }
+
+            public void DoUI(IObjectUIControl control)
+            {
                 if (point != null)
                 {
                     if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
@@ -1310,7 +1346,6 @@ namespace GL_EditorFramework.EditorDrawables
 
             public void OnValueChangeStart()
             {
-                pathCapture = new PropertyCapture(path);
                 pointCapture = new PropertyCapture(point);
             }
 
@@ -1321,10 +1356,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             public void OnValueSet()
             {
-                pathCapture?.HandleUndo(scene);
                 pointCapture?.HandleUndo(scene);
-
-                pathCapture = null;
+                
                 pointCapture = null;
 
                 scene.Refresh();

@@ -78,9 +78,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public virtual bool ProvidesProperty(EditorSceneBase scene) => false;
-
-        public virtual IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => null;
+        public virtual bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl) => false;
 
         public struct BoundingBox
         {
@@ -235,9 +233,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         void DeleteSelected(DeletionManager manager, IList list, IList currentList);
 
-        bool ProvidesProperty(EditorSceneBase scene);
-
-        IObjectUIProvider GetPropertyProvider(EditorSceneBase scene);
+        bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl);
 
         void ListChanged(IList list);
     }

@@ -226,12 +226,17 @@ namespace Example
             return 0;
         }
 
-        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this, scene);
-
-        public new class PropertyProvider : IObjectUIProvider
+        public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)
         {
-            PropertyCapture? capture = null;
+            if (!Selected)
+                return false;
+            objectUIControl.AddObjectUIContainer(new PropertyProvider(this, scene), "Transform");
+            objectUIControl.AddObjectUIContainer(new ExampleUIContainer(this, scene), "Example Controls");
+            return true;
+        }
 
+        public class ExampleUIContainer : IObjectUIContainer
+        {
             string text = "";
             string longText = "";
             float number = 0;
@@ -250,7 +255,7 @@ namespace Example
                 "AnimatedObject"
             };
 
-            public PropertyProvider(SingleObject obj, EditorSceneBase scene)
+            public ExampleUIContainer(SingleObject obj, EditorSceneBase scene)
             {
                 this.obj = obj;
                 this.scene = scene;
@@ -267,13 +272,6 @@ namespace Example
 
             public void DoUI(IObjectUIControl control)
             {
-                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
-                    obj.Position = control.Vector3Input(obj.Position, "Position", 1, 16);
-                else
-                    obj.Position = control.Vector3Input(obj.Position, "Position", 0.125f, 2);
-
-                control.Spacing(30);
-                control.Heading("Example controls");
                 text = control.TextInput(text, "TextInput");
                 longText = control.FullWidthTextInput(longText, "Long Text Input");
                 number = control.NumberInput(number, "Number Input");
@@ -293,7 +291,7 @@ namespace Example
 
             public void OnValueChangeStart()
             {
-                capture = new PropertyCapture(obj);
+
             }
 
             public void OnValueChanged()
@@ -303,9 +301,7 @@ namespace Example
 
             public void OnValueSet()
             {
-                capture?.HandleUndo(scene);
-                capture = null;
-                scene.Refresh();
+                
             }
 
             public void UpdateProperties()

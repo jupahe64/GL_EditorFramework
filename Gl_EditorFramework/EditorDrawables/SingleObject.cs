@@ -240,11 +240,15 @@ namespace GL_EditorFramework.EditorDrawables
                 manager.Add(list, this);
         }
 
-        public override bool ProvidesProperty(EditorSceneBase scene) => Selected;
+        public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)
+        {
+            if (!Selected)
+                return false;
+            objectUIControl.AddObjectUIContainer(new PropertyProvider(this, scene), "Transform");
+            return true;
+        }
 
-        public override IObjectUIProvider GetPropertyProvider(EditorSceneBase scene) => new PropertyProvider(this,scene);
-
-        public class PropertyProvider : IObjectUIProvider
+        public class PropertyProvider : IObjectUIContainer
         {
             PropertyCapture? capture = null;
 

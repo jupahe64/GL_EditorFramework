@@ -107,28 +107,29 @@ namespace GL_EditorFramework.EditorDrawables
         public abstract void DeleteSelected();
 
         /// <summary>
-        /// Returns a new <see cref="IObjectUIProvider"/> based on the currently selected objects
+        /// Sets up an <see cref="ObjectUIControl"/> based on the currently selected objects
         /// </summary>
         /// <returns></returns>
-        public IObjectUIProvider GetObjectUIProvider()
+        public void SetupObjectUIControl(ObjectUIControl objectUIControl)
         {
-            IObjectUIProvider provider = null;
+            objectUIControl.ClearObjectUIContainers();
+
+            bool atleastOne = false;
             foreach (IEditableObject obj in GetObjects())
             {
 
-                if (obj.ProvidesProperty(this))
+                if (obj.TrySetupObjectUIControl(this, objectUIControl))
                 {
-                    if (provider == null)
-                        provider = obj.GetPropertyProvider(this);
-                    else
+                    if (atleastOne)
                     {
-                        provider = null;
-                        break;
+                        objectUIControl.ClearObjectUIContainers();
+                        return;
                     }
+                    else
+                        atleastOne = true;
                 }
             }
-
-            return provider;
+            objectUIControl.Refresh();
         }
 
         /// <summary>

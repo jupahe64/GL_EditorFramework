@@ -67,7 +67,6 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.objectUIControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.objectUIControl1.CurrentObjectUIProvider = null;
             this.objectUIControl1.Location = new System.Drawing.Point(3, 470);
             this.objectUIControl1.Name = "objectUIControl1";
             this.objectUIControl1.Size = new System.Drawing.Size(326, 274);
