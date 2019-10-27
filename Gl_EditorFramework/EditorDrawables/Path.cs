@@ -28,7 +28,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         private int pathPointVao;
         private int pathPointBuffer;
-        private List<PathPoint> pathPoints;
+        readonly protected List<PathPoint> pathPoints;
+
+        public IReadOnlyList<PathPoint> PathPoints => pathPoints;
 
         [PropertyCapture.Undoable]
         public bool Closed { get; set; } = false;

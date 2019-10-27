@@ -315,14 +315,14 @@ namespace GL_EditorFramework.EditorDrawables
 
         public class DeletionManager
         {
-            internal Dictionary<IList, List<IEditableObject>> dict = new Dictionary<IList, List<IEditableObject>>();
+            public Dictionary<IList, List<IEditableObject>> Dictionary { get; private set; } = new Dictionary<IList, List<IEditableObject>>();
 
             public void Add(IList list, params IEditableObject[] objs)
             {
-                if (!dict.ContainsKey(list))
-                    dict[list] = new List<IEditableObject>();
+                if (!Dictionary.ContainsKey(list))
+                    Dictionary[list] = new List<IEditableObject>();
 
-                dict[list].AddRange(objs);
+                Dictionary[list].AddRange(objs);
             }
         }
 
@@ -338,7 +338,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         protected void _ExecuteDeletion(DeletionManager manager)
         {
-            if (manager.dict.Count == 0)
+            if (manager.Dictionary.Count == 0)
                 return;
 
             List<RevertableDeletion.DeleteInListInfo> infos = new List<RevertableDeletion.DeleteInListInfo>();
@@ -346,7 +346,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             uint var = 0;
 
-            foreach (KeyValuePair<IList, List<IEditableObject>> entry in manager.dict)
+            foreach (KeyValuePair<IList, List<IEditableObject>> entry in manager.Dictionary)
             {
                 if (entry.Value.Count < 1)
                     throw new Exception("entry has no objects");
