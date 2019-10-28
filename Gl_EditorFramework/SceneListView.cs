@@ -17,22 +17,39 @@ namespace GL_EditorFramework
         /// <summary>
         /// A dictionary containing all RootLists stored by their name
         /// </summary>
-        public Dictionary<string, IList> RootLists { get; set; } = new Dictionary<string, IList>();
+        public Dictionary<string, IList> RootLists
+        {
+            get => rootLists;
+            set
+            {
+                rootLists = value;
+                UpdateComboBoxItems();
+            }
+        }
+
+        Dictionary<string, IList> rootLists = new Dictionary<string, IList>();
+
+        public void UpdateComboBoxItems()
+        {
+            rootListComboBox.Items.Clear();
+            rootListComboBox.Items.AddRange(rootLists.Keys.ToArray());
+        }
 
         private Stack<IList> listStack = new Stack<IList>();
 
         public event SelectionChangedEventHandler SelectionChanged;
         public event ItemsMovedEventHandler ItemsMoved;
-        public event EventHandler CurrentListChanged;
         public event ListEventHandler ListExited;
 
         int fontHeight;
+        private string currentRootListName = "None";
 
         /// <summary>
         /// The set used to determine which objects are selected
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ISet<object> SelectedItems {
+        public ISet<object> SelectedItems
+        {
             get => listView.SelectedItems;
             set
             {
@@ -44,7 +61,15 @@ namespace GL_EditorFramework
         /// The name of the current list on the root level
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public string CurrentRootListName { get; private set; } = "None";
+        public string CurrentRootListName
+        {
+            get => currentRootListName;
+            private set
+            {
+                currentRootListName = value;
+                rootListComboBox.SelectedItem = value;
+            }
+        }
 
         /// <summary>
         /// Sets the current list to a list in <see cref="RootLists"/>
@@ -78,11 +103,11 @@ namespace GL_EditorFramework
             if (listStack == null)
                 return;
 
-            if(listView.CurrentList!=null)
+            if (listView.CurrentList != null)
                 listStack.Push(listView.CurrentList);
             listView.CurrentList = list;
 
-            rootListChangePanel.Visible = false;
+            rootListComboBox.Visible = false;
             btnBack.Visible = true;
         }
 
@@ -91,12 +116,12 @@ namespace GL_EditorFramework
         /// </summary>
         public void ExitList()
         {
-            if (listStack.Count==0)
+            if (listStack.Count == 0)
                 return;
-            
+
             listView.CurrentList = listStack.Pop();
 
-            rootListChangePanel.Visible = true;
+            rootListComboBox.Visible = true;
             btnBack.Visible = false;
         }
 
@@ -117,172 +142,12 @@ namespace GL_EditorFramework
         {
             InitializeComponent();
 
-            listView.SelectionChanged += (x,y) => SelectionChanged?.Invoke(x,y);
+            listView.SelectionChanged += (x, y) => SelectionChanged?.Invoke(x, y);
             listView.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
 
             Graphics g = CreateGraphics();
 
             fontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
-
-            rootListChangePanel.Height = rootListChangePanel.FontHeight + 4;
-            btnBack.Height = rootListChangePanel.FontHeight + 6;
-
-            listView.Top = rootListChangePanel.FontHeight + 7;
-            listView.Height = Height - rootListChangePanel.FontHeight - 8;
-
-            rootListChangePanel.Paint += RootListChangePanel_Paint;
-            rootListChangePanel.Click += RootListChangePanel_Click;
-        }
-
-        private void RootListChangePanel_Click(object sender, EventArgs e)
-        {
-            if (rootListChangePanel.Expanded)
-            {
-                rootListChangePanel.Height = rootListChangePanel.FontHeight + 4;
-
-                listView.Top = rootListChangePanel.FontHeight + 7;
-                listView.Height =  Height - rootListChangePanel.FontHeight - 8;
-                listView.Visible = true;
-                rootListChangePanel.Expanded = false;
-                CurrentRootListName = RootLists.Keys.ElementAt(rootListChangePanel.HoveredCategoryIndex);
-                listView.CurrentList = RootLists[CurrentRootListName];
-                CurrentListChanged?.Invoke(this, null);
-                rootListChangePanel.Refresh();
-            }
-            else
-            {
-                rootListChangePanel.FullHeight = RootLists.Count * (rootListChangePanel.FontHeight+4);
-                if (rootListChangePanel.FullHeight > Height / 2)
-                {
-                    rootListChangePanel.Height =  Height - 2;
-                    listView.Visible = false;
-                }
-                else
-                {
-                    rootListChangePanel.Height =  rootListChangePanel.FullHeight;
-                    listView.Top = rootListChangePanel.FullHeight + 7;
-                    listView.Height =  Height - rootListChangePanel.FullHeight - 8;
-                }
-                rootListChangePanel.Expanded = true;
-                rootListChangePanel.Refresh();
-            }
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            if (rootListChangePanel.Expanded)
-            {
-                if (rootListChangePanel.FullHeight > Height / 2)
-                {
-                    rootListChangePanel.Height =  Height - 2;
-                    listView.Visible = false;
-                }
-                else
-                {
-                    rootListChangePanel.Height =  rootListChangePanel.FullHeight;
-                    listView.Top = rootListChangePanel.FullHeight + 7;
-                    listView.Height =  Height - rootListChangePanel.FullHeight - 8;
-                    listView.Visible = true;
-                }
-                rootListChangePanel.Refresh();
-            }
-        }
-
-        private void RootListChangePanel_Paint(object sender, PaintEventArgs e)
-        {
-            Brush textBrush = new SolidBrush(ForeColor);
-
-            Graphics g = e.Graphics;
-
-            if (rootListChangePanel.Expanded)
-            {
-                int i = 0;
-                int y;
-                foreach (string rootList in RootLists.Keys)
-                {
-                    if ((y = 2 + i * (rootListChangePanel.FontHeight + 4) + rootListChangePanel.AutoScrollPosition.Y+rootListChangePanel.YOffset) > 2 - rootListChangePanel.FontHeight)
-                    {
-                        if (CurrentRootListName == rootList)
-                        {
-                            g.FillRectangle(SystemBrushes.Highlight, 0, y-2, rootListChangePanel.Width, rootListChangePanel.FontHeight+4);
-                            g.DrawString(rootList, rootListChangePanel.Font, SystemBrushes.HighlightText, 4, y);
-                        }
-                        else if (rootListChangePanel.HoveredCategoryIndex == i)
-                        {
-                            g.FillRectangle(SystemBrushes.MenuHighlight, 0, y-2, rootListChangePanel.Width, rootListChangePanel.FontHeight+4);
-                            g.DrawString(rootList, rootListChangePanel.Font, SystemBrushes.HighlightText, 4, y);
-                        }
-                        else
-                            g.DrawString(rootList, rootListChangePanel.Font, textBrush, 4, y);
-
-                    }
-                    i++;
-                    if (y > rootListChangePanel.Height)
-                        break;
-                }
-            } else
-                g.DrawString(CurrentRootListName, rootListChangePanel.Font, textBrush, 4, 2);
-        }
-        
-
-
-
-
-
-        private class RootListChangePanel : UserControl
-        {
-            public int HoveredCategoryIndex = -1;
-
-            new public int FontHeight;
-
-            public int FullHeight;
-            public int YOffset = 0;
-
-            public bool Expanded = false;
-
-            public Dictionary<string, IList> lists = new Dictionary<string, IList>();
-
-            protected override void OnFontChanged(EventArgs e)
-            {
-                base.OnFontChanged(e);
-                Graphics g = CreateGraphics();
-                FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
-            }
-
-            public RootListChangePanel()
-            {
-                SetStyle(
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.UserPaint |
-                ControlStyles.OptimizedDoubleBuffer,
-                true);
-                Graphics g = CreateGraphics();
-                FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
-            }
-
-            protected override void OnMouseLeave(EventArgs e)
-            {
-                base.OnMouseLeave(e);
-                HoveredCategoryIndex = -1;
-                Refresh();
-            }
-            protected override void OnMouseMove(MouseEventArgs e)
-            {
-                base.OnMouseMove(e);
-                HoveredCategoryIndex = (e.Y - YOffset) / (FontHeight + 4);
-                Refresh();
-            }
-
-            protected override void OnMouseWheel(MouseEventArgs e)
-            {
-                base.OnMouseWheel(e);
-                YOffset = Math.Min(0,Math.Max(YOffset + e.Delta / 4, Height - FullHeight));
-
-                
-
-                Refresh();
-            }
         }
 
         private void BtnBack_Click(object sender, EventArgs e)
@@ -291,7 +156,22 @@ namespace GL_EditorFramework
             ListEventArgs args = new ListEventArgs(listView.CurrentList);
             ListExited?.Invoke(this, args);
         }
+
+        private void RootListComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            listView.CurrentList = rootLists[(string)rootListComboBox.SelectedItem];
+        }
+
+        private void rootListComboBox_DropDown(object sender, EventArgs e)
+        {
+
+        }
     }
+
+
+
+
+
 
     public class SelectionChangedEventArgs : HandledEventArgs
     {

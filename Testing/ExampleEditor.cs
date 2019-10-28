@@ -137,6 +137,8 @@ namespace Example
             for (int i = 0; i<15; i++)
                 sceneListView1.RootLists.Add("Test"+i,scene.objects);
 
+            sceneListView1.UpdateComboBoxItems();
+
             //link the scenes selected objs to sceneListView
             sceneListView1.SelectedItems = scene.SelectedObjects;
             //set current category (highly recommended to do once all categories are added

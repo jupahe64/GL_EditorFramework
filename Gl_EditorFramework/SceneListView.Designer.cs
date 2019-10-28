@@ -10,37 +10,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.listView = new GL_EditorFramework.FastListView();
-            this.rootListChangePanel = new GL_EditorFramework.SceneListView.RootListChangePanel();
             this.btnBack = new System.Windows.Forms.Button();
+            this.rootListComboBox = new System.Windows.Forms.ComboBox();
+            this.listView = new GL_EditorFramework.FastListView();
             this.SuspendLayout();
-            // 
-            // listView
-            // 
-            this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listView.AutoScroll = true;
-            this.listView.BackColor = System.Drawing.SystemColors.Window;
-            this.listView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.listView.Location = new System.Drawing.Point(1, 29);
-            this.listView.Margin = new System.Windows.Forms.Padding(1, 3, 1, 1);
-            this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(298, 270);
-            this.listView.TabIndex = 0;
-            // 
-            // categoryPanel
-            // 
-            this.rootListChangePanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.rootListChangePanel.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.rootListChangePanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.rootListChangePanel.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rootListChangePanel.Location = new System.Drawing.Point(1, 1);
-            this.rootListChangePanel.Margin = new System.Windows.Forms.Padding(1);
-            this.rootListChangePanel.Name = "categoryPanel";
-            this.rootListChangePanel.Size = new System.Drawing.Size(298, 24);
-            this.rootListChangePanel.TabIndex = 1;
             // 
             // btnBack
             // 
@@ -57,10 +30,37 @@
             this.btnBack.Visible = false;
             this.btnBack.Click += new System.EventHandler(this.BtnBack_Click);
             // 
+            // rootListComboBox
+            // 
+            this.rootListComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.rootListComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.rootListComboBox.FormattingEnabled = true;
+            this.rootListComboBox.Location = new System.Drawing.Point(0, 2);
+            this.rootListComboBox.Name = "rootListComboBox";
+            this.rootListComboBox.Size = new System.Drawing.Size(300, 21);
+            this.rootListComboBox.TabIndex = 3;
+            this.rootListComboBox.DropDown += new System.EventHandler(this.rootListComboBox_DropDown);
+            this.rootListComboBox.SelectedIndexChanged += new System.EventHandler(this.RootListComboBox_SelectedIndexChanged);
+            // 
+            // listView
+            // 
+            this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listView.AutoScroll = true;
+            this.listView.BackColor = System.Drawing.SystemColors.Window;
+            this.listView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.listView.Location = new System.Drawing.Point(1, 29);
+            this.listView.Margin = new System.Windows.Forms.Padding(1, 3, 1, 1);
+            this.listView.Name = "listView";
+            this.listView.Size = new System.Drawing.Size(298, 270);
+            this.listView.TabIndex = 0;
+            // 
             // SceneListView
             // 
+            this.Controls.Add(this.rootListComboBox);
             this.Controls.Add(this.btnBack);
-            this.Controls.Add(this.rootListChangePanel);
             this.Controls.Add(this.listView);
             this.Name = "SceneListView";
             this.Size = new System.Drawing.Size(300, 300);
@@ -71,7 +71,7 @@
         #endregion
 
         private FastListView listView;
-        private RootListChangePanel rootListChangePanel;
         private System.Windows.Forms.Button btnBack;
+        private System.Windows.Forms.ComboBox rootListComboBox;
     }
 }
