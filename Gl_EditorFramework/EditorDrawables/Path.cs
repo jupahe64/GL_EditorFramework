@@ -93,7 +93,6 @@ namespace GL_EditorFramework.EditorDrawables
                     (randomColor & 0xFF) / 255f,
                     1f
                     );
-
                 foreach (PathPoint point in pathPoints)
                 {
                     #region Point
@@ -1215,7 +1214,7 @@ namespace GL_EditorFramework.EditorDrawables
             return false;
         }
 
-        public override void DeleteSelected(DeletionManager manager, IList list, IList currentList)
+        public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
         {
             bool allPointsSelected = true;
             foreach (PathPoint point in pathPoints)
@@ -1223,18 +1222,13 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (allPointsSelected)
             {
-                if (currentList == pathPoints)
-                {
-                    for(int i = 1; i<pathPoints.Count; i++)
-                        pathPoints[i].DeleteSelected(manager, pathPoints, currentList);
-                }
-                else
-                    manager.Add(list, this);
+                scene.InvalidateList(pathPoints);
+                manager.Add(list, this);
             }
             else
             {
                 foreach (PathPoint point in pathPoints)
-                    point.DeleteSelected(manager, pathPoints, currentList);
+                    point.DeleteSelected(scene, manager, pathPoints);
             }
         }
 
@@ -1647,7 +1641,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return i;
             }
 
-            public override void DeleteSelected(DeletionManager manager, IList list, IList currentList)
+            public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
             {
                 if (Selected)
                     manager.Add(list, this);

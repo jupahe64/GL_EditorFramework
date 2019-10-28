@@ -234,7 +234,7 @@ namespace GL_EditorFramework.EditorDrawables
             infos.Add(this, 0, prevPos, null, null);
         }
 
-        public override void DeleteSelected(DeletionManager manager, IList list, IList currentList)
+        public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
         {
             if (Selected)
                 manager.Add(list, this);

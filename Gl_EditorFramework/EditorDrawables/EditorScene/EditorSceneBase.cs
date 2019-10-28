@@ -57,6 +57,7 @@ namespace GL_EditorFramework.EditorDrawables
         public event ListChangedEventHandler ListChanged;
         public event DictChangedEventHandler DictChanged;
         public event ListEventHandler ListEntered;
+        public event ListEventHandler ListInvalidated;
 
         protected float draggingDepth;
 
@@ -86,6 +87,14 @@ namespace GL_EditorFramework.EditorDrawables
         {
             CurrentList = list;
             ListEntered?.Invoke(this, new ListEventArgs(list));
+        }
+
+        public void InvalidateList(IList list)
+        {
+            if(list==CurrentList)
+                CurrentList = null;
+
+            ListInvalidated?.Invoke(this, new ListEventArgs(list));
         }
 
         public void Refresh() => control.Refresh();
@@ -331,7 +340,7 @@ namespace GL_EditorFramework.EditorDrawables
             DeletionManager manager = new DeletionManager();
 
             foreach (IEditableObject obj in list)
-                obj.DeleteSelected(manager, list, CurrentList);
+                obj.DeleteSelected(this, manager, list);
 
             _ExecuteDeletion(manager);
         }

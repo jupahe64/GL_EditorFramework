@@ -73,7 +73,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public virtual void DeleteSelected(DeletionManager manager, IList list, IList currentList)
+        public virtual void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
         {
 
         }
@@ -231,7 +231,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         uint KeyUp(KeyEventArgs e, GL_ControlBase control);
 
-        void DeleteSelected(DeletionManager manager, IList list, IList currentList);
+        void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list);
 
         bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl);
 

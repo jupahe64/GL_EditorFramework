@@ -129,6 +129,7 @@ namespace Example
             scene.ObjectsMoved += Scene_ObjectsMoved;
             scene.ListChanged += Scene_ListChanged;
             scene.ListEntered += Scene_ListEntered;
+            scene.ListInvalidated += Scene_ListInvalidated;
             gL_ControlModern1.KeyDown += GL_ControlModern1_KeyDown;
 
             //add categories to sceneListView (in this case 15 references to the same list, 
@@ -149,6 +150,12 @@ namespace Example
             //auto select the 5th object for testing purposes
             scene.ToogleSelected(scene.objects[4], true);
             Scene_SelectionChanged(this, null);
+        }
+
+        private void Scene_ListInvalidated(object sender, ListEventArgs e)
+        {
+            if (sceneListView1.CurrentList == e.List)
+                sceneListView1.InvalidateCurrentList();
         }
 
         private void SceneListView1_ListExited(object sender, ListEventArgs e)

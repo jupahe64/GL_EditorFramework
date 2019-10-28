@@ -30,7 +30,7 @@ namespace GL_EditorFramework.EditorDrawables
             DeletionManager manager = new DeletionManager();
 
             foreach (IEditableObject obj in objects)
-                obj.DeleteSelected(manager, objects, CurrentList);
+                obj.DeleteSelected(this, manager, objects);
 
             _ExecuteDeletion(manager);
         }

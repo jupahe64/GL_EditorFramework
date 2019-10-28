@@ -78,7 +78,8 @@ namespace GL_EditorFramework
             if (listStack == null)
                 return;
 
-            listStack.Push(listView.CurrentList);
+            if(listView.CurrentList!=null)
+                listStack.Push(listView.CurrentList);
             listView.CurrentList = list;
 
             rootListChangePanel.Visible = false;
@@ -97,6 +98,11 @@ namespace GL_EditorFramework
 
             rootListChangePanel.Visible = true;
             btnBack.Visible = false;
+        }
+
+        public void InvalidateCurrentList()
+        {
+            listView.CurrentList = null;
         }
 
         /// <summary>
@@ -185,6 +191,8 @@ namespace GL_EditorFramework
 
         private void RootListChangePanel_Paint(object sender, PaintEventArgs e)
         {
+            Brush textBrush = new SolidBrush(ForeColor);
+
             Graphics g = e.Graphics;
 
             if (rootListChangePanel.Expanded)
@@ -206,7 +214,7 @@ namespace GL_EditorFramework
                             g.DrawString(rootList, rootListChangePanel.Font, SystemBrushes.HighlightText, 4, y);
                         }
                         else
-                            g.DrawString(rootList, rootListChangePanel.Font, new SolidBrush(ForeColor), 4, y);
+                            g.DrawString(rootList, rootListChangePanel.Font, textBrush, 4, y);
 
                     }
                     i++;
@@ -214,7 +222,7 @@ namespace GL_EditorFramework
                         break;
                 }
             } else
-                g.DrawString(CurrentRootListName, rootListChangePanel.Font, new SolidBrush(ForeColor), 4, 2);
+                g.DrawString(CurrentRootListName, rootListChangePanel.Font, textBrush, 4, 2);
         }
         
 
@@ -367,8 +375,8 @@ namespace GL_EditorFramework
             get => list;
             set
             {
-                list = value??emptyList;
-                AutoScrollMinSize = new Size(0, FontHeight * list.Count);
+                list = value;
+                AutoScrollMinSize = new Size(0, FontHeight * list?.Count??0);
                 Refresh();
             }
         }
@@ -378,6 +386,9 @@ namespace GL_EditorFramework
         /// </summary>
         public void UpdateAutoscrollHeight()
         {
+            if (list == null)
+                return;
+
             AutoScrollMinSize = new Size(0, FontHeight * list.Count);
         }
 
@@ -401,6 +412,9 @@ namespace GL_EditorFramework
 
         private void Timer_Tick(object sender, EventArgs e)
         {
+            if (list == null)
+                return;
+
             VerticalScroll.Value = Math.Max(VerticalScroll.Minimum, Math.Min(VerticalScroll.Value+marginScrollSpeed, VerticalScroll.Maximum));
 
             if(action == Action.SELECT)
@@ -417,6 +431,10 @@ namespace GL_EditorFramework
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+
+            if (list == null)
+                return;
+
             if (e.Button != MouseButtons.Left)
                 return;
 
@@ -475,6 +493,10 @@ namespace GL_EditorFramework
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+
+            if (list == null)
+                return;
+
             mouseY = e.Y;
             if (e.Button != MouseButtons.Left)
                 return;
@@ -507,6 +529,10 @@ namespace GL_EditorFramework
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+
+            if (list == null)
+                return;
+
             if (e.Button != MouseButtons.Left)
                 return;
 
@@ -598,10 +624,18 @@ namespace GL_EditorFramework
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            if (CurrentList == null)
-                return;
+
+            Brush textBrush = new SolidBrush(ForeColor);
 
             Graphics g = e.Graphics;
+
+            if (CurrentList == null)
+            {
+                g.FillRectangle(SystemBrushes.ControlLight, 0, 0, Width, Height);
+                g.DrawString("No List Selected", Font, textBrush, 5, 5);
+
+                return;
+            }
 
             int i = 0;
             int j = 0;
@@ -636,7 +670,7 @@ namespace GL_EditorFramework
                         g.DrawString(list[j].ToString(), Font, SystemBrushes.HighlightText, 2, y);
                     }
                     else
-                        g.DrawString(list[j].ToString(), Font, new SolidBrush(ForeColor), 2, y);
+                        g.DrawString(list[j].ToString(), Font, textBrush, 2, y);
 
                 }
                 i++;
@@ -650,7 +684,7 @@ namespace GL_EditorFramework
                 {
                     i = draggedStartIndex + dragOffset;
                     y = i * (FontHeight) + AutoScrollPosition.Y;
-                    g.DrawString(draggedCount.ToString(), Font, new SolidBrush(ForeColor), 2, y);
+                    g.DrawString(draggedCount.ToString(), Font, textBrush, 2, y);
                     i++;
                 }
                 else
@@ -672,7 +706,7 @@ namespace GL_EditorFramework
                                 g.DrawString(list[j].ToString(), Font, SystemBrushes.HighlightText, 2, y);
                             }
                             else
-                                g.DrawString(list[j].ToString(), Font, new SolidBrush(ForeColor), 2, y);
+                                g.DrawString(list[j].ToString(), Font, textBrush, 2, y);
 
                         }
                         i++;
@@ -687,12 +721,20 @@ namespace GL_EditorFramework
         protected override void OnScroll(ScrollEventArgs se)
         {
             base.OnScroll(se);
+
+            if (list == null)
+                return;
+
             Refresh();
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
+
+            if (list == null)
+                return;
+
             if (mouseDown)
             {
                 if (action == Action.DRAG)

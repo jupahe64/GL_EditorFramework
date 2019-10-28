@@ -32,7 +32,7 @@ namespace GL_EditorFramework.EditorDrawables
             foreach (List<IEditableObject> objects in categories.Values)
             {
                 foreach (IEditableObject obj in objects)
-                    obj.DeleteSelected(manager, objects, CurrentList);
+                    obj.DeleteSelected(this, manager, objects);
             }
 
             _ExecuteDeletion(manager);
