@@ -175,9 +175,9 @@ namespace GL_EditorFramework
 
     public class SelectionChangedEventArgs : HandledEventArgs
     {
-        public List<object> ItemsToSelect { get; private set; }
-        public List<object> ItemsToDeselect { get; private set; }
-        public SelectionChangedEventArgs(List<object> itemsToSelect, List<object> itemsToDeselect)
+        public IEnumerable<object> ItemsToSelect { get; private set; }
+        public IEnumerable<object> ItemsToDeselect { get; private set; }
+        public SelectionChangedEventArgs(IEnumerable<object> itemsToSelect, IEnumerable<object> itemsToDeselect)
         {
             ItemsToSelect = itemsToSelect;
             ItemsToDeselect = itemsToDeselect;
@@ -218,6 +218,8 @@ namespace GL_EditorFramework
         private int dragOffset = 0;
         private bool useDragRepresention = false;
         private int dragGapSize = 0;
+
+        private object lastSelectedObject = null;
 
         private enum Action
         {
@@ -478,18 +480,9 @@ namespace GL_EditorFramework
                             itemsToDeselect.Add(list[i]);
                 }
 
-                SelectionChangedEventArgs eventArgs = new SelectionChangedEventArgs(itemsToSelect, itemsToDeselect);
+                UpdateSelection(itemsToSelect, itemsToDeselect);
 
-                SelectionChanged?.Invoke(this, eventArgs);
-
-                if (!eventArgs.Handled)
-                {
-                    foreach (object obj in itemsToSelect)
-                        selectedItems.Add(obj);
-
-                    foreach (object obj in itemsToDeselect)
-                        selectedItems.Remove(obj);
-                }
+                lastSelectedObject = list[selectEndIndex];
 
                 prevSelectStartIndex = selectStartIndex;
                 selectStartIndex = -1;
@@ -499,6 +492,93 @@ namespace GL_EditorFramework
 
             action = Action.NONE;
             Refresh();
+        }
+
+        private void UpdateSelection(IEnumerable<object> itemsToSelect, IEnumerable<object> itemsToDeselect)
+        {
+            SelectionChangedEventArgs eventArgs = new SelectionChangedEventArgs(itemsToSelect, itemsToDeselect);
+
+            SelectionChanged?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+            {
+                foreach (object obj in itemsToSelect)
+                    selectedItems.Add(obj);
+
+                foreach (object obj in itemsToDeselect)
+                    selectedItems.Remove(obj);
+            }
+        }
+
+        public static IEnumerable<object> ItemToEnumerable(object item)
+        {
+            yield return item;
+        }
+
+        protected override bool IsInputKey(Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.Right:
+                case Keys.Left:
+                case Keys.Up:
+                case Keys.Down:
+                    return true;
+                case Keys.Shift | Keys.Right:
+                case Keys.Shift | Keys.Left:
+                case Keys.Shift | Keys.Up:
+                case Keys.Shift | Keys.Down:
+                    return true;
+            }
+            return base.IsInputKey(keyData);
+        }
+
+        protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
+        {
+            base.OnPreviewKeyDown(e);
+            int index = list.IndexOf(lastSelectedObject);
+
+            if (index == -1)
+                return;
+
+            if (e.KeyCode == Keys.Up && index > 0)
+            {
+                object previous = list[index - 1];
+                if (selectedItems.Contains(previous))
+                    UpdateSelection(Enumerable.Empty<object>(), selectedItems.Where(x => x != previous).ToArray());
+                else
+                    UpdateSelection(ItemToEnumerable(previous), selectedItems.ToArray());
+
+                lastSelectedObject = previous;
+                EnsureVisisble(previous);
+            }
+            else if (e.KeyCode==Keys.Down && index < list.Count - 1)
+            {
+                object next = list[index + 1];
+                if (selectedItems.Contains(next))
+                    UpdateSelection(Enumerable.Empty<object>(),selectedItems.Where(x=>x!= next).ToArray());
+                else
+                    UpdateSelection(ItemToEnumerable(next), selectedItems.ToArray());
+
+                lastSelectedObject = next;
+                EnsureVisisble(next);
+            }
+
+            Focus();
+        }
+
+        public void EnsureVisisble(object item)
+        {
+            int index = list.IndexOf(item);
+            if (index == -1)
+                return;
+
+            int y = index * FontHeight + AutoScrollPosition.Y;
+
+            if (y < 0)
+                AutoScrollPosition = new Point(0, index * FontHeight);
+            else if(y > Height - FontHeight)
+                AutoScrollPosition = new Point(0, index * FontHeight - Height + FontHeight );
         }
 
         protected override void OnPaint(PaintEventArgs e)
