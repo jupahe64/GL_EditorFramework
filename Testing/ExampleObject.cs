@@ -171,9 +171,9 @@ namespace Example
             base.Prepare(control);
         }
 
-        public override uint Select(int index, GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint Select(int index, GL_ControlBase control)
         {
-            selectedObjects?.Add(this);
+            
             if (!Selected)
             {
                 Selected = true;
@@ -182,9 +182,9 @@ namespace Example
             return 0;
         }
 
-        public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint SelectDefault(GL_ControlBase control)
         {
-            selectedObjects?.Add(this);
+            
             if (!Selected)
             {
                 Selected = true;
@@ -193,9 +193,9 @@ namespace Example
             return 0;
         }
 
-        public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint SelectAll(GL_ControlBase control)
         {
-            selectedObjects?.Add(this);
+            
             if (!Selected)
             {
                 Selected = true;
@@ -204,9 +204,9 @@ namespace Example
             return 0;
         }
 
-        public override uint Deselect(int index, GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint Deselect(int index, GL_ControlBase control)
         {
-            selectedObjects?.Remove(this);
+            
             if (Selected)
             {
                 Selected = false;
@@ -215,9 +215,9 @@ namespace Example
             return 0;
         }
 
-        public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint DeselectAll(GL_ControlBase control)
         {
-            selectedObjects?.Remove(this);
+            
             if (Selected)
             {
                 Selected = false;

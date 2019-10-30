@@ -47,7 +47,123 @@ namespace GL_EditorFramework.EditorDrawables
 
         public int HoveredPart { get; protected set; } = 0;
 
-        public readonly HashSet<object> SelectedObjects = new HashSet<object>();
+        public readonly SelectionSet SelectedObjects;
+
+
+        public class SelectionSet : ISet<object>
+        {
+            EditorSceneBase scene;
+
+            public SelectionSet(EditorSceneBase scene)
+            {
+                this.scene = scene;
+            }
+
+            #region unimplemented methods
+
+            public bool IsReadOnly => throw new NotImplementedException();
+
+            public bool Add(object item)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Clear()
+            {
+                throw new NotImplementedException();
+            }
+            
+            public void CopyTo(object[] array, int arrayIndex)
+            {
+                foreach(object obj in scene.GetObjects().Where(x => x.IsSelected()))
+                    array[arrayIndex++] = obj;
+            }
+
+            public void ExceptWith(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void IntersectWith(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool IsProperSubsetOf(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool IsProperSupersetOf(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool IsSubsetOf(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool IsSupersetOf(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool Overlaps(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool Remove(object item)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool SetEquals(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SymmetricExceptWith(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void UnionWith(IEnumerable<object> other)
+            {
+                throw new NotImplementedException();
+            }
+
+            void ICollection<object>.Add(object item)
+            {
+                throw new NotImplementedException();
+            }
+            #endregion
+
+            public bool Contains(object item)
+            {
+                return ((ISelectable)item).IsSelected();
+            }
+
+            public IEnumerator<object> GetEnumerator()
+            {
+                return scene.GetObjects().Where(x => x.IsSelected()).GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return scene.GetObjects().Where(x => x.IsSelected()).GetEnumerator();
+            }
+
+            public int Count => scene.GetObjects().Count(x => x.IsSelected());
+        }
+
+
+        public EditorSceneBase()
+        {
+            SelectedObjects = new SelectionSet(this);
+        }
+
         public IList CurrentList { get; set; }
 
         public List<AbstractGlDrawable> StaticObjects { get; set; } = new List<AbstractGlDrawable>();
@@ -118,7 +234,6 @@ namespace GL_EditorFramework.EditorDrawables
         /// <summary>
         /// Sets up an <see cref="ObjectUIControl"/> based on the currently selected objects
         /// </summary>
-        /// <returns></returns>
         public void SetupObjectUIControl(ObjectUIControl objectUIControl)
         {
             objectUIControl.ClearObjectUIContainers();
@@ -186,7 +301,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in objs)
                     {
                         list.Add(obj);
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(control);
                     }
 
                     UpdateSelection(var);
@@ -194,16 +309,15 @@ namespace GL_EditorFramework.EditorDrawables
 
                 case SelectionBehavior.CHANGE:
                     var = REDRAW_PICKING;
-                    foreach (IEditableObject selected in SelectedObjects)
+                    foreach (IEditableObject obj in GetObjects())
                     {
-                        var |= selected.DeselectAll(control, null);
+                        var |= obj.DeselectAll(control);
                     }
-                    SelectedObjects.Clear();
 
                     foreach (IEditableObject obj in objs)
                     {
                         list.Add(obj);
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(control);
                     }
 
                     UpdateSelection(var);
@@ -253,7 +367,7 @@ namespace GL_EditorFramework.EditorDrawables
                     {
                         list.Insert(index, obj);
 
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(control);
                         index++;
                     }
 
@@ -262,17 +376,16 @@ namespace GL_EditorFramework.EditorDrawables
 
                 case SelectionBehavior.CHANGE:
                     var = REDRAW_PICKING;
-                    foreach (IEditableObject selected in SelectedObjects)
+                    foreach (IEditableObject obj in GetObjects())
                     {
-                        var |= selected.DeselectAll(control, null);
+                        var |= obj.DeselectAll(control);
                     }
-                    SelectedObjects.Clear();
 
                     foreach (IEditableObject obj in objs)
                     {
                         list.Insert(index, obj);
 
-                        var |= obj.SelectDefault(control, SelectedObjects);
+                        var |= obj.SelectDefault(control);
                         index++;
                     }
 
@@ -313,7 +426,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 infos[index] = new RevertableDeletion.DeleteInfo(obj, list.IndexOf(obj));
                 list.Remove(obj);
-                var |= obj.DeselectAll(control, SelectedObjects);
+                var |= obj.DeselectAll(control);
                 index++;
             }
 
@@ -363,7 +476,7 @@ namespace GL_EditorFramework.EditorDrawables
                 if (entry.Value.Count == 1)
                 {
                     singleInfos.Add(new RevertableDeletion.SingleDeleteInListInfo(entry.Value[0], entry.Key.IndexOf(entry.Value[0]), entry.Key));
-                    var |= entry.Value[0].DeselectAll(control, SelectedObjects);
+                    var |= entry.Value[0].DeselectAll(control);
                     entry.Key.Remove(entry.Value[0]);
                 }
                 else
@@ -373,7 +486,7 @@ namespace GL_EditorFramework.EditorDrawables
                     foreach (IEditableObject obj in entry.Value)
                     {
                         deleteInfos[i++] = new RevertableDeletion.DeleteInfo(obj, entry.Key.IndexOf(obj));
-                        var |= obj.DeselectAll(control, SelectedObjects);
+                        var |= obj.DeselectAll(control);
                         entry.Key.Remove(obj);
                     }
                     infos.Add(new RevertableDeletion.DeleteInListInfo(deleteInfos, entry.Key));
@@ -409,10 +522,8 @@ namespace GL_EditorFramework.EditorDrawables
         {
             TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
 
-            foreach (IEditableObject obj in SelectedObjects)
-            {
+            foreach (IEditableObject obj in GetObjects())
                 obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
-            }
 
             CurrentAction = NoAction;
 
@@ -424,11 +535,11 @@ namespace GL_EditorFramework.EditorDrawables
             uint var = 0;
             if (isSelected)
             {
-                var |= obj.SelectDefault(control, SelectedObjects);
+                var |= obj.SelectDefault(control);
             }
             else
             {
-                var |= obj.DeselectAll(control, SelectedObjects);
+                var |= obj.DeselectAll(control);
             }
         }
     }

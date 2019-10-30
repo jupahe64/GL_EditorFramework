@@ -312,7 +312,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
                 return false;
 
-            if ((drawSelection && SelectedObjects.Contains(obj)) || (drawOthers && !SelectedObjects.Contains(obj)))
+            if ((drawSelection && obj.IsSelected()) || (drawOthers && !obj.IsSelected()))
                 return true;
 
             else

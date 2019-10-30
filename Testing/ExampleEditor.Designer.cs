@@ -66,6 +66,7 @@
             this.objectUIControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.objectUIControl1.BackColor = System.Drawing.SystemColors.Control;
             this.objectUIControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.objectUIControl1.Location = new System.Drawing.Point(3, 470);
             this.objectUIControl1.Name = "objectUIControl1";

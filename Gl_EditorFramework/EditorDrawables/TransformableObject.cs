@@ -144,6 +144,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos infos)
         {
+            if (!Selected)
+                return;
+
             Position = transformAction.NewPos(Position, out Vector3? prevPos);
 
             Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);

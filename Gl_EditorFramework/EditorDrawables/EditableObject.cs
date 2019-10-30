@@ -31,15 +31,19 @@ namespace GL_EditorFramework.EditorDrawables
 
         public abstract bool IsSelected(int partIndex);
 
+        public abstract bool IsSelectedAll();
+
+        public abstract bool IsSelected();
+
         public abstract void GetSelectionBox(ref BoundingBox boundingBox);
 
         public abstract LocalOrientation GetLocalOrientation(int partIndex);
 
         public abstract bool IsInRange(float range, float rangeSquared, Vector3 pos);
 
-        public abstract uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects);
+        public abstract uint SelectAll(GL_ControlBase control);
 
-        public abstract uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects);
+        public abstract uint SelectDefault(GL_ControlBase control);
         
         public virtual void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
@@ -51,10 +55,10 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public abstract uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
+        public abstract uint Select(int partIndex, GL_ControlBase control);
 
-        public abstract uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
-        public abstract uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects);
+        public abstract uint Deselect(int partIndex, GL_ControlBase control);
+        public abstract uint DeselectAll(GL_ControlBase control);
 
         public virtual void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
         {
@@ -141,6 +145,26 @@ namespace GL_EditorFramework.EditorDrawables
                 (minX + maxX) * 0.5f,
                 (minY + maxY) * 0.5f,
                 (minZ + maxZ) * 0.5f);
+
+            public static bool operator ==(BoundingBox box1, BoundingBox box2)
+            {
+                return box1.minX == box2.minX &&
+                       box1.maxX == box2.maxX &&
+                       box1.minY == box2.minY &&
+                       box1.maxY == box2.maxY &&
+                       box1.minZ == box2.minZ &&
+                       box1.maxZ == box2.maxZ;
+            }
+
+            public static bool operator !=(BoundingBox box1, BoundingBox box2)
+            {
+                return box1.minX != box2.minX ||
+                       box1.maxX != box2.maxX ||
+                       box1.minY != box2.minY ||
+                       box1.maxY != box2.maxY ||
+                       box1.minZ != box2.minZ ||
+                       box1.maxZ != box2.maxZ;
+            }
         }
 
         public struct LocalOrientation
@@ -166,7 +190,7 @@ namespace GL_EditorFramework.EditorDrawables
         }
     }
 
-    public interface IEditableObject
+    public interface IEditableObject : ISelectable
     {
         bool Visible { get; set; }
 
@@ -180,18 +204,13 @@ namespace GL_EditorFramework.EditorDrawables
 
         bool IsInRange(float range, float rangeSquared, Vector3 pos);
 
-        uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects);
-
-        uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects);
-
         void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene);
 
         void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene);
 
-        uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
+        uint Select(int partIndex, GL_ControlBase control);
 
-        uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects);
-        uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects);
+        uint Deselect(int partIndex, GL_ControlBase control);
 
         void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale);
 
@@ -236,5 +255,18 @@ namespace GL_EditorFramework.EditorDrawables
         bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl);
 
         void ListChanged(IList list);
+    }
+
+    public interface ISelectable
+    {
+        uint SelectAll(GL_ControlBase control);
+
+        uint SelectDefault(GL_ControlBase control);
+
+        uint DeselectAll(GL_ControlBase control);
+
+        bool IsSelectedAll();
+
+        bool IsSelected();
     }
 }

@@ -32,10 +32,11 @@ namespace GL_EditorFramework.EditorDrawables
                         {
                             BoundingBox box = BoundingBox.Default;
 
-                            foreach (IEditableObject selected in SelectedObjects)
-                                selected.GetSelectionBox(ref box);
+                            foreach (IEditableObject obj in GetObjects())
+                                obj.GetSelectionBox(ref box);
 
-                            CurrentAction = new TranslateAction(control, e.Location, box.GetCenter(), draggingDepth);
+                            if(box!=BoundingBox.Default)
+                                CurrentAction = new TranslateAction(control, e.Location, box.GetCenter(), draggingDepth);
                         }
                     }
                 }
@@ -50,10 +51,11 @@ namespace GL_EditorFramework.EditorDrawables
                         {
                             BoundingBox box = BoundingBox.Default;
 
-                            foreach (IEditableObject selected in SelectedObjects)
-                                selected.GetSelectionBox(ref box);
+                            foreach (IEditableObject obj in GetObjects())
+                                obj.GetSelectionBox(ref box);
 
-                            CurrentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
+                            if (box != BoundingBox.Default)
+                                CurrentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
                         }
                     }
                 }
@@ -74,13 +76,16 @@ namespace GL_EditorFramework.EditorDrawables
                         {
                             BoundingBox box = BoundingBox.Default;
 
-                            foreach (IEditableObject selected in SelectedObjects)
-                                selected.GetSelectionBox(ref box);
+                            foreach (IEditableObject obj in GetObjects())
+                                obj.GetSelectionBox(ref box);
 
-                            if (shift)
-                                CurrentAction = new ScaleAction(control, e.Location, box.GetCenter());
-                            else
-                                CurrentAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
+                            if (box != BoundingBox.Default)
+                            {
+                                if (shift)
+                                    CurrentAction = new ScaleAction(control, e.Location, box.GetCenter());
+                                else
+                                    CurrentAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
+                            }
                         }
                     }
                 }
@@ -170,7 +175,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (CurrentAction != NoAction && CurrentAction.IsApplyOnRelease())
             {
-                foreach (IEditableObject obj in SelectedObjects)
+                foreach (IEditableObject obj in GetObjects())
                 {
                     obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
                 }
@@ -242,11 +247,10 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (!shift)
                     {
-                        foreach (IEditableObject selected in SelectedObjects)
+                        foreach (IEditableObject obj in GetObjects())
                         {
-                            selected.DeselectAll(control, null);
+                            obj.DeselectAll(control);
                         }
-                        SelectedObjects.Clear();
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                 }
@@ -257,16 +261,15 @@ namespace GL_EditorFramework.EditorDrawables
                         if (shift)
                         {
                             //remove from selection
-                            Hovered.Deselect(HoveredPart, control, SelectedObjects);
+                            Hovered.Deselect(HoveredPart, control);
                             SelectionChanged?.Invoke(this, new EventArgs());
                         }
                         else
                         {
-                            foreach (IEditableObject selected in SelectedObjects)
+                            foreach (IEditableObject obj in GetObjects())
                             {
-                                selected.DeselectAll(control, null);
+                                obj.DeselectAll(control);
                             }
-                            SelectedObjects.Clear();
                             SelectionChanged?.Invoke(this, new EventArgs());
                         }
                     }
@@ -275,18 +278,17 @@ namespace GL_EditorFramework.EditorDrawables
                         if (shift)
                         {
                             //add to selection
-                            Hovered.Select(HoveredPart, control, SelectedObjects);
+                            Hovered.Select(HoveredPart, control);
                             SelectionChanged?.Invoke(this, new EventArgs());
                         }
                         else
                         {
                             //change selection
-                            foreach (IEditableObject selected in SelectedObjects)
+                            foreach (IEditableObject obj in GetObjects())
                             {
-                                selected.DeselectAll(control, null);
+                                obj.DeselectAll(control);
                             }
-                            SelectedObjects.Clear();
-                            Hovered.Select(HoveredPart, control, SelectedObjects);
+                            Hovered.Select(HoveredPart, control);
                             SelectionChanged?.Invoke(this, new EventArgs());
                         }
                     }
@@ -296,18 +298,17 @@ namespace GL_EditorFramework.EditorDrawables
                     if (hoveredIsSelected)
                     {
                         //remove from selection
-                        Hovered.Deselect(HoveredPart, control, SelectedObjects);
+                        Hovered.Deselect(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                     else
                     {
                         //change selection
-                        foreach (IEditableObject selected in SelectedObjects)
+                        foreach (IEditableObject obj in GetObjects())
                         {
-                            selected.DeselectAll(control, null);
+                            obj.DeselectAll(control);
                         }
-                        SelectedObjects.Clear();
-                        Hovered.Select(HoveredPart, control, SelectedObjects);
+                        Hovered.Select(HoveredPart, control);
                         SelectionChanged?.Invoke(this, new EventArgs());
                     }
                 }
@@ -408,15 +409,17 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Undo();
                 }
-                else if (SelectedObjects.Count > 0)
+                else
                 {
-                    EditableObject.BoundingBox box = EditableObject.BoundingBox.Default;
+                    BoundingBox box = BoundingBox.Default;
 
-                    foreach (IEditableObject selected in SelectedObjects)
+                    foreach (IEditableObject obj in GetObjects())
                     {
-                        selected.GetSelectionBox(ref box);
+                        obj.GetSelectionBox(ref box);
                     }
-                    control.CameraTarget = box.GetCenter();
+
+                    if(box!=BoundingBox.Default)
+                        control.CameraTarget = box.GetCenter();
                 }
 
                 var = REDRAW_PICKING;
@@ -427,50 +430,50 @@ namespace GL_EditorFramework.EditorDrawables
 
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.H && SelectedObjects.Count > 0) //hide/show selected objects
+            else if (e.KeyCode == Keys.H) //hide/show selected objects
             {
-                foreach (IEditableObject selected in SelectedObjects)
+                foreach (IEditableObject obj in GetObjects())
                 {
-                    selected.Visible = e.Shift;
+                    if(obj.IsSelected())
+                        obj.Visible = e.Shift;
                 }
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.S && SelectedObjects.Count > 0 && e.Shift) //auto snap selected objects
+            else if (e.KeyCode == Keys.S && e.Shift) //auto snap selected objects
             {
                 SnapAction action = new SnapAction();
-                foreach (IEditableObject selected in SelectedObjects)
+                foreach (IEditableObject obj in GetObjects())
                 {
-                    selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
+                    obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.R && SelectedObjects.Count > 0 && e.Shift && e.Control) //reset scale for selected objects
+            else if (e.KeyCode == Keys.R && e.Shift && e.Control) //reset scale for selected objects
             {
                 ResetScale action = new ResetScale();
-                foreach (IEditableObject selected in SelectedObjects)
+                foreach (IEditableObject obj in GetObjects())
                 {
-                    selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
+                    obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
-            else if (e.KeyCode == Keys.R && SelectedObjects.Count > 0 && e.Shift) //reset rotation for selected objects
+            else if (e.KeyCode == Keys.R && e.Shift) //reset rotation for selected objects
             {
                 ResetRot action = new ResetRot();
-                foreach (IEditableObject selected in SelectedObjects)
+                foreach (IEditableObject obj in GetObjects())
                 {
-                    selected.ApplyTransformActionToSelection(action, ref transformChangeInfos);
+                    obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                 }
                 var = REDRAW_PICKING;
             }
             else if (e.Control && e.KeyCode == Keys.A) //select/deselect all objects
             {
-                if (e.Shift && SelectedObjects.Count > 0)
+                if (e.Shift)
                 {
-                    foreach (IEditableObject selected in SelectedObjects)
+                    foreach (IEditableObject obj in GetObjects())
                     {
-                        selected.DeselectAll(control, null);
+                        obj.DeselectAll(control);
                     }
-                    SelectedObjects.Clear();
                     selectionHasChanged = true;
                 }
 
@@ -478,7 +481,7 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     foreach (IEditableObject obj in GetObjects())
                     {
-                        obj.SelectAll(control, SelectedObjects);
+                        obj.SelectAll(control);
                     }
                     selectionHasChanged = true;
                 }

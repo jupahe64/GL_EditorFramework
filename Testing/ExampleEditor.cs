@@ -242,17 +242,19 @@ namespace Example
         {
             if (scene.CurrentList is List<Path.PathPoint> points)
             {
-                //add new pathpount to path
+                //add new pathpoint to path
+
+                Path.PathPoint point;
 
                 if (points.Count > 0)
-                    scene.Add(scene.CurrentList, new Path.PathPoint(points.Last().Position, Vector3.Zero, Vector3.Zero));
+                    scene.Add(scene.CurrentList, point = new Path.PathPoint(points.Last().Position, Vector3.Zero, Vector3.Zero));
                 else
-                    scene.Add(scene.CurrentList, new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
+                    scene.Add(scene.CurrentList, point = new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
             }
             else
                 //add new TransformableObject to the scene
                 scene.Add(scene.CurrentList, new TransformableObject(Vector3.Zero, Vector3.Zero, Vector3.One));
-
+            
 
             sceneListView1.UpdateAutoScrollHeight();
         }

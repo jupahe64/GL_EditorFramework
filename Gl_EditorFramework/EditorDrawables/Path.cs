@@ -126,7 +126,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1);
                     else
                         pos = point.Position + point.ControlPoint1;
 
@@ -150,7 +150,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2);
                     else
                         pos = point.Position + point.ControlPoint2;
 
@@ -1007,20 +1007,20 @@ namespace GL_EditorFramework.EditorDrawables
             throw new Exception("Invalid partIndex");
         }
 
-        public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint SelectAll(GL_ControlBase control)
         {
-            selectedObjects?.Add(this);
+            
             foreach (PathPoint point in pathPoints)
-                point.SelectAll(control, selectedObjects);
+                point.SelectAll(control);
 
             return REDRAW;
         }
 
-        public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint SelectDefault(GL_ControlBase control)
         {
-            selectedObjects?.Add(this);
+            
             foreach (PathPoint point in pathPoints)
-                point.SelectDefault(control, selectedObjects);
+                point.SelectDefault(control);
 
             return REDRAW;
         }
@@ -1053,13 +1053,13 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint Select(int partIndex, GL_ControlBase control)
         {
-            selectedObjects?.Add(this);
+            
             if (partIndex == 0)
             {
                 foreach (PathPoint point in pathPoints)
-                    point.SelectDefault(control, selectedObjects);
+                    point.SelectDefault(control);
             }
             else
             {
@@ -1069,7 +1069,7 @@ namespace GL_EditorFramework.EditorDrawables
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
                     {
-                        point.Select(partIndex, control, selectedObjects);
+                        point.Select(partIndex, control);
                     }
                     partIndex -= span;
                 }
@@ -1078,13 +1078,13 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint Deselect(int partIndex, GL_ControlBase control)
         {
-            selectedObjects?.Remove(this);
+            
             if (partIndex == 0)
             {
                 foreach (PathPoint point in pathPoints)
-                    point.DeselectAll(control, selectedObjects);
+                    point.DeselectAll(control);
             }
             else
             {
@@ -1095,7 +1095,7 @@ namespace GL_EditorFramework.EditorDrawables
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
                     {
-                        point.Deselect(partIndex, control, selectedObjects);
+                        point.Deselect(partIndex, control);
                     }
                     partIndex -= span;
                     noPointsSelected &= !point.Selected;
@@ -1123,7 +1123,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
         {
-            
+            foreach (PathPoint point in pathPoints)
+                point.ApplyTransformActionToSelection(transformAction, ref transformChangeInfos);
         }
 
         public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
@@ -1142,11 +1143,11 @@ namespace GL_EditorFramework.EditorDrawables
             throw new Exception("Invalid partIndex");
         }
 
-        public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint DeselectAll(GL_ControlBase control)
         {
-            selectedObjects?.Remove(this);
+            
             foreach (PathPoint point in pathPoints)
-                point.DeselectAll(control, selectedObjects);
+                point.DeselectAll(control);
 
             return REDRAW;
         }
@@ -1234,28 +1235,49 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)
         {
-            if (scene.SelectedObjects.Count > pathPoints.Count + 1)
+            bool any = false;
+
+            foreach (PathPoint point in pathPoints)
+                any |= point.Selected;
+
+
+            if (!any)
                 return false;
-            foreach (object obj in scene.SelectedObjects)
-            {
-                if (!pathPoints.Contains(obj) && obj != this)
-                    return false;
-            }
 
             objectUIControl.AddObjectUIContainer(new PathUIContainer(this, scene), "Path");
             
             List<PathPoint> points = new List<PathPoint>();
 
-            foreach (IEditableObject obj in scene.SelectedObjects)
+            foreach (PathPoint point in pathPoints)
             {
-                if (obj is PathPoint)
-                    points.Add((PathPoint)obj);
+                if (point.Selected)
+                    points.Add(point);
             }
 
             if (points.Count == 1)
                 objectUIControl.AddObjectUIContainer(new SinglePathPointUIContainer(points[0], scene), "Path Point");
 
             return true;
+        }
+
+        public override bool IsSelectedAll()
+        {
+            bool all = false;
+
+            foreach(PathPoint point in pathPoints)
+                all &= point.Selected;
+
+            return all;
+        }
+
+        public override bool IsSelected()
+        {
+            bool any = false;
+
+            foreach (PathPoint point in pathPoints)
+                any |= point.Selected;
+
+            return any;
         }
 
         public class PathUIContainer : IObjectUIContainer
@@ -1466,49 +1488,49 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override bool IsInRange(float range, float rangeSquared, Vector3 pos) => true; //probably never gets called
 
-            public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
+            public override uint SelectAll(GL_ControlBase control)
             {
                 Selected = true;
-                selectedObjects?.Add(this);
-                selectedObjects?.Add(Path);
+                
+                
                 return REDRAW;
             }
 
-            public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
+            public override uint SelectDefault(GL_ControlBase control)
             {
                 Selected = true;
-                selectedObjects?.Add(this);
-                selectedObjects?.Add(Path);
+                
+                
                 return REDRAW;
             }
 
-            public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+            public override uint Select(int partIndex, GL_ControlBase control)
             {
                 if (partIndex == 0)
                 {
                     Selected = true;
-                    selectedObjects?.Add(this);
-                    selectedObjects?.Add(Path);
+                    
+                    
                 }
                 return REDRAW;
             }
 
-            public override uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+            public override uint Deselect(int partIndex, GL_ControlBase control)
             {
                 if (partIndex == 0)
                 {
                     Selected = false;
-                    selectedObjects?.Remove(this);
-                    selectedObjects?.Remove(Path);
+                    
+                    
                 }
                 return REDRAW;
             }
 
-            public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
+            public override uint DeselectAll(GL_ControlBase control)
             {
                 Selected = false;
-                selectedObjects?.Remove(this);
-                selectedObjects?.Remove(Path);
+                
+                
                 return REDRAW;
             }
 
@@ -1645,6 +1667,16 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (Selected)
                     manager.Add(list, this);
+            }
+
+            public override bool IsSelectedAll()
+            {
+                return Selected;
+            }
+
+            public override bool IsSelected()
+            {
+                return Selected;
             }
         }
     }

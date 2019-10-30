@@ -180,38 +180,38 @@ namespace GL_EditorFramework.EditorDrawables
             return (pos - Position).LengthSquared < rangeSquared;
         }
         
-        public override uint SelectAll(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint SelectAll(GL_ControlBase control)
         {
             Selected = true;
-            selectedObjects?.Add(this);
+            
             return REDRAW;
         }
 
-        public override uint SelectDefault(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint SelectDefault(GL_ControlBase control)
         {
             Selected = true;
-            selectedObjects?.Add(this);
+            
             return REDRAW;
         }
 
-        public override uint Select(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint Select(int partIndex, GL_ControlBase control)
         {
             Selected = true;
-            selectedObjects?.Add(this);
+            
             return REDRAW;
         }
 
-        public override uint Deselect(int partIndex, GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint Deselect(int partIndex, GL_ControlBase control)
         {
             Selected = false;
-            selectedObjects?.Remove(this);
+            
             return REDRAW;
         }
 
-        public override uint DeselectAll(GL_ControlBase control, ISet<object> selectedObjects)
+        public override uint DeselectAll(GL_ControlBase control)
         {
             Selected = false;
-            selectedObjects?.Remove(this);
+            
             return REDRAW;
         }
 
@@ -230,6 +230,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos infos)
         {
+            if (!Selected)
+                return;
+
             Position = transformAction.NewPos(Position, out Vector3? prevPos);
             infos.Add(this, 0, prevPos, null, null);
         }
@@ -246,6 +249,16 @@ namespace GL_EditorFramework.EditorDrawables
                 return false;
             objectUIControl.AddObjectUIContainer(new PropertyProvider(this, scene), "Transform");
             return true;
+        }
+
+        public override bool IsSelectedAll()
+        {
+            return Selected;
+        }
+
+        public override bool IsSelected()
+        {
+            return Selected;
         }
 
         public class PropertyProvider : IObjectUIContainer
