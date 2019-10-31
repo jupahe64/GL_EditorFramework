@@ -72,12 +72,6 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 throw new NotImplementedException();
             }
-            
-            public void CopyTo(object[] array, int arrayIndex)
-            {
-                foreach(object obj in scene.GetObjects().Where(x => x.IsSelected()))
-                    array[arrayIndex++] = obj;
-            }
 
             public void ExceptWith(IEnumerable<object> other)
             {
@@ -140,6 +134,12 @@ namespace GL_EditorFramework.EditorDrawables
             }
             #endregion
 
+            public void CopyTo(object[] array, int arrayIndex)
+            {
+                foreach (object obj in scene.GetObjects().Where(x => x.IsSelected()))
+                    array[arrayIndex++] = obj;
+            }
+
             public bool Contains(object item)
             {
                 return ((ISelectable)item).IsSelected();
@@ -147,12 +147,12 @@ namespace GL_EditorFramework.EditorDrawables
 
             public IEnumerator<object> GetEnumerator()
             {
-                return scene.GetObjects().Where(x => x.IsSelected()).GetEnumerator();
+                return scene.GetAllSelected().GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return scene.GetObjects().Where(x => x.IsSelected()).GetEnumerator();
+                return scene.GetAllSelected().GetEnumerator();
             }
 
             public int Count => scene.GetObjects().Count(x => x.IsSelected());
@@ -224,6 +224,17 @@ namespace GL_EditorFramework.EditorDrawables
 
             if ((var & REDRAW_PICKING) > 0)
                 control.DrawPicking();
+        }
+
+        private IEnumerable<ISelectable> GetAllSelected()
+        {
+            foreach (IEditableObject point in GetObjects())
+            {
+                foreach (ISelectable selected in point.GetSelected())
+                {
+                    yield return selected;
+                }
+            }
         }
 
         /// <summary>

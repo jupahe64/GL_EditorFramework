@@ -303,7 +303,7 @@ namespace GL_EditorFramework
                     foreach (object obj in selectedItems)
                     {
                         int index = list.IndexOf(obj);
-                        if (index < min || max < index)
+                        if (index==-1 || (index < min || max < index))
                             itemsToDeselect.Add(obj);
                     }
                 }

@@ -1280,6 +1280,15 @@ namespace GL_EditorFramework.EditorDrawables
             return any;
         }
 
+        public override IEnumerable<ISelectable> GetSelected()
+        {
+            foreach (PathPoint point in pathPoints)
+            {
+                foreach (ISelectable selected in point.GetSelected())
+                    yield return selected;
+            }
+        }
+
         public class PathUIContainer : IObjectUIContainer
         {
             PropertyCapture? pathCapture = null;
@@ -1677,6 +1686,12 @@ namespace GL_EditorFramework.EditorDrawables
             public override bool IsSelected()
             {
                 return Selected;
+            }
+
+            public override IEnumerable<ISelectable> GetSelected()
+            {
+                if (Selected)
+                    yield return this;
             }
         }
     }

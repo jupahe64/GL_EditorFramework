@@ -261,6 +261,12 @@ namespace GL_EditorFramework.EditorDrawables
             return Selected;
         }
 
+        public override IEnumerable<ISelectable> GetSelected()
+        {
+            if (Selected)
+                yield return this;
+        }
+
         public class PropertyProvider : IObjectUIContainer
         {
             PropertyCapture? capture = null;
