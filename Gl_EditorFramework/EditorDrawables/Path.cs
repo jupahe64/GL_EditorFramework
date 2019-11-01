@@ -73,8 +73,6 @@ namespace GL_EditorFramework.EditorDrawables
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, pathPointBuffer);
 
-            Vector3 scale = editorScene.CurrentAction.NewScale(Vector3.One);
-
             float[] data = new float[pathPoints.Count * 12]; //px, py, pz, pCol, cp1x, cp1y, cp1z, cp1Col,  cp2x, cp2y, cp2z, cp2Col
 
             int i = 0;
@@ -232,7 +230,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1);
                     else
                         pos = point.Position + point.ControlPoint1;
 
@@ -259,7 +257,7 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2 * scale);
+                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2);
                     else
                         pos = point.Position + point.ControlPoint2;
 
@@ -303,8 +301,6 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             GL.Disable(EnableCap.Texture2D);
-
-            Vector3 scale = editorScene.CurrentAction.NewScale(Vector3.One);
 
             Vector4 color = new Vector4();
 
@@ -361,7 +357,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.ControlPoint1)));
+                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
@@ -388,7 +384,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.ControlPoint2)));
+                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
@@ -440,7 +436,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.ControlPoint1)));
+                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
@@ -464,7 +460,7 @@ namespace GL_EditorFramework.EditorDrawables
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(scale * point.ControlPoint2)));
+                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(

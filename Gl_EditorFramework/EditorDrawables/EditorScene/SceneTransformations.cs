@@ -79,11 +79,11 @@ namespace GL_EditorFramework.EditorDrawables
                 return newRot;
             }
 
-            public virtual Vector3 NewScale(Vector3 scale) => scale;
+            public virtual Vector3 NewScale(Vector3 scale, Matrix3 rotation) => scale;
 
-            public Vector3 NewScale(Vector3 scale, out Vector3? prevScale)
+            public Vector3 NewScale(Vector3 scale, Matrix3 rotation, out Vector3? prevScale)
             {
-                Vector3 newScale = NewScale(scale);
+                Vector3 newScale = NewScale(scale, rotation);
                 if (newScale == scale)
                     prevScale = null;
                 else
@@ -176,7 +176,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     case AxisRestriction.X:
 
-                        vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                        vec = control.InvertedRotationMatrix.Row2;
                         if (Math.Round(vec.X, 7) == 1 || Math.Round(vec.X, 7) == -1)
                         {
                             translation = new Vector3(scrolling, 0, 0);
@@ -191,7 +191,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     case AxisRestriction.Y:
 
-                        vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                        vec = control.InvertedRotationMatrix.Row2;
                         if (Math.Round(vec.Y, 7) == 1 || Math.Round(vec.Y, 7) == -1)
                         {
                             translation = translation = new Vector3(0, scrolling, 0);
@@ -206,7 +206,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     case AxisRestriction.Z:
 
-                        vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                        vec = control.InvertedRotationMatrix.Row2;
                         if (Math.Round(vec.Z, 7) == 1 || Math.Round(vec.Z, 7) == -1)
                         {
                             translation = translation = new Vector3(0, 0, scrolling);
@@ -221,7 +221,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     case AxisRestriction.YZ:
 
-                        vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                        vec = control.InvertedRotationMatrix.Row2;
                         if (Math.Round(vec.X, 7) == 0)
                         {
                             translation = PointOnScrollPlane(mousePos);
@@ -236,7 +236,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     case AxisRestriction.XZ:
 
-                        vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                        vec = control.InvertedRotationMatrix.Row2;
                         if (Math.Round(vec.Y, 7) == 0)
                         {
                             translation = PointOnScrollPlane(mousePos);
@@ -251,7 +251,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     case AxisRestriction.XY:
 
-                        vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                        vec = control.InvertedRotationMatrix.Row2;
                         if (Math.Round(vec.Z, 7) == 0)
                         {
                             translation = PointOnScrollPlane(mousePos);
@@ -326,7 +326,7 @@ namespace GL_EditorFramework.EditorDrawables
                     axisRestriction = AxisRestriction.NONE;
 
 
-                vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                vec = control.InvertedRotationMatrix.Row2;
 
                 //determine weithert scrolling should be allowed based on the current axisRestriction and camera orientation
                 if (axisRestriction == AxisRestriction.NONE ||
@@ -478,7 +478,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 double angle = 0;
 
-                vec = Vector3.Transform(control.InvertedRotationMatrix, Vector3.UnitZ);
+                vec = control.InvertedRotationMatrix.Row2;
 
                 switch (axisRestriction)
                 {
@@ -702,11 +702,31 @@ namespace GL_EditorFramework.EditorDrawables
 
             Point centerPoint;
 
-            public override Vector3 NewScale(Vector3 _scale) => scale * _scale;
+            public override Vector3 NewScale(Vector3 _scale, Matrix3 rotation)
+            {
+                return new Vector3(
+                    _scale.X * new Vector3(rotation.Row0 * scale).Length,
+                    _scale.Y * new Vector3(rotation.Row1 * scale).Length,
+                    _scale.Z * new Vector3(rotation.Row2 * scale).Length
+                    );
+            }
 
             public override Vector3 NewIndividualPos(Vector3 pos) => pos * scale;
 
             Vector3 scale = Vector3.One;
+
+            enum AxisRestriction
+            {
+                NONE,
+                X,
+                Y,
+                Z,
+                YZ,
+                XZ,
+                XY
+            }
+
+            AxisRestriction axisRestriction = AxisRestriction.NONE;
 
             public ScaleAction(GL_ControlBase control, Point mousePos, Vector3 center)
             {
@@ -726,12 +746,133 @@ namespace GL_EditorFramework.EditorDrawables
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
                     scaling = (float)Math.Round(scaling);
 
-                scale = new Vector3(scaling, scaling, scaling);
+                switch (axisRestriction)
+                {
+                    case AxisRestriction.NONE:
+                        scale = new Vector3(scaling, scaling, scaling);
+                        break;
+                    case AxisRestriction.X:
+                        scale = new Vector3(scaling, 1, 1);
+                        break;
+                    case AxisRestriction.Y:
+                        scale = new Vector3(1, scaling, 1);
+                        break;
+                    case AxisRestriction.Z:
+                        scale = new Vector3(1, 1, scaling);
+                        break;
+                    case AxisRestriction.YZ:
+                        scale = new Vector3(1, scaling, scaling);
+                        break;
+                    case AxisRestriction.XZ:
+                        scale = new Vector3(scaling, 1, scaling);
+                        break;
+                    case AxisRestriction.XY:
+                        scale = new Vector3(scaling, scaling, 1);
+                        break;
+                }
+            }
+
+            public override void KeyDown(KeyEventArgs e)
+            {
+                AxisRestriction old = axisRestriction;
+                switch (e.KeyCode)
+                {
+                    case Keys.X:
+                        axisRestriction = e.Shift ? AxisRestriction.YZ : AxisRestriction.X;
+                        break;
+                    case Keys.Y:
+                        axisRestriction = e.Shift ? AxisRestriction.XZ : AxisRestriction.Y;
+                        break;
+                    case Keys.Z:
+                        axisRestriction = e.Shift ? AxisRestriction.XY : AxisRestriction.Z;
+                        break;
+                    default:
+                        return;
+                }
+
+                if (axisRestriction == old)
+                    axisRestriction = AxisRestriction.NONE;
             }
 
             public override Vector3 NewPos(Vector3 pos)
             {
                 return (pos - center) * scale + center;
+            }
+
+            public override void Draw(GL_ControlModern controlModern)
+            {
+                if (axisRestriction == AxisRestriction.NONE)
+                    return;
+
+                controlModern.CurrentShader = Renderers.ColorBlockRenderer.SolidColorShaderProgram;
+
+                control.ResetModelMatrix();
+
+                GL.LineWidth(1.0f);
+
+                if (axisRestriction == AxisRestriction.X || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.XZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorX);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(center + Vector3.UnitX * control.ZFar);
+                    GL.Vertex3(center - Vector3.UnitX * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Y || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.YZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorY);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(center + Vector3.UnitY * control.ZFar);
+                    GL.Vertex3(center - Vector3.UnitY * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Z || axisRestriction == AxisRestriction.XZ || axisRestriction == AxisRestriction.YZ)
+                {
+                    Renderers.ColorBlockRenderer.SolidColorShaderProgram.SetVector4("color", colorZ);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(center + Vector3.UnitZ * control.ZFar);
+                    GL.Vertex3(center - Vector3.UnitZ * control.ZFar);
+                    GL.End();
+                }
+            }
+
+            public override void Draw(GL_ControlLegacy controlLegacy)
+            {
+                if (axisRestriction == AxisRestriction.NONE)
+                    return;
+
+                control.ResetModelMatrix();
+
+                GL.LineWidth(1.0f);
+
+                if (axisRestriction == AxisRestriction.X || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.XZ)
+                {
+                    GL.Color4(colorX);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(center + Vector3.UnitX * control.ZFar);
+                    GL.Vertex3(center - Vector3.UnitX * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Y || axisRestriction == AxisRestriction.XY || axisRestriction == AxisRestriction.YZ)
+                {
+                    GL.Color4(colorY);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(center + Vector3.UnitY * control.ZFar);
+                    GL.Vertex3(center - Vector3.UnitY * control.ZFar);
+                    GL.End();
+                }
+
+                if (axisRestriction == AxisRestriction.Z || axisRestriction == AxisRestriction.XZ || axisRestriction == AxisRestriction.YZ)
+                {
+                    GL.Color4(colorZ);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(center + Vector3.UnitZ * control.ZFar);
+                    GL.Vertex3(center - Vector3.UnitZ * control.ZFar);
+                    GL.End();
+                }
             }
         }
 
@@ -741,7 +882,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             Point centerPoint;
 
-            public override Vector3 NewScale(Vector3 _scale) => new Vector3(
+            public override Vector3 NewScale(Vector3 _scale, Matrix3 rotation) => new Vector3(
                 WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.X * _scale.X) : scale.X * _scale.X,
                 WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Y * _scale.Y) : scale.Y * _scale.Y,
                 WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Z * _scale.Z) : scale.Z * _scale.Z
@@ -935,7 +1076,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public class ResetScale : AbstractTransformAction
         {
-            public override Vector3 NewScale(Vector3 rot) => Vector3.One;
+            public override Vector3 NewScale(Vector3 rot, Matrix3 rotation) => Vector3.One;
         }
 
         public class PropertyChanges : AbstractTransformAction
@@ -957,7 +1098,7 @@ namespace GL_EditorFramework.EditorDrawables
                     return rot;
             }
 
-            public override Vector3 NewScale(Vector3 scale)
+            public override Vector3 NewScale(Vector3 scale, Matrix3 rotation)
             {
                 if (scaleOverride.HasValue)
                     return scaleOverride.Value;

@@ -43,7 +43,7 @@ namespace GL_EditorFramework.EditorDrawables
             Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale) : Scale) * 0.5f) *
+                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * 0.5f) *
                 new Matrix4(Selected ? editorScene.CurrentAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
@@ -81,7 +81,7 @@ namespace GL_EditorFramework.EditorDrawables
             Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale) : Scale) * 0.5f) *
+                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * 0.5f) *
                 new Matrix4(Selected ? editorScene.CurrentAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
@@ -153,7 +153,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             Rotation = transformAction.NewRot(Rotation, out Vector3? prevRot);
 
-            Scale = transformAction.NewScale(Scale, out Vector3? prevScale);
+            Scale = transformAction.NewScale(Scale, rotMtx, out Vector3 ? prevScale);
             infos.Add(this, 0, prevPos, prevRot, prevScale);
         }
 
