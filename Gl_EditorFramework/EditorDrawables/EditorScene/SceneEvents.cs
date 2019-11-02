@@ -346,6 +346,8 @@ namespace GL_EditorFramework.EditorDrawables
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
                 {
+                    Hovered = null;
+                    HoveredPart = -1;
                     return obj.MouseEnter(inObjectIndex, control);
                 }
                 inObjectIndex -= span;
