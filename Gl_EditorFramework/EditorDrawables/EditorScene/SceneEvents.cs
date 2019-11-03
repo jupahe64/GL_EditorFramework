@@ -217,11 +217,6 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseClick(e, control);
             }
 
-            foreach (AbstractGlDrawable obj in StaticObjects)
-            {
-                var |= obj.MouseClick(e, control);
-            }
-
             bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
             bool hoveredIsSelected = Hovered != null && Hovered.IsSelected(HoveredPart);
             bool nothingHovered = Hovered == null;
@@ -314,7 +309,10 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            CurrentAction = NoAction; //because MouseClick implies that the Mouse Button is not pressed anymore
+            foreach (AbstractGlDrawable obj in StaticObjects)
+            {
+                var |= obj.MouseClick(e, control);
+            }
 
             var |= REDRAW;
             var |= FORCE_REENTER;

@@ -130,6 +130,8 @@ namespace GL_EditorFramework.GL_Core
             skipCameraAction = false;
             forceReEnter = false;
 
+            HandleDrawableEvtResult(mainDrawable.MouseUp(e, this));
+
             if ((e.Location.X == dragStartPos.X) && (e.Location.Y == dragStartPos.Y))
             {
                 shouldRedraw = true;
@@ -166,10 +168,6 @@ namespace GL_EditorFramework.GL_Core
                 }
                 if (!skipCameraAction)
                     HandleCameraEvtResult(activeCamera.MouseClick(e, this));
-            }
-            else
-            {
-                HandleDrawableEvtResult(mainDrawable.MouseUp(e, this));
             }
 
             dragStartPos = new Point(-1, -1);

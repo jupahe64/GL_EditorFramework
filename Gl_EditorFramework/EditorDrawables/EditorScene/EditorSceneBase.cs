@@ -245,7 +245,7 @@ namespace GL_EditorFramework.EditorDrawables
         /// <summary>
         /// Sets up an <see cref="ObjectUIControl"/> based on the currently selected objects
         /// </summary>
-        public void SetupObjectUIControl(ObjectUIControl objectUIControl)
+        public virtual void SetupObjectUIControl(ObjectUIControl objectUIControl)
         {
             objectUIControl.ClearObjectUIContainers();
 

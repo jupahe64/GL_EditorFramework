@@ -428,6 +428,10 @@ namespace GL_EditorFramework.GL_Core
             int picked = (int)pickingFrameBuffer - PickingIndexOffset;
             if (lastPicked != picked || forceReEnter)
             {
+                if (lastPicked >= 0)
+                {
+                    HandleDrawableEvtResult(mainDrawable.MouseLeave(lastPicked, this));
+                }
                 if (picked >= 0)
                 {
                     HandleDrawableEvtResult(mainDrawable.MouseEnter(picked, this));
@@ -435,10 +439,6 @@ namespace GL_EditorFramework.GL_Core
                 else
                 {
                     HandleDrawableEvtResult(mainDrawable.MouseLeaveEntirely(this));
-                }
-                if (lastPicked >= 0)
-                {
-                    HandleDrawableEvtResult(mainDrawable.MouseLeave(lastPicked, this));
                 }
                 lastPicked = picked;
                 Console.WriteLine(picked);
