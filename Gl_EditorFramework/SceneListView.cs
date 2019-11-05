@@ -9,6 +9,18 @@ using static GL_EditorFramework.Framework;
 
 namespace GL_EditorFramework
 {
+    public struct ItemDoubleClickedEventArgs
+    {
+        public ItemDoubleClickedEventArgs(object item) : this()
+        {
+            Item = item;
+        }
+
+        public object Item { get; }
+    }
+
+    public delegate void ItemDoubleClickedEventHandler(object sender, ItemDoubleClickedEventArgs e);
+
     /// <summary>
     /// A control for viewing the content of and selecting items in multiple <see cref="IList"/>s
     /// </summary>
@@ -40,6 +52,7 @@ namespace GL_EditorFramework
         public event SelectionChangedEventHandler SelectionChanged;
         public event ItemsMovedEventHandler ItemsMoved;
         public event ListEventHandler ListExited;
+        public event ItemDoubleClickedEventHandler ItemDoubleClicked;
 
         int fontHeight;
         private string currentRootListName = "None";
@@ -161,10 +174,12 @@ namespace GL_EditorFramework
         {
             listView.CurrentList = rootLists[(string)rootListComboBox.SelectedItem];
         }
-
-        private void rootListComboBox_DropDown(object sender, EventArgs e)
+        
+        private void listView_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-
+            object item = listView.GetItemAt(e.Location);
+            if (item != null)
+                ItemDoubleClicked?.Invoke(this, new ItemDoubleClickedEventArgs(item));
         }
     }
 }

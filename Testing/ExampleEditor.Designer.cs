@@ -60,6 +60,7 @@
             this.sceneListView1.RootLists = ((System.Collections.Generic.Dictionary<string, System.Collections.IList>)(resources.GetObject("sceneListView1.RootLists")));
             this.sceneListView1.Size = new System.Drawing.Size(326, 226);
             this.sceneListView1.TabIndex = 6;
+            this.sceneListView1.ItemDoubleClicked += new GL_EditorFramework.ItemDoubleClickedEventHandler(this.SceneListView1_ItemDoubleClicked);
             // 
             // objectUIControl1
             // 

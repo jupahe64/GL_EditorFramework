@@ -40,7 +40,6 @@
             this.rootListComboBox.Name = "rootListComboBox";
             this.rootListComboBox.Size = new System.Drawing.Size(300, 21);
             this.rootListComboBox.TabIndex = 3;
-            this.rootListComboBox.DropDown += new System.EventHandler(this.rootListComboBox_DropDown);
             this.rootListComboBox.SelectedIndexChanged += new System.EventHandler(this.RootListComboBox_SelectedIndexChanged);
             // 
             // listView
@@ -56,6 +55,7 @@
             this.listView.Name = "listView";
             this.listView.Size = new System.Drawing.Size(298, 270);
             this.listView.TabIndex = 0;
+            this.listView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView_MouseDoubleClick);
             // 
             // SceneListView
             // 

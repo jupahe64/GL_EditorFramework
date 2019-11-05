@@ -190,6 +190,8 @@ namespace GL_EditorFramework.EditorDrawables
         {
 
         }
+
+        public abstract Vector3 GetFocusPoint();
     }
 
     public interface IEditableObject : ISelectable
@@ -257,6 +259,8 @@ namespace GL_EditorFramework.EditorDrawables
         bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl);
 
         void ListChanged(IList list);
+
+        Vector3 GetFocusPoint();
     }
 
     public interface ISelectable

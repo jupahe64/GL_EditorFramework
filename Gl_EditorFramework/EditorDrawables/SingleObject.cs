@@ -267,6 +267,11 @@ namespace GL_EditorFramework.EditorDrawables
                 yield return this;
         }
 
+        public override Vector3 GetFocusPoint()
+        {
+            return Position;
+        }
+
         public class PropertyProvider : IObjectUIContainer
         {
             PropertyCapture? capture = null;

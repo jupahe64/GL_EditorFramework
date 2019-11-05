@@ -73,6 +73,8 @@ namespace GL_EditorFramework
 
         private int marginScrollSpeed = 0;
 
+        
+
         /// <summary>
         /// The set used to determine which objects are selected
         /// </summary>
@@ -96,6 +98,14 @@ namespace GL_EditorFramework
                 AutoScrollMinSize = new Size(0, FontHeight * list?.Count??0);
                 Refresh();
             }
+        }
+
+        public object GetItemAt(Point point)
+        {
+            if (CurrentList == null || CurrentList.Count == 0)
+                return null;
+
+            return CurrentList[Math.Max(0, Math.Min((point.Y - AutoScrollPosition.Y) / (FontHeight), list.Count - 1))];
         }
 
         /// <summary>
@@ -295,8 +305,7 @@ namespace GL_EditorFramework
                 List<object> itemsToDeselect = new List<object>();
 
                 for (int i = min; i <= max; i++)
-                    if (!selectedItems.Contains(list[i]))
-                        itemsToSelect.Add(list[i]);
+                    itemsToSelect.Add(list[i]);
 
                 if (!keepTheRest)
                 {
@@ -337,11 +346,11 @@ namespace GL_EditorFramework
 
             if (!eventArgs.Handled)
             {
-                foreach (object obj in itemsToSelect)
-                    selectedItems.Add(obj);
-
                 foreach (object obj in itemsToDeselect)
                     selectedItems.Remove(obj);
+
+                foreach (object obj in itemsToSelect)
+                    selectedItems.Add(obj);
             }
         }
 

@@ -1285,6 +1285,11 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
+        public override Vector3 GetFocusPoint()
+        {
+            return pathPoints[0].Position;
+        }
+
         public class PathUIContainer : IObjectUIContainer
         {
             PropertyCapture? pathCapture = null;
@@ -1688,6 +1693,11 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (Selected)
                     yield return this;
+            }
+
+            public override Vector3 GetFocusPoint()
+            {
+                return Position;
             }
         }
     }
