@@ -439,7 +439,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             Point centerPoint;
 
-            Matrix3 deltaRotation;
+            Matrix3 deltaRotation = Matrix3.Identity;
 
             public override Matrix3 NewRot(Matrix3 rot) =>  rot * deltaRotation;
 

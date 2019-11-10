@@ -28,17 +28,21 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ExampleEditor));
             this.btnAdd = new System.Windows.Forms.Button();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.grabSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sceneListView1 = new GL_EditorFramework.SceneListView();
             this.objectUIControl1 = new GL_EditorFramework.ObjectUIControl();
             this.gL_ControlLegacy1 = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
             this.gL_ControlModern1 = new GL_EditorFramework.GL_Core.GL_ControlModern();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnAdd
@@ -50,6 +54,39 @@
             this.btnAdd.Text = "Add Object";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.BtnAdd_Click);
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.sceneListView1);
+            this.splitContainer1.Panel1.Controls.Add(this.objectUIControl1);
+            this.splitContainer1.Panel1.Controls.Add(this.btnAdd);
+            this.splitContainer1.Panel1.Controls.Add(this.gL_ControlLegacy1);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.gL_ControlModern1);
+            this.splitContainer1.Size = new System.Drawing.Size(998, 747);
+            this.splitContainer1.SplitterDistance = 332;
+            this.splitContainer1.TabIndex = 7;
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.grabSelectionToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(151, 26);
+            // 
+            // grabSelectionToolStripMenuItem
+            // 
+            this.grabSelectionToolStripMenuItem.Name = "grabSelectionToolStripMenuItem";
+            this.grabSelectionToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
+            this.grabSelectionToolStripMenuItem.Text = "Grab Selection";
             // 
             // sceneListView1
             // 
@@ -101,6 +138,7 @@
             this.gL_ControlModern1.BackColor = System.Drawing.Color.Black;
             this.gL_ControlModern1.CamRotX = 0F;
             this.gL_ControlModern1.CamRotY = 0F;
+            this.gL_ControlModern1.ContextMenuStrip = this.contextMenuStrip1;
             this.gL_ControlModern1.CurrentShader = null;
             this.gL_ControlModern1.Fov = 0.7853982F;
             this.gL_ControlModern1.Location = new System.Drawing.Point(3, 3);
@@ -114,26 +152,6 @@
             this.gL_ControlModern1.ZFar = 32000F;
             this.gL_ControlModern1.ZNear = 0.32F;
             // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.sceneListView1);
-            this.splitContainer1.Panel1.Controls.Add(this.objectUIControl1);
-            this.splitContainer1.Panel1.Controls.Add(this.btnAdd);
-            this.splitContainer1.Panel1.Controls.Add(this.gL_ControlLegacy1);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.gL_ControlModern1);
-            this.splitContainer1.Size = new System.Drawing.Size(998, 747);
-            this.splitContainer1.SplitterDistance = 332;
-            this.splitContainer1.TabIndex = 7;
-            // 
             // ExampleEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -146,6 +164,7 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -157,6 +176,8 @@
         private GL_EditorFramework.ObjectUIControl objectUIControl1;
         private GL_EditorFramework.SceneListView sceneListView1;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem grabSelectionToolStripMenuItem;
     }
 }
 

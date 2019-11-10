@@ -137,8 +137,7 @@ namespace GL_EditorFramework.EditorDrawables
                     (byte)(col.Z * 255),
                     (byte)(col.W * 255)}, 0);
 
-                    if(point.ControlPoint1!=Vector3.Zero)
-                        part++;
+                    part++;
                     #endregion
 
                     #region ControlPoint2
@@ -161,8 +160,7 @@ namespace GL_EditorFramework.EditorDrawables
                     (byte)(col.Z * 255),
                     (byte)(col.W * 255)}, 0);
 
-                    if (point.ControlPoint2 != Vector3.Zero)
-                        part++;
+                    part++;
                     #endregion;
 
                     i += 12;
@@ -221,8 +219,7 @@ namespace GL_EditorFramework.EditorDrawables
                     #endregion
 
                     #region ControlPoint1
-                    if (point.ControlPoint1!=Vector3.Zero)
-                        col = control.NextPickingColor();
+                    col = control.NextPickingColor();
 
                     if (point.ControlPoint1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         editorScene.Hovered == this && editorScene.HoveredPart == part)
@@ -243,13 +240,11 @@ namespace GL_EditorFramework.EditorDrawables
                     (byte)(col.Z * 255),
                     (byte)(col.W * 255)}, 0);
 
-                    if (point.ControlPoint1 != Vector3.Zero)
-                        part++;
+                    part++;
                     #endregion
 
                     #region ControlPoint2
-                    if (point.ControlPoint2 != Vector3.Zero)
-                        col = control.NextPickingColor();
+                    col = control.NextPickingColor();
 
                     if (point.ControlPoint2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         editorScene.Hovered == this && editorScene.HoveredPart == part)
@@ -270,8 +265,7 @@ namespace GL_EditorFramework.EditorDrawables
                     (byte)(col.Z * 255),
                     (byte)(col.W * 255)}, 0);
 
-                    if (point.ControlPoint2 != Vector3.Zero)
-                        part++;
+                    part++;
                     #endregion
 
                     i += 12;
@@ -1424,11 +1418,9 @@ namespace GL_EditorFramework.EditorDrawables
                     return Selected;
                 }
 
-                int part = 1;
-
                 if (ControlPoint1 != Vector3.Zero)
                 {
-                    if (hoveredPart == part)
+                    if (hoveredPart == 1)
                     {
                         if (actionType == DragActionType.TRANSLATE)
                         {
@@ -1443,12 +1435,11 @@ namespace GL_EditorFramework.EditorDrawables
                             return Selected;
                         }
                     }
-                    part++;
                 }
 
                 if (ControlPoint2 != Vector3.Zero)
                 {
-                    if (hoveredPart == part)
+                    if (hoveredPart == 2)
                     {
                         if (actionType == DragActionType.TRANSLATE)
                         {
@@ -1553,28 +1544,18 @@ namespace GL_EditorFramework.EditorDrawables
                     return;
                 }
 
-                int part = 1;
-
-                if (ControlPoint1 != Vector3.Zero)
+                if (_part == 1)
                 {
-                    if (_part == part)
-                    {
-                        prevPos = ControlPoint1;
-                        ControlPoint1 = pos.Value;
-                        return;
-                    }
-                    part++;
+                    prevPos = ControlPoint1;
+                    ControlPoint1 = pos.Value;
+                    return;
                 }
-
-                if (ControlPoint2 != Vector3.Zero)
+                
+                if (_part == 2)
                 {
-                    if (_part == part)
-                    {
-                        prevPos = ControlPoint2;
-                        ControlPoint2 = pos.Value;
-                        return;
-                    }
-                    part++;
+                    prevPos = ControlPoint2;
+                    ControlPoint2 = pos.Value;
+                    return;
                 }
             }
             
@@ -1602,23 +1583,20 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (Selected)
                 {
-                    int part = 1;
-
                     Vector3? prevPos;
 
                     if (ControlPoint1 != Vector3.Zero)
                     {
                         ControlPoint1 = transformAction.NewIndividualPos(ControlPoint1, out prevPos);
                         if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, part, prevPos, null, null);
-                        part++;
+                            transformChangeInfos.Add(this, 1, prevPos, null, null);
                     }
 
                     if (ControlPoint2 != Vector3.Zero)
                     {
                         ControlPoint2 = transformAction.NewIndividualPos(ControlPoint2, out prevPos);
                         if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, part, prevPos, null, null);
+                            transformChangeInfos.Add(this, 2, prevPos, null, null);
                     }
 
                     Position = transformAction.NewPos(Position, out prevPos);
@@ -1629,42 +1607,31 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
             {
-                int part = 1;
                 if (ControlPoint1 != Vector3.Zero)
                 {
-                    if (part == _part)
+                    if (_part == 1)
                     {
                         ControlPoint1 = transformAction.NewPos(Position + ControlPoint1, out Vector3? prevPos) - Position;
                         if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, part, prevPos - Position, null, null);
+                            transformChangeInfos.Add(this, 1, prevPos - Position, null, null);
 
                         return;
                     }
-                    part++;
                 }
 
                 if (ControlPoint2 != Vector3.Zero)
                 {
-                    if (part == _part)
+                    if (_part == 2)
                     {
                         ControlPoint2 = transformAction.NewPos(Position + ControlPoint2, out Vector3? prevPos) - Position;
                         if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, part, prevPos - Position, null, null);
+                            transformChangeInfos.Add(this, 2, prevPos - Position, null, null);
                         return;
                     }
                 }
             }
 
-            public override int GetPickableSpan()
-            {
-                int i = 1;
-                if (ControlPoint1 != Vector3.Zero)
-                    i++;
-                if (ControlPoint2 != Vector3.Zero)
-                    i++;
-
-                return i;
-            }
+            public override int GetPickableSpan() => 3;
 
             public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
             {

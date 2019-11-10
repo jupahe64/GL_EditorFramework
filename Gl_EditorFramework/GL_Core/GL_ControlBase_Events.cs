@@ -120,6 +120,8 @@ namespace GL_EditorFramework.GL_Core
                 Refresh();
         }
 
+        public new ContextMenuStrip ContextMenuStrip { get; set; }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
@@ -163,7 +165,10 @@ namespace GL_EditorFramework.GL_Core
                         break;
                     default:
                         shouldRedraw = false;
-                        HandleDrawableEvtResult(mainDrawable.MouseClick(e, this));
+                        if(e.Button==MouseButtons.Right)
+                            ContextMenuStrip?.Show(this, e.Location);
+                        else
+                            HandleDrawableEvtResult(mainDrawable.MouseClick(e, this));
                         break;
                 }
                 if (!skipCameraAction)
