@@ -289,6 +289,8 @@ namespace GL_EditorFramework.EditorDrawables
                 control.CurrentShader = defaultShaderProgram;
                 GL.DrawArrays(PrimitiveType.Points, 0, pathPoints.Count);
                 #endregion
+
+                GL.LineWidth(2f);
             }
         }
 
@@ -1276,15 +1278,6 @@ namespace GL_EditorFramework.EditorDrawables
             return any;
         }
 
-        public override IEnumerable<ISelectable> GetSelected()
-        {
-            foreach (PathPoint point in pathPoints)
-            {
-                foreach (ISelectable selected in point.GetSelected())
-                    yield return selected;
-            }
-        }
-
         public override Vector3 GetFocusPoint()
         {
             return pathPoints[0].Position;
@@ -1687,12 +1680,6 @@ namespace GL_EditorFramework.EditorDrawables
             public override bool IsSelected()
             {
                 return Selected;
-            }
-
-            public override IEnumerable<ISelectable> GetSelected()
-            {
-                if (Selected)
-                    yield return this;
             }
 
             public override Vector3 GetFocusPoint()

@@ -261,12 +261,6 @@ namespace GL_EditorFramework.EditorDrawables
             return Selected;
         }
 
-        public override IEnumerable<ISelectable> GetSelected()
-        {
-            if (Selected)
-                yield return this;
-        }
-
         public override Vector3 GetFocusPoint()
         {
             return Position;

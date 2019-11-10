@@ -35,8 +35,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         public abstract bool IsSelected();
 
-        public abstract IEnumerable<ISelectable> GetSelected();
-
         public abstract void GetSelectionBox(ref BoundingBox boundingBox);
 
         public abstract LocalOrientation GetLocalOrientation(int partIndex);
@@ -274,7 +272,5 @@ namespace GL_EditorFramework.EditorDrawables
         bool IsSelectedAll();
 
         bool IsSelected();
-
-        IEnumerable<ISelectable> GetSelected();
     }
 }

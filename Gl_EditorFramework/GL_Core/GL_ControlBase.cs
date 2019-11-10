@@ -347,6 +347,8 @@ namespace GL_EditorFramework.GL_Core
 
             GL.Enable(EnableCap.AlphaTest);
 
+            GL.LineWidth(2f);
+
             GL.Hint(HintTarget.MultisampleFilterHintNv, HintMode.Nicest);
             
         }

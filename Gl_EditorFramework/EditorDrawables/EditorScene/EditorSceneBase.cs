@@ -62,17 +62,7 @@ namespace GL_EditorFramework.EditorDrawables
             #region unimplemented methods
 
             public bool IsReadOnly => throw new NotImplementedException();
-
-            public bool Add(object item)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Clear()
-            {
-                throw new NotImplementedException();
-            }
-
+            
             public void ExceptWith(IEnumerable<object> other)
             {
                 throw new NotImplementedException();
@@ -108,11 +98,6 @@ namespace GL_EditorFramework.EditorDrawables
                 throw new NotImplementedException();
             }
 
-            public bool Remove(object item)
-            {
-                throw new NotImplementedException();
-            }
-
             public bool SetEquals(IEnumerable<object> other)
             {
                 throw new NotImplementedException();
@@ -127,12 +112,13 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 throw new NotImplementedException();
             }
-
-            void ICollection<object>.Add(object item)
-            {
-                throw new NotImplementedException();
-            }
             #endregion
+
+            public void Clear()
+            {
+                foreach (ISelectable obj in scene.GetObjects().Where(x => x.IsSelected()))
+                    obj.DeselectAll(scene.control);
+            }
 
             public void CopyTo(object[] array, int arrayIndex)
             {
@@ -145,14 +131,39 @@ namespace GL_EditorFramework.EditorDrawables
                 return ((ISelectable)item).IsSelected();
             }
 
+            public bool Add(object item)
+            {
+                ISelectable selectable = (item as ISelectable);
+                if (selectable == null || selectable.IsSelected())
+                    return false;
+
+                selectable.SelectDefault(scene.control);
+                return true;
+            }
+
+            void ICollection<object>.Add(object item)
+            {
+                (item as ISelectable)?.SelectDefault(scene.control);
+            }
+
+            public bool Remove(object item)
+            {
+                ISelectable selectable = (item as ISelectable);
+                if (selectable==null || !selectable.IsSelected())
+                    return false;
+
+                selectable.DeselectAll(scene.control);
+                return true;
+            }
+
             public IEnumerator<object> GetEnumerator()
             {
-                return scene.GetAllSelected().GetEnumerator();
+                return scene.GetObjects().Where(x => x.IsSelected()).GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return scene.GetAllSelected().GetEnumerator();
+                return scene.GetObjects().Where(x => x.IsSelected()).GetEnumerator();
             }
 
             public int Count => scene.GetObjects().Count(x => x.IsSelected());
@@ -224,17 +235,6 @@ namespace GL_EditorFramework.EditorDrawables
 
             if ((var & REDRAW_PICKING) > 0)
                 control.DrawPicking();
-        }
-
-        private IEnumerable<ISelectable> GetAllSelected()
-        {
-            foreach (IEditableObject point in GetObjects())
-            {
-                foreach (ISelectable selected in point.GetSelected())
-                {
-                    yield return selected;
-                }
-            }
         }
 
         /// <summary>

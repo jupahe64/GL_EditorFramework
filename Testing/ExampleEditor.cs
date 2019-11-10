@@ -195,11 +195,23 @@ namespace Example
         private void SceneListView1_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             //apply selection changes to scene
-            foreach (object obj in e.ItemsToDeselect)
-                scene.ToogleSelected((EditableObject)obj, false);
+            if (e.SelectionChangeMode == SelectionChangeMode.SET)
+            {
+                scene.SelectedObjects.Clear();
 
-            foreach (object obj in e.ItemsToSelect)
-                scene.ToogleSelected((EditableObject)obj, true);
+                foreach (ISelectable obj in e.Items)
+                    obj.SelectDefault(gL_ControlModern1);
+            }
+            else if (e.SelectionChangeMode == SelectionChangeMode.ADD)
+            {
+                foreach (ISelectable obj in e.Items)
+                    obj.SelectDefault(gL_ControlModern1);
+            }
+            else //SelectionChangeMode.SUBTRACT
+            {
+                foreach (ISelectable obj in e.Items)
+                    obj.DeselectAll(gL_ControlModern1);
+            }
 
             e.Handled = true;
             gL_ControlModern1.Refresh();

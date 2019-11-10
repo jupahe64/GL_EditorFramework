@@ -8,14 +8,21 @@ using System.Collections;
 
 namespace GL_EditorFramework
 {
+    public enum SelectionChangeMode
+    {
+        SET,
+        ADD,
+        SUBTRACT
+    }
+
     public class SelectionChangedEventArgs : HandledEventArgs
     {
-        public IEnumerable<object> ItemsToSelect { get; private set; }
-        public IEnumerable<object> ItemsToDeselect { get; private set; }
-        public SelectionChangedEventArgs(IEnumerable<object> itemsToSelect, IEnumerable<object> itemsToDeselect)
+        public IEnumerable<object> Items { get; private set; }
+        public SelectionChangeMode SelectionChangeMode { get; private set; }
+        public SelectionChangedEventArgs(IEnumerable<object> items, SelectionChangeMode selectionChangeMode)
         {
-            ItemsToSelect = itemsToSelect;
-            ItemsToDeselect = itemsToDeselect;
+            Items = items;
+            SelectionChangeMode = selectionChangeMode;
         }
     }
 
@@ -301,30 +308,17 @@ namespace GL_EditorFramework
                 int min = Math.Min(selectStartIndex, selectEndIndex);
                 int max = Math.Max(selectStartIndex, selectEndIndex);
 
-                List<object> itemsToSelect = new List<object>();
-                List<object> itemsToDeselect = new List<object>();
+                List<object> items = new List<object>();
 
                 for (int i = min; i <= max; i++)
-                    itemsToSelect.Add(list[i]);
-
-                if (!keepTheRest)
-                {
-                    foreach (object obj in selectedItems)
-                    {
-                        int index = list.IndexOf(obj);
-                        if (index==-1 || (index < min || max < index))
-                            itemsToDeselect.Add(obj);
-                    }
-                }
+                    items.Add(list[i]);
 
                 if (subtract)
-                {
-                    for (int i = min; i <= max; i++)
-                        if (selectedItems.Contains(list[i]))
-                            itemsToDeselect.Add(list[i]);
-                }
-
-                UpdateSelection(itemsToSelect, itemsToDeselect);
+                    UpdateSelection(items, SelectionChangeMode.SUBTRACT);
+                else if(keepTheRest)
+                    UpdateSelection(items, SelectionChangeMode.ADD);
+                else
+                    UpdateSelection(items, SelectionChangeMode.SET);
 
                 lastSelectedObject = list[selectEndIndex];
 
@@ -338,19 +332,31 @@ namespace GL_EditorFramework
             Refresh();
         }
 
-        private void UpdateSelection(IEnumerable<object> itemsToSelect, IEnumerable<object> itemsToDeselect)
+        private void UpdateSelection(IEnumerable<object> items, SelectionChangeMode selectionChangeMode)
         {
-            SelectionChangedEventArgs eventArgs = new SelectionChangedEventArgs(itemsToSelect, itemsToDeselect);
+            SelectionChangedEventArgs eventArgs = new SelectionChangedEventArgs(items, selectionChangeMode);
 
             SelectionChanged?.Invoke(this, eventArgs);
 
             if (!eventArgs.Handled)
             {
-                foreach (object obj in itemsToDeselect)
-                    selectedItems.Remove(obj);
+                if (selectionChangeMode==SelectionChangeMode.SET)
+                {
+                    selectedItems.Clear();
 
-                foreach (object obj in itemsToSelect)
-                    selectedItems.Add(obj);
+                    foreach (object obj in items)
+                        selectedItems.Add(obj);
+                }
+                else if(selectionChangeMode == SelectionChangeMode.ADD)
+                {
+                    foreach (object obj in items)
+                        selectedItems.Add(obj);
+                }
+                else //SelectionChangeMode.SUBTRACT
+                {
+                    foreach (object obj in items)
+                        selectedItems.Remove(obj);
+                }
             }
         }
 
@@ -387,28 +393,38 @@ namespace GL_EditorFramework
 
             if (e.KeyCode == Keys.Up && index > 0)
             {
-                object previous = list[index - 1];
-                if (selectedItems.Contains(previous))
-                    UpdateSelection(Enumerable.Empty<object>(), selectedItems.Where(x => x != previous).ToArray());
-                else
-                    UpdateSelection(ItemToEnumerable(previous), selectedItems.ToArray());
-
-                lastSelectedObject = previous;
-                EnsureVisisble(previous);
+                lastSelectedObject = list[index - 1];
+                UpdateSelection(ItemToEnumerable(lastSelectedObject), e.Shift?SelectionChangeMode.ADD: SelectionChangeMode.SET);
+                EnsureVisisble(index - 1);
             }
             else if (e.KeyCode==Keys.Down && index < list.Count - 1)
             {
-                object next = list[index + 1];
-                if (selectedItems.Contains(next))
-                    UpdateSelection(Enumerable.Empty<object>(),selectedItems.Where(x=>x!= next).ToArray());
-                else
-                    UpdateSelection(ItemToEnumerable(next), selectedItems.ToArray());
-
-                lastSelectedObject = next;
-                EnsureVisisble(next);
+                lastSelectedObject = list[index + 1];
+                UpdateSelection(ItemToEnumerable(lastSelectedObject), e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
+                EnsureVisisble(index + 1);
             }
 
             Focus();
+        }
+
+        protected override void OnKeyPress(KeyPressEventArgs e)
+        {
+            base.OnKeyPress(e);
+
+            int index = (list.IndexOf(lastSelectedObject)+1)%list.Count;
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[index].ToString().ToLower().StartsWith(e.KeyChar.ToString().ToLower()))
+                {
+                    lastSelectedObject = list[index];
+                    UpdateSelection(ItemToEnumerable(lastSelectedObject), SelectionChangeMode.SET);
+                    EnsureVisisble(lastSelectedObject);
+                    return;
+                }
+                index = (index + 1) % list.Count;
+            }
+
         }
 
         public void EnsureVisisble(object item)
@@ -417,12 +433,17 @@ namespace GL_EditorFramework
             if (index == -1)
                 return;
 
+            EnsureVisisble(index);
+        }
+
+        protected void EnsureVisisble(int index)
+        {
             int y = index * FontHeight + AutoScrollPosition.Y;
 
             if (y < 0)
                 AutoScrollPosition = new Point(0, index * FontHeight);
-            else if(y > Height - FontHeight)
-                AutoScrollPosition = new Point(0, index * FontHeight - Height + FontHeight );
+            else if (y > Height - FontHeight)
+                AutoScrollPosition = new Point(0, index * FontHeight - Height + FontHeight);
         }
 
         protected override void OnPaint(PaintEventArgs e)
