@@ -15,6 +15,8 @@ namespace GL_EditorFramework
         public static float PI = (float)Math.PI;
         public static float HALF_PI = (float)Math.PI/2;
 
+        public static bool ShowShaderErrors = false;
+
         public delegate void ListEventHandler(object sender, ListEventArgs e);
 
         public class ListEventArgs : EventArgs

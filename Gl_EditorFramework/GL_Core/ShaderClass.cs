@@ -63,7 +63,7 @@ namespace GL_EditorFramework.GL_Core
 
                 string log = GL.GetShaderInfoLog(shader.Value.id);
                 Console.WriteLine(log);
-                if (log != "")
+                if (Framework.ShowShaderErrors && log != "")
                     MessageBox.Show(log);
             }
             LoadAttributes(program);
