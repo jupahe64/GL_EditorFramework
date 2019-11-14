@@ -178,6 +178,7 @@ namespace GL_EditorFramework.EditorDrawables
         public IList CurrentList { get; set; }
 
         public List<AbstractGlDrawable> StaticObjects { get; set; } = new List<AbstractGlDrawable>();
+        public IEnumerable<IEditableObject> EditableObjects => GetObjects();
 
         public event EventHandler SelectionChanged;
         public event EventHandler ObjectsMoved;

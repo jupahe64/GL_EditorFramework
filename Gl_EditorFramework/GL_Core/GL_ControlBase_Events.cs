@@ -165,7 +165,7 @@ namespace GL_EditorFramework.GL_Core
                         break;
                     default:
                         shouldRedraw = false;
-                        if(e.Button==MouseButtons.Right)
+                        if (e.Button == MouseButtons.Right && ModifierKeys == Keys.None)
                             ContextMenuStrip?.Show(this, e.Location);
                         else
                             HandleDrawableEvtResult(mainDrawable.MouseClick(e, this));

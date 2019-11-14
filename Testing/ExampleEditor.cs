@@ -276,6 +276,25 @@ namespace Example
             if (e.Item is IEditableObject obj)
                 gL_ControlModern1.CameraTarget = obj.GetFocusPoint();
         }
+
+        private void HideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (scene.Hovered?.Visible == true)
+            {
+                scene.Hovered.Visible = false;
+                gL_ControlModern1.Repick();
+                gL_ControlModern1.Refresh();
+            }
+        }
+
+        private void ShowAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var obj in scene.EditableObjects)
+                obj.Visible = true;
+
+            gL_ControlModern1.Repick();
+            gL_ControlModern1.Refresh();
+        }
     }
     /*
     public class TestProvider : IPropertyProvider
