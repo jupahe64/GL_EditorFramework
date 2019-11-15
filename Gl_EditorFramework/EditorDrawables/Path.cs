@@ -1400,13 +1400,13 @@ namespace GL_EditorFramework.EditorDrawables
             public Path Path { get; internal set; }
 
             [PropertyCapture.Undoable]
-            public Vector3 Position { get; set; }
+            public virtual Vector3 Position { get; set; }
 
             [PropertyCapture.Undoable]
-            public Vector3 ControlPoint1 { get; set; }
+            public virtual Vector3 ControlPoint1 { get; set; }
 
             [PropertyCapture.Undoable]
-            public Vector3 ControlPoint2 { get; set; }
+            public virtual Vector3 ControlPoint2 { get; set; }
 
             public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
             {

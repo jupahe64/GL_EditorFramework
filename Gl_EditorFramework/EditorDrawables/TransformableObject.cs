@@ -19,16 +19,16 @@ namespace GL_EditorFramework.EditorDrawables
             : base(pos)
         {
             Rotation = rot;
-            this.Scale = scale;
+            Scale = scale;
         }
 
         public override string ToString() => "block";
 
         [PropertyCapture.Undoable]
-        public Vector3 Rotation { get; set; } = Vector3.Zero;
+        public virtual Vector3 Rotation { get; set; } = Vector3.Zero;
 
         [PropertyCapture.Undoable]
-        public Vector3 Scale { get; set; } = new Vector3(1, 1, 1);
+        public virtual Vector3 Scale { get; set; } = new Vector3(1, 1, 1);
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {

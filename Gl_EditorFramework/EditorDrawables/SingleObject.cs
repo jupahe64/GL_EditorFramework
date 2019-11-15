@@ -22,7 +22,7 @@ namespace GL_EditorFramework.EditorDrawables
     {
 
         [PropertyCapture.Undoable]
-        public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
+        public virtual Vector3 Position { get; set; } = new Vector3(0, 0, 0);
 
         protected bool Selected = false;
 
