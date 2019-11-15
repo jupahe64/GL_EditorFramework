@@ -15,7 +15,7 @@ namespace GL_EditorFramework.GL_Core
 {
     public partial class GL_ControlBase : GLControl
     {
-        public GL_ControlBase(int maxGL_Version, int redrawerInterval) : base(OpenTK.Graphics.GraphicsMode.Default, maxGL_Version, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
+        public GL_ControlBase(int maxGL_Version, int redrawerInterval) : base(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(), 24), maxGL_Version, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
         {
             redrawer.Interval = redrawerInterval;
             redrawer.Tick += Redrawer_Tick;
@@ -29,7 +29,7 @@ namespace GL_EditorFramework.GL_Core
             RedrawerFrame++;
         }
 
-        public GL_ControlBase() : base(OpenTK.Graphics.GraphicsMode.Default, 1, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
+        public GL_ControlBase() : base(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(), 24), 1, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
         {
             
         }
