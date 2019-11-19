@@ -269,7 +269,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override Vector3 GetFocusPoint()
         {
-            return Position;
+            return GlobalPosition;
         }
 
         public class PropertyProvider : IObjectUIContainer

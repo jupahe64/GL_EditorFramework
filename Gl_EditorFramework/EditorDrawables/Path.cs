@@ -1274,7 +1274,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override Vector3 GetFocusPoint()
         {
-            return pathPoints[0].Position;
+            return pathPoints[0].GlobalPosition;
         }
 
         public class PathUIContainer : IObjectUIContainer
