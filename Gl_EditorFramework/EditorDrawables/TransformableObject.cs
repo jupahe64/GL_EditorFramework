@@ -25,10 +25,22 @@ namespace GL_EditorFramework.EditorDrawables
         public override string ToString() => "block";
 
         [PropertyCapture.Undoable]
-        public virtual Vector3 Rotation { get; set; } = Vector3.Zero;
+        public Vector3 Rotation { get; set; } = Vector3.Zero;
+
+        public virtual Matrix3 GlobalRotation
+        {
+            get => Framework.Mat3FromEulerAnglesDeg(Rotation);
+            set => Rotation = value.ExtractDegreeEulerAngles() + new Vector3(
+                        (float)Math.Round(Rotation.X / 360f) * 360,
+                        (float)Math.Round(Rotation.Y / 360f) * 360,
+                        (float)Math.Round(Rotation.Z / 360f) * 360
+                        );
+        }
 
         [PropertyCapture.Undoable]
-        public virtual Vector3 Scale { get; set; } = new Vector3(1, 1, 1);
+        public Vector3 Scale { get; set; } = new Vector3(1, 1, 1);
+
+        public virtual Vector3 GlobalScale { get => Scale; set => value = Scale; }
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
@@ -40,7 +52,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
+            Matrix3 rotMtx = GlobalRotation;
 
             control.UpdateModelMatrix(
                 Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * 0.5f) *
@@ -78,7 +90,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
+            Matrix3 rotMtx = GlobalRotation;
 
             control.UpdateModelMatrix(
                 Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * 0.5f) *
@@ -107,12 +119,12 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override LocalOrientation GetLocalOrientation(int partIndex)
         {
-            return new LocalOrientation(Position, Framework.Mat3FromEulerAnglesDeg(Rotation));
+            return new LocalOrientation(Position, GlobalRotation);
         }
 
         public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
         {
-            localOrientation = new LocalOrientation(Position, Framework.Mat3FromEulerAnglesDeg(Rotation));
+            localOrientation = new LocalOrientation(Position, GlobalRotation);
             dragExclusively = false;
             return Selected;
         }
@@ -138,7 +150,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (scale.HasValue)
             {
                 prevScale = this.Scale;
-                this.Scale = scale.Value;
+                Scale = scale.Value;
             }
         }
 
@@ -147,14 +159,20 @@ namespace GL_EditorFramework.EditorDrawables
             if (!Selected)
                 return;
 
-            Position = transformAction.NewPos(Position, out Vector3? prevPos);
+            Vector3 pp = Position, pr = Rotation, ps = Scale;
 
-            Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(Rotation);
+            GlobalPosition = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
 
-            Rotation = transformAction.NewRot(Rotation, out Vector3? prevRot);
+            Matrix3 rotMtx = GlobalRotation;
 
-            Scale = transformAction.NewScale(Scale, rotMtx, out Vector3 ? prevScale);
-            infos.Add(this, 0, prevPos, prevRot, prevScale);
+            GlobalRotation = transformAction.NewRot(GlobalRotation, out bool rotHasChanged);
+
+            GlobalScale = transformAction.NewScale(GlobalScale, rotMtx, out bool scaleHasChanged);
+
+            infos.Add(this, 0,
+                posHasChanged   ? new Vector3?(pp) : new Vector3?(), 
+                rotHasChanged   ? new Vector3?(pr) : new Vector3?(),
+                scaleHasChanged ? new Vector3?(ps) : new Vector3?());
         }
 
         public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)

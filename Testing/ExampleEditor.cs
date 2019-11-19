@@ -38,19 +38,19 @@ namespace Example
             
             scene.objects.Add(obj = new ExampleObject(new Vector3(0, -4, 0)));
 
-            List<Path.PathPoint> pathPoints = new List<Path.PathPoint>
+            List<PathPoint> pathPoints = new List<PathPoint>
             {
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(0, 0, 0),
                 new Vector3(0, 0, 0),
                 new Vector3(2, 0, 0)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(8, 4, 2),
                 new Vector3(-4, 0, 4),
                 new Vector3(4, 0, -4)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(4, 2, -6),
                 new Vector3(0, 0, 0),
                 new Vector3(0, 0, 0)
@@ -59,24 +59,24 @@ namespace Example
             
             scene.objects.Add(obj = new Path(pathPoints));
 
-            pathPoints = new List<Path.PathPoint>
+            pathPoints = new List<PathPoint>
             {
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(-3, 6, 0),
                 new Vector3(0, 0, -1.75f),
                 new Vector3(0, 0, 1.75f)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(0, 6, 3),
                 new Vector3(-1.75f, 0, 0),
                 new Vector3(1.75f, 0, 0)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(3, 6, 0),
                 new Vector3(0, 0, 1.75f),
                 new Vector3(0, 0, -1.75f)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(0, 6, -3),
                 new Vector3(1.75f, 0, 0),
                 new Vector3(-1.75f, 0, 0)
@@ -85,24 +85,24 @@ namespace Example
             
             scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
 
-            pathPoints = new List<Path.PathPoint>
+            pathPoints = new List<PathPoint>
             {
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(-3, 6, 0),
                 new Vector3(0, 0, -1.75f),
                 new Vector3(0, 0, 1.75f)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(0, 6, 3),
                 new Vector3(-1.75f, 0, 0),
                 new Vector3(1.75f, 0, 0)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(3, 6, 0),
                 new Vector3(0, 0, 1.75f),
                 new Vector3(0, 0, -1.75f)
                 ),
-                new Path.PathPoint(
+                new PathPoint(
                 new Vector3(0, 6, -3),
                 new Vector3(1.75f, 0, 0),
                 new Vector3(-1.75f, 0, 0)
@@ -170,7 +170,7 @@ namespace Example
         private void Scene_ListEntered(object sender, ListEventArgs e)
         {
             sceneListView1.EnterList(e.List);
-            if (e.List as List<Path.PathPoint> != null)
+            if (e.List as List<PathPoint> != null)
                 btnAdd.Text = "Add Point";
             else
                 btnAdd.Text = "Add Object";
@@ -252,16 +252,16 @@ namespace Example
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
-            if (scene.CurrentList is List<Path.PathPoint> points)
+            if (scene.CurrentList is List<PathPoint> points)
             {
                 //add new pathpoint to path
 
-                Path.PathPoint point;
+                PathPoint point;
 
                 if (points.Count > 0)
-                    scene.Add(scene.CurrentList, point = new Path.PathPoint(points.Last().Position, Vector3.Zero, Vector3.Zero));
+                    scene.Add(scene.CurrentList, point = new PathPoint(points.Last().Position, Vector3.Zero, Vector3.Zero));
                 else
-                    scene.Add(scene.CurrentList, point = new Path.PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
+                    scene.Add(scene.CurrentList, point = new PathPoint(Vector3.Zero, Vector3.Zero, Vector3.Zero));
             }
             else
                 //add new TransformableObject to the scene

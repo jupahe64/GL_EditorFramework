@@ -23,43 +23,43 @@ namespace GL_EditorFramework.EditorDrawables
         {
             public virtual Vector3 NewPos(Vector3 pos) => pos;
 
-            public Vector3 NewPos(Vector3 pos, out Vector3? prevPos)
+            public Vector3 NewPos(Vector3 pos, out bool posHasChanged)
             {
                 Vector3 newPos = NewPos(pos);
                 if (newPos == pos)
-                    prevPos = null;
+                    posHasChanged = false;
                 else
-                    prevPos = pos;
+                    posHasChanged = true;
                 return newPos;
             }
 
             public virtual Vector3 NewIndividualPos(Vector3 pos) => pos;
 
-            public Vector3 NewIndividualPos(Vector3 pos, out Vector3? prevPos)
+            public Vector3 NewIndividualPos(Vector3 pos, out bool posHasChanged)
             {
                 Vector3 newPos = NewIndividualPos(pos);
                 if (newPos == pos)
-                    prevPos = null;
+                    posHasChanged = false;
                 else
-                    prevPos = pos;
+                    posHasChanged = true;
                 return newPos;
             }
 
             public virtual Matrix3 NewRot(Matrix3 rot) => rot;
 
-            public Vector3 NewRot(Vector3 rot, out Vector3? prevRot)
+            public Vector3 NewRot(Vector3 rot, out bool rotHasChanged)
             {
                 Matrix3 rotMtx = Framework.Mat3FromEulerAnglesDeg(rot);
 
                 Matrix3 newRot = NewRot(rotMtx);
                 if (newRot == rotMtx)
                 {
-                    prevRot = null;
+                    rotHasChanged = false;
                     return rot;
                 }
                 else
                 {
-                    prevRot = rot;
+                    rotHasChanged = true;
                     
                     return newRot.ExtractDegreeEulerAngles()+new Vector3(
                         (float)Math.Round(rot.X / 360f) * 360,
@@ -69,25 +69,25 @@ namespace GL_EditorFramework.EditorDrawables
                 }
             }
 
-            public Matrix3 NewRot(Matrix3 rot, out Matrix3? prevRot)
+            public Matrix3 NewRot(Matrix3 rot, out bool rotHasChanged)
             {
                 Matrix3 newRot = NewRot(rot);
                 if (newRot == rot)
-                    prevRot = null;
+                    rotHasChanged = false;
                 else
-                    prevRot = rot;
+                    rotHasChanged = true;
                 return newRot;
             }
 
             public virtual Vector3 NewScale(Vector3 scale, Matrix3 rotation) => scale;
 
-            public Vector3 NewScale(Vector3 scale, Matrix3 rotation, out Vector3? prevScale)
+            public Vector3 NewScale(Vector3 scale, Matrix3 rotation, out bool scaleHasChanged)
             {
                 Vector3 newScale = NewScale(scale, rotation);
                 if (newScale == scale)
-                    prevScale = null;
+                    scaleHasChanged = false;
                 else
-                    prevScale = scale;
+                    scaleHasChanged = true;
                 return newScale;
             }
 

@@ -16,7 +16,7 @@ using static GL_EditorFramework.Renderers;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    public class Path : EditableObject
+    public partial class Path : EditableObject
     {
         private static bool Initialized = false;
         private static bool InitializedLegacy = false;
@@ -95,9 +95,9 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     #region Point
                     if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
-                        pos = point.Position;
+                        pos = point.GlobalPosition;
 
                     data[i] =     pos.X;
                     data[i + 1] = pos.Y;
@@ -118,15 +118,15 @@ namespace GL_EditorFramework.EditorDrawables
                     #endregion
 
                     #region ControlPoint1
-                    if (point.ControlPoint1 != Vector3.Zero && editorScene.ExclusiveAction!=NoAction && 
+                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction!=NoAction && 
                         editorScene.Hovered == this && editorScene.HoveredPart==part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint1);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        pos = point.Position + point.ControlPoint1;
+                        pos = point.GlobalPosition + point.GlobalCP1;
 
                     data[i + 4] =  pos.X;
                     data[i + 5] =  pos.Y;
@@ -141,15 +141,15 @@ namespace GL_EditorFramework.EditorDrawables
                     #endregion
 
                     #region ControlPoint2
-                    if (point.ControlPoint2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         editorScene.Hovered == this && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint2);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
                     else
-                        pos = point.Position + point.ControlPoint2;
+                        pos = point.GlobalPosition + point.GlobalCP2;
 
                     data[i + 8] =  pos.X;
                     data[i + 9] =  pos.Y;
@@ -199,9 +199,9 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     #region Point
                     if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
-                        pos = point.Position;
+                        pos = point.GlobalPosition;
 
                     data[i] = pos.X;
                     data[i + 1] = pos.Y;
@@ -221,15 +221,15 @@ namespace GL_EditorFramework.EditorDrawables
                     #region ControlPoint1
                     col = control.NextPickingColor();
 
-                    if (point.ControlPoint1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         editorScene.Hovered == this && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint1);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        pos = point.Position + point.ControlPoint1;
+                        pos = point.GlobalPosition + point.GlobalCP1;
 
                     data[i + 4] = pos.X;
                     data[i + 5] = pos.Y;
@@ -246,15 +246,15 @@ namespace GL_EditorFramework.EditorDrawables
                     #region ControlPoint2
                     col = control.NextPickingColor();
 
-                    if (point.ControlPoint2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         editorScene.Hovered == this && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint2);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.Position) + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
                     else
-                        pos = point.Position + point.ControlPoint2;
+                        pos = point.GlobalPosition + point.GlobalCP2;
 
                     data[i + 8] = pos.X;
                     data[i + 9] = pos.Y;
@@ -325,9 +325,9 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Vector3 pos;
                     if (point.Selected)
-                        positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.Position);
+                        positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
-                        positions[posIndex] = pos = point.Position;
+                        positions[posIndex] = pos = point.GlobalPosition;
 
                     control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
 
@@ -342,22 +342,22 @@ namespace GL_EditorFramework.EditorDrawables
 
 
 
-                    if (point.ControlPoint1 != Vector3.Zero)
+                    if (point.GlobalCP1 != Vector3.Zero)
                     {
                         if (editorScene.ExclusiveAction != NoAction &&
                             editorScene.Hovered == this && editorScene.HoveredPart == part)
 
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint1)));
+                                positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1)));
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1)));
+                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + point.ControlPoint1));
+                                positions[posIndex + 1] = pos + point.GlobalCP1));
 
                         GL.Color4(colors[colorIndex]);
 
@@ -369,22 +369,22 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         positions[posIndex + 1] = pos;
 
-                    if (point.ControlPoint2 != Vector3.Zero)
+                    if (point.GlobalCP2 != Vector3.Zero)
                     {
                         if (editorScene.ExclusiveAction != NoAction &&
                             editorScene.Hovered == this && editorScene.HoveredPart == part)
 
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex+2] = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint2)));
+                                positions[posIndex+2] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2)));
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2)));
+                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex+2] = pos + point.ControlPoint2));
+                                positions[posIndex+2] = pos + point.GlobalCP2));
 
                         GL.Color4(colors[colorIndex]);
 
@@ -409,9 +409,9 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Vector3 pos;
                     if (point.Selected)
-                        positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.Position);
+                        positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
-                        positions[posIndex] = pos = point.Position;
+                        positions[posIndex] = pos = point.GlobalPosition;
 
                     control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
 
@@ -421,22 +421,22 @@ namespace GL_EditorFramework.EditorDrawables
 
                     colors[colorIndex] = color;
 
-                    if (point.ControlPoint1 != Vector3.Zero)
+                    if (point.GlobalCP1 != Vector3.Zero)
                     {
                         if (editorScene.ExclusiveAction != NoAction &&
                             editorScene.Hovered == this && editorScene.HoveredPart == part)
 
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint1)));
+                                positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1)));
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint1)));
+                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + point.ControlPoint1));
+                                positions[posIndex + 1] = pos + point.GlobalCP1));
 
                         GL.Color4(control.NextPickingColor());
                         GL.CallList(drawLists);
@@ -445,22 +445,22 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         positions[posIndex + 1] = pos;
 
-                    if (point.ControlPoint2 != Vector3.Zero)
+                    if (point.GlobalCP2 != Vector3.Zero)
                     {
                         if (editorScene.ExclusiveAction != NoAction &&
                             editorScene.Hovered == this && editorScene.HoveredPart == part)
 
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = editorScene.ExclusiveAction.NewPos(point.Position + point.ControlPoint2)));
+                                positions[posIndex + 2] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2)));
                         else if (point.Selected)
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.ControlPoint2)));
+                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2)));
                         else
                             control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
                             Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + point.ControlPoint2));
+                                positions[posIndex + 2] = pos + point.GlobalCP2));
 
                         GL.Color4(control.NextPickingColor());
                         GL.CallList(drawLists);
@@ -482,14 +482,14 @@ namespace GL_EditorFramework.EditorDrawables
             for(int i = 1; i<pathPoints.Count; i++)
             {
                 GL.Begin(PrimitiveType.LineStrip);
-                if (pathPoints[i-1].ControlPoint2 != Vector3.Zero || pathPoints[i].ControlPoint1 != Vector3.Zero)//bezierCurve
+                if (pathPoints[i-1].GlobalCP2 != Vector3.Zero || pathPoints[i].GlobalCP1 != Vector3.Zero)//bezierCurve
                 {
                     Vector3 p0 = positions[posIndex];
                     Vector3 p1 = positions[posIndex+2];
                     Vector3 p2 = positions[posIndex+4];
                     Vector3 p3 = positions[posIndex+3];
 
-                    if (pathPoints[i-1].ControlPoint2 != Vector3.Zero)
+                    if (pathPoints[i-1].GlobalCP2 != Vector3.Zero)
                         GL.Vertex3(p1);
 
                     for (float t = 0f; t<=1.0; t += 0.125f)
@@ -507,7 +507,7 @@ namespace GL_EditorFramework.EditorDrawables
                                             ttt * p3);
                     }
 
-                    if (pathPoints[i].ControlPoint1 != Vector3.Zero)
+                    if (pathPoints[i].GlobalCP1 != Vector3.Zero)
                         GL.Vertex3(p2);
                 }
                 else
@@ -522,14 +522,14 @@ namespace GL_EditorFramework.EditorDrawables
             if (Closed)
             {
                 GL.Begin(PrimitiveType.LineStrip);
-                if (pathPoints[pathPoints.Count - 1].ControlPoint2 != Vector3.Zero || pathPoints[0].ControlPoint1 != Vector3.Zero)//bezierCurve
+                if (pathPoints[pathPoints.Count - 1].GlobalCP2 != Vector3.Zero || pathPoints[0].GlobalCP1 != Vector3.Zero)//bezierCurve
                 {
                     Vector3 p0 = positions[posIndex];
                     Vector3 p1 = positions[posIndex + 2];
                     Vector3 p2 = positions[1];
                     Vector3 p3 = positions[0];
 
-                    if (pathPoints[pathPoints.Count - 1].ControlPoint2 != Vector3.Zero)
+                    if (pathPoints[pathPoints.Count - 1].GlobalCP2 != Vector3.Zero)
                         GL.Vertex3(p1);
 
                     for (float t = 0f; t <= 1.0; t += 0.25f)
@@ -547,7 +547,7 @@ namespace GL_EditorFramework.EditorDrawables
                                             ttt * p3);
                     }
 
-                    if (pathPoints[0].ControlPoint1 != Vector3.Zero)
+                    if (pathPoints[0].GlobalCP1 != Vector3.Zero)
                         GL.Vertex3(p2);
                 }
                 else
@@ -1381,277 +1381,6 @@ namespace GL_EditorFramework.EditorDrawables
             public void UpdateProperties()
             {
 
-            }
-        }
-
-        public class PathPoint : EditableObject
-        {
-            public bool Selected = false;
-
-            public override string ToString() => "PathPoint";
-
-            public PathPoint(Vector3 position, Vector3 controlPoint1, Vector3 controlPoint2)
-            {
-                Position = position;
-                ControlPoint1 = controlPoint1;
-                ControlPoint2 = controlPoint2;
-            }
-
-            public Path Path { get; internal set; }
-
-            [PropertyCapture.Undoable]
-            public virtual Vector3 Position { get; set; }
-
-            [PropertyCapture.Undoable]
-            public virtual Vector3 ControlPoint1 { get; set; }
-
-            [PropertyCapture.Undoable]
-            public virtual Vector3 ControlPoint2 { get; set; }
-
-            public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
-            {
-
-                if (hoveredPart == 0)
-                {
-                    localOrientation = new LocalOrientation(Position);
-                    dragExclusively = false;
-                    return Selected;
-                }
-
-                if (ControlPoint1 != Vector3.Zero)
-                {
-                    if (hoveredPart == 1)
-                    {
-                        if (actionType == DragActionType.TRANSLATE)
-                        {
-                            localOrientation = new LocalOrientation(Position + ControlPoint1);
-                            dragExclusively = true; //controlPoints can be moved exclusively
-                            return true;
-                        }
-                        else
-                        {
-                            localOrientation = new LocalOrientation(Position);
-                            dragExclusively = false;
-                            return Selected;
-                        }
-                    }
-                }
-
-                if (ControlPoint2 != Vector3.Zero)
-                {
-                    if (hoveredPart == 2)
-                    {
-                        if (actionType == DragActionType.TRANSLATE)
-                        {
-                            localOrientation = new LocalOrientation(Position + ControlPoint2);
-                            dragExclusively = true; //controlPoints can be moved exclusively
-                            return true;
-                        }
-                        else
-                        {
-                            localOrientation = new LocalOrientation(Position);
-                            dragExclusively = false;
-                            return Selected;
-                        }
-                    }
-                }
-                throw new Exception("Invalid partIndex");
-            }
-
-            public override bool IsSelected(int partIndex) => Selected;
-
-            public override void GetSelectionBox(ref BoundingBox boundingBox)
-            {
-                if (!Selected)
-                    return;
-
-                boundingBox.Include(new BoundingBox(
-                    Position.X - 0.5f,
-                    Position.X + 0.5f,
-                    Position.Y - 0.5f,
-                    Position.Y + 0.5f,
-                    Position.Z - 0.5f,
-                    Position.Z + 0.5f
-                ));
-            }
-
-            public override LocalOrientation GetLocalOrientation(int partIndex)
-            {
-                return new LocalOrientation(Position);
-            }
-
-            public override bool IsInRange(float range, float rangeSquared, Vector3 pos) => true; //probably never gets called
-
-            public override uint SelectAll(GL_ControlBase control)
-            {
-                Selected = true;
-                
-                
-                return REDRAW;
-            }
-
-            public override uint SelectDefault(GL_ControlBase control)
-            {
-                Selected = true;
-                
-                
-                return REDRAW;
-            }
-
-            public override uint Select(int partIndex, GL_ControlBase control)
-            {
-                if (partIndex == 0)
-                {
-                    Selected = true;
-                    
-                    
-                }
-                return REDRAW;
-            }
-
-            public override uint Deselect(int partIndex, GL_ControlBase control)
-            {
-                if (partIndex == 0)
-                {
-                    Selected = false;
-                    
-                    
-                }
-                return REDRAW;
-            }
-
-            public override uint DeselectAll(GL_ControlBase control)
-            {
-                Selected = false;
-                
-                
-                return REDRAW;
-            }
-
-            public override void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int _part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
-            {
-                prevPos = null;
-                prevRot = null;
-                prevScale = null;
-
-                if (!pos.HasValue)
-                    return;
-
-                if (_part == 0)
-                {
-                    prevPos = Position;
-                    Position = pos.Value;
-                    return;
-                }
-
-                if (_part == 1)
-                {
-                    prevPos = ControlPoint1;
-                    ControlPoint1 = pos.Value;
-                    return;
-                }
-                
-                if (_part == 2)
-                {
-                    prevPos = ControlPoint2;
-                    ControlPoint2 = pos.Value;
-                    return;
-                }
-            }
-            
-            public override void Prepare(GL_ControlModern control)
-            {
-                //probably never gets called
-            }
-
-            public override void Prepare(GL_ControlLegacy control)
-            {
-                //probably never gets called
-            }
-
-            public override void Draw(GL_ControlModern control, Pass pass)
-            {
-                //probably never gets called
-            }
-
-            public override void Draw(GL_ControlLegacy control, Pass pass)
-            {
-                //probably never gets called
-            }
-
-            public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
-            {
-                if (Selected)
-                {
-                    Vector3? prevPos;
-
-                    if (ControlPoint1 != Vector3.Zero)
-                    {
-                        ControlPoint1 = transformAction.NewIndividualPos(ControlPoint1, out prevPos);
-                        if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, 1, prevPos, null, null);
-                    }
-
-                    if (ControlPoint2 != Vector3.Zero)
-                    {
-                        ControlPoint2 = transformAction.NewIndividualPos(ControlPoint2, out prevPos);
-                        if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, 2, prevPos, null, null);
-                    }
-
-                    Position = transformAction.NewPos(Position, out prevPos);
-                    if (prevPos.HasValue)
-                        transformChangeInfos.Add(this, 0, prevPos, null, null);
-                }
-            }
-
-            public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
-            {
-                if (ControlPoint1 != Vector3.Zero)
-                {
-                    if (_part == 1)
-                    {
-                        ControlPoint1 = transformAction.NewPos(Position + ControlPoint1, out Vector3? prevPos) - Position;
-                        if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, 1, prevPos - Position, null, null);
-
-                        return;
-                    }
-                }
-
-                if (ControlPoint2 != Vector3.Zero)
-                {
-                    if (_part == 2)
-                    {
-                        ControlPoint2 = transformAction.NewPos(Position + ControlPoint2, out Vector3? prevPos) - Position;
-                        if (prevPos.HasValue)
-                            transformChangeInfos.Add(this, 2, prevPos - Position, null, null);
-                        return;
-                    }
-                }
-            }
-
-            public override int GetPickableSpan() => 3;
-
-            public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
-            {
-                if (Selected)
-                    manager.Add(list, this);
-            }
-
-            public override bool IsSelectedAll()
-            {
-                return Selected;
-            }
-
-            public override bool IsSelected()
-            {
-                return Selected;
-            }
-
-            public override Vector3 GetFocusPoint()
-            {
-                return Position;
             }
         }
     }

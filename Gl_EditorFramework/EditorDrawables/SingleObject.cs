@@ -22,7 +22,9 @@ namespace GL_EditorFramework.EditorDrawables
     {
 
         [PropertyCapture.Undoable]
-        public virtual Vector3 Position { get; set; } = new Vector3(0, 0, 0);
+        public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
+
+        public virtual Vector3 GlobalPosition { get => Position; set => Position = value; }
 
         protected bool Selected = false;
 
@@ -233,8 +235,12 @@ namespace GL_EditorFramework.EditorDrawables
             if (!Selected)
                 return;
 
-            Position = transformAction.NewPos(Position, out Vector3? prevPos);
-            infos.Add(this, 0, prevPos, null, null);
+            Vector3 pp = Position;
+
+            GlobalPosition = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
+
+            if(posHasChanged)
+                infos.Add(this, 0, pp, null, null);
         }
 
         public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)

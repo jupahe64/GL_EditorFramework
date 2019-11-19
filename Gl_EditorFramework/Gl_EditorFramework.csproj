@@ -56,6 +56,7 @@
     <Compile Include="EditorDrawables\EditorScene\SceneDrawing.cs" />
     <Compile Include="EditorDrawables\EditorScene\SceneEvents.cs" />
     <Compile Include="EditorDrawables\EditorScene\SceneTransformations.cs" />
+    <Compile Include="EditorDrawables\PathPoint.cs" />
     <Compile Include="EditorDrawables\SingleObject.cs" />
     <Compile Include="EditorDrawables\EditorScene\UndoAndRedo.cs" />
     <Compile Include="EditorDrawables\TransformableObject.cs" />
