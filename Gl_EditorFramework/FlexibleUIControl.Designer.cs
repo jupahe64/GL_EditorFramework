@@ -1,6 +1,6 @@
 ﻿namespace GL_EditorFramework
 {
-    partial class ObjectUIControl
+    partial class FlexibleUIControl
     {
         /// <summary> 
         /// Required designer variable.
@@ -60,14 +60,14 @@
             this.comboBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ComboBox1_KeyDown);
             this.comboBox1.LostFocus += new System.EventHandler(this.ComboBox1_LostFocus);
             // 
-            // ObjectUIControl
+            // FlexibleUIControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.textBox1);
-            this.Name = "ObjectUIControl";
+            this.Name = "FlexibleUIControl";
             this.Size = new System.Drawing.Size(220, 160);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -76,7 +76,7 @@
 
         #endregion
 
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.ComboBox comboBox1;
+        protected System.Windows.Forms.TextBox textBox1;
+        protected System.Windows.Forms.ComboBox comboBox1;
     }
 }

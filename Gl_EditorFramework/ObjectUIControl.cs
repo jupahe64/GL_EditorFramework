@@ -1,49 +1,37 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Reflection;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Collections;
-using System.Collections.Specialized;
 
 namespace GL_EditorFramework
 {
-    /// <summary>
-    /// A control for displaying object specific UI that an <see cref="IObjectUIContainer"/> provides
-    /// </summary>
-    public partial class ObjectUIControl : UserControl, IObjectUIControl
+    public class ObjectUIControl : FlexibleUIControl, IObjectUIControl
     {
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        protected static extern IntPtr SendMessage(HandleRef hWnd, int msg, int wParam, int lParam);
+        const int fieldWidth = 50;
+        const int fieldSpace = 2;
+        const int beforeTwoLineSpacing = 5;
+        const int fullWidthSpace = 5;
+        const int margin = 10;
+        const int rowHeight = 20;
 
-        public Font HeadingFont;
-        public Font LinkFont;
+        private int currentY;
+        int usableWidth;
 
-        enum EventType
+        protected override void OnResize(EventArgs e)
         {
-            DRAW,
-            CLICK,
-            DRAG_START,
-            DRAG,
-            DRAG_END,
-            DRAG_ABORT,
-            LOST_FOCUS
+            base.OnResize(e);
+            if (VScroll)
+                usableWidth = Width - SystemInformation.VerticalScrollBarWidth - 2;
+            else
+                usableWidth = Width - 2;
+            Refresh();
         }
 
-        static uint VALUE_CHANGE_START = 1;
-        static uint VALUE_CHANGED = 2;
-        static uint VALUE_SET = 4;
-
-        uint changeTypes = 0;
-
-        EventType eventType = EventType.DRAW;
+        protected override bool HasNoUIContent() => containerInfos.Count == 0;
 
         class ContainerInfo
         {
@@ -58,19 +46,19 @@ namespace GL_EditorFramework
                 this.objectUIContainer = objectUIContainer;
             }
         }
-        
+
         List<ContainerInfo> containerInfos = new List<ContainerInfo>();
 
-        public IEnumerable<IObjectUIContainer> ObjectUIContainers => containerInfos.Select(x=>x.objectUIContainer);
+        public IEnumerable<IObjectUIContainer> ObjectUIContainers => containerInfos.Select(x => x.objectUIContainer);
 
         public void AddObjectUIContainer(IObjectUIContainer objectUIContainer, string name)
         {
-            containerInfos.Add(new ContainerInfo(objectUIContainer,name));
+            containerInfos.Add(new ContainerInfo(objectUIContainer, name));
         }
 
         public void RemoveObjectUIContainers(IObjectUIContainer objectUIContainer)
         {
-            foreach(ContainerInfo containerInfo in containerInfos)
+            foreach (ContainerInfo containerInfo in containerInfos)
             {
                 if (containerInfo.objectUIContainer == containerInfos)
                 {
@@ -85,189 +73,18 @@ namespace GL_EditorFramework
             containerInfos.Clear();
         }
 
-        Graphics g;
-
-        int index;
-
-        Point mousePos;
-        Point lastMousePos;
-        Point dragStarPos;
-
-        int usableWidth;
-
-        Brush buttonHighlight = new SolidBrush(MixedColor(SystemColors.GradientInactiveCaption, SystemColors.ControlLightLight));
-
-        Timer doubleClickTimer = new Timer();
-        bool acceptDoubleClick = false;
-
-        bool mouseDown = false;
-
-        int focusedIndex = -1;
-        int dragIndex = -1;
-
-        bool mouseWasDragged = false;
-        int textBoxHeight;
-
-        bool textBoxHasNumericFilter = false;
-
-        public ObjectUIControl()
-        {
-            SetStyle(
-            ControlStyles.AllPaintingInWmPaint |
-            ControlStyles.UserPaint |
-            ControlStyles.OptimizedDoubleBuffer,
-            true);
-
-            InitializeComponent();
-
-            HeadingFont = new Font(Font.FontFamily, 10);
-
-            LinkFont = new Font(textBox1.Font, FontStyle.Underline);
-
-            doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
-            doubleClickTimer.Tick += DoubleClickTimer_Tick;
-
-            textBox1.Visible = false;
-            textBoxHeight = textBox1.Height;
-        }
-
-        private void TextBox1_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (acceptDoubleClick || e.Clicks == 2)
-            {
-                textBox1.SelectAll();
-                acceptDoubleClick = false;
-            }
-
-        }
-
-        private void DoubleClickTimer_Tick(object sender, EventArgs e)
-        {
-            acceptDoubleClick = false;
-            doubleClickTimer.Stop();
-        }
-
-        private void TextBox1_LostFocus(object sender, EventArgs e)
-        {
-            if (focusedIndex == -1)
-                return;
-
-            eventType = EventType.LOST_FOCUS;
-
-            Refresh();
-
-            textBox1.Visible = false;
-            focusedIndex = -1;
-
-            eventType = EventType.DRAW;
-
-            changeTypes = 0;
-        }
-
-        private void ComboBox1_LostFocus(object sender, EventArgs e)
-        {
-            if (focusedIndex == -1)
-                return;
-
-            comboBox1.Visible = false;
-            AutoScrollMinSize = new Size(0, autoScrollRestoreHeight);
-            AutoScrollPosition = new Point(0, autoScrollRestoreY);
-
-            eventType = EventType.LOST_FOCUS;
-
-            Refresh();
-
-            focusedIndex = -1;
-
-            eventType = EventType.DRAW;
-
-            changeTypes = 0;
-        }
-
-        private void TextBox1_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Return && textBox1.Focused)
-            {
-                Focus();
-                e.SuppressKeyPress = true;
-            }
-        }
-
-        private void ComboBox1_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Return && comboBox1.Focused)
-                Focus();
-        }
-        private int currentY;
-
-        private void TextBox1_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            NumberFormatInfo numberFormat = CultureInfo.CurrentCulture.NumberFormat;
-            string numberDecimalSeparator = numberFormat.NumberDecimalSeparator;
-            string numberGroupSeparator = numberFormat.NumberGroupSeparator;
-            string negativeSign = numberFormat.NegativeSign;
-            string text = e.KeyChar.ToString();
-            if (!char.IsDigit(e.KeyChar) && !text.Equals(numberDecimalSeparator) && !text.Equals(numberGroupSeparator) && !text.Equals(negativeSign) && 
-                e.KeyChar != '\b' && (ModifierKeys & (Keys.Control | Keys.Alt)) == Keys.None)
-            {
-                e.Handled = true;
-            }
-        }
-
-        protected override void OnScroll(ScrollEventArgs se)
-        {
-            base.OnScroll(se);
-            Refresh();
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            if (VScroll)
-                usableWidth = Width - SystemInformation.VerticalScrollBarWidth-2;
-            else
-                usableWidth = Width-2;
-            Refresh();
-        }
-
-        static Brush backBrush = new SolidBrush(MixedColor(SystemColors.ControlDark, SystemColors.Control));
-
-        static Point[] arrowDown = new Point[]
-        {
-            new Point( 2,  6),
-            new Point(18,  6),
-            new Point(10, 14)
-        };
-
-        static Point[] arrowLeft = new Point[]
-        {
-            new Point(14,  2),
-            new Point(14, 18),
-            new Point( 6, 10)
-        };
-
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
 
-            if (containerInfos.Count == 0)
+            if (!TryInitDrawing(e))
                 return;
-
-            g = e.Graphics;
-
-            if (comboBox1.Visible)
-            {
-                g.DrawString(comboBoxName, textBox1.Font, SystemBrushes.ControlText, 10, 10);
-                return;
-            }
 
             currentY = margin + AutoScrollPosition.Y;
-
-            index = 0;
-
+            
             try
             {
-                foreach(ContainerInfo containerInfo in containerInfos)
+                foreach (ContainerInfo containerInfo in containerInfos)
                 {
                     int lastY = currentY - margin / 2;
                     bool hovered = new Rectangle(Width - margin - 20 - SystemInformation.VerticalScrollBarWidth, currentY, 20 + SystemInformation.VerticalScrollBarWidth, 20).Contains(mousePos);
@@ -281,7 +98,7 @@ namespace GL_EditorFramework
                     Heading(containerInfo.name);
                     Spacing(margin / 2);
 
-                    if(containerInfo.isExpanded)
+                    if (containerInfo.isExpanded)
                         containerInfo.objectUIContainer.DoUI(this);
 
                     g.DrawRectangle(SystemPens.ControlDark, margin / 2, lastY, usableWidth - margin, currentY - lastY);
@@ -301,387 +118,11 @@ namespace GL_EditorFramework
 
                 AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y + margin);
             }
-            catch(ControlInvalidatedException) //this Control has been invalidated
+            catch (ControlInvalidatedException) //this Control has been invalidated
             {
                 AutoScrollMinSize = new Size();
             }
         }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            if (comboBox1.Visible)
-                return;
-
-            if (e.Button == MouseButtons.Left)
-            {
-                mouseDown = true;
-
-                mouseWasDragged = false;
-                dragStarPos = e.Location;
-                eventType = EventType.DRAG_START;
-                dragIndex = -1;
-
-                Refresh();
-
-                Focus();
-
-                eventType = EventType.DRAW;
-            }
-            else if (e.Button == MouseButtons.Right)
-            {
-                eventType = EventType.DRAG_ABORT;
-                Refresh();
-                eventType = EventType.DRAW;
-            }
-
-            changeTypes = 0;
-        }
-
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            mousePos = e.Location;
-
-            if (e.Button == MouseButtons.Left && Math.Abs(mousePos.X - dragStarPos.X) > 2)
-                mouseWasDragged = true;
-
-            if (mouseWasDragged)
-                eventType = EventType.DRAG;
-
-            Refresh();
-
-            eventType = EventType.DRAW;
-            lastMousePos = e.Location;
-
-            changeTypes = 0;
-        }
-
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            if (e.Button != MouseButtons.Left || containerInfos.Count == 0)
-                return;
-            mouseDown = false;
-
-            if (mouseWasDragged)
-            {
-                eventType = EventType.DRAG_END;
-                Refresh();
-            }
-            else
-            {
-                eventType = EventType.CLICK;
-                Refresh();
-            }
-
-            eventType = EventType.DRAW;
-
-            if (textBoxRequest.HasValue)
-            {
-                SuspendLayout();
-                textBox1.Visible = true;
-
-                textBox1.Text = textBoxRequest.Value.value;
-                textBox1.TextAlign = textBoxRequest.Value.alignment;
-                textBox1.Location = new Point(textBoxRequest.Value.x, textBoxRequest.Value.y);
-                textBox1.Width = textBoxRequest.Value.width;
-                ResumeLayout();
-
-                textBox1.Focus();
-
-                int lParam = mousePos.Y - textBox1.Top << 16 | (mousePos.X - textBox1.Left & 65535);
-                int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
-
-                textBox1.Select(Math.Max(0, num), 0);
-
-                if (textBoxRequest.Value.useNumericFilter && !textBoxHasNumericFilter)
-                {
-                    textBox1.KeyPress += TextBox1_KeyPress;
-                    textBoxHasNumericFilter = true;
-                }
-                else if (textBoxHasNumericFilter)
-                {
-                    textBox1.KeyPress -= TextBox1_KeyPress;
-                    textBoxHasNumericFilter = false;
-                }
-
-                textBoxRequest = null;
-            }
-
-            changeTypes = 0;
-        }
-
-        private void DrawField(int x, int y, int width, string value, Brush outline, Brush background, bool isCentered = true)
-        {
-            g.FillRectangle(outline, x, y, width, textBoxHeight + 2);
-            g.FillRectangle(background, x + 1, y + 1, width - 2, textBoxHeight);
-
-            g.SetClip(new Rectangle(
-                x + 1,
-                y + 1,
-                width - 2,
-                textBoxHeight));
-
-            if(isCentered)
-                g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
-                x + 1 + (width - (int)Math.Ceiling(g.MeasureString(value, textBox1.Font).Width)) / 2, y);
-            else
-                g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
-                x + 1, y);
-
-            g.ResetClip();
-        }
-
-        struct TextBoxSetup
-        {
-            public int x;
-            public int y;
-            public int width;
-            public string value;
-            public HorizontalAlignment alignment;
-            public bool useNumericFilter;
-
-            public TextBoxSetup(int x, int y, int width, string value, HorizontalAlignment alignment, bool useNumericFilter)
-            {
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.value = value;
-                this.alignment = alignment;
-                this.useNumericFilter = useNumericFilter;
-            }
-        }
-
-        TextBoxSetup? textBoxRequest;
-
-        private void PrepareFieldForInput(int x, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
-        {
-            textBoxRequest = new TextBoxSetup(x + 1, y + 1, width - 2, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput);
-            
-            focusedIndex = index;
-
-            changeTypes |= VALUE_CHANGE_START;
-
-            acceptDoubleClick = true;
-            doubleClickTimer.Start();
-        }
-
-        private static float Clamped(float value, float min, float max, bool wrapAround)
-        {
-            if (wrapAround)
-            {
-                float span = max - min;
-                return min + (((value - min) % span + span) % span);
-            }
-            else
-            {
-                return Math.Min(Math.Max(min, value), max);
-            }
-        }
-
-        #region UI Elements
-        float valueBeforeDrag;
-        private float NumericInputField(int x, int y, int width, float number, NumberInputInfo info, bool isCentered)
-        {
-            switch (eventType)
-            {
-                case EventType.CLICK:
-                    if (new Rectangle(x + 1, currentY + 1, width - 1, textBoxHeight - 2).Contains(mousePos))
-                    {
-                        DrawField(x, currentY, width, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight, isCentered);
-                        PrepareFieldForInput(x, currentY, width, number.ToString(), isCentered);
-                    }
-                    else
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-
-                case EventType.DRAG_START:
-                    if (focusedIndex == index)
-                        DrawField(x, currentY, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                    {
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                        if (new Rectangle(x + 1, currentY + 1, width - 1, textBoxHeight - 2).Contains(mousePos))
-                        {
-                            dragIndex = index;
-                            valueBeforeDrag = number;
-                            changeTypes |= VALUE_CHANGE_START;
-                        }
-                    }
-
-                    break;
-
-                case EventType.DRAG:
-                    if (dragIndex == index)
-                    {
-                        changeTypes |= VALUE_CHANGED;
-                        number = Clamped(valueBeforeDrag + (mousePos.X - dragStarPos.X) / info.incrementDragDivider * info.increment,
-                            info.min, info.max, info.wrapAround);
-                    }
-                    if (focusedIndex == index)
-                        DrawField(x, currentY, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-
-                case EventType.DRAG_END:
-                    if (dragIndex == index)
-                    {
-                        changeTypes |= VALUE_SET;
-                        dragIndex = -1;
-                    }
-
-                    if (focusedIndex == index)
-                        DrawField(x, currentY, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-
-                case EventType.LOST_FOCUS:
-                    if (focusedIndex == index && float.TryParse(textBox1.Text, out float parsed))
-                    {
-                        changeTypes |= VALUE_SET;
-                        number = Clamped(parsed, info.min, info.max, info.wrapAround);
-                    }
-
-                    if (focusedIndex == index)
-                        DrawField(x, currentY, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-
-                case EventType.DRAG_ABORT:
-                    if (dragIndex == index)
-                    {
-                        changeTypes |= VALUE_CHANGED;
-                        number = valueBeforeDrag;
-                        dragIndex = -1;
-                    }
-                    if (focusedIndex == index)
-                        DrawField(x, currentY, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-
-                default: //EventType.DRAW
-                    if (focusedIndex == index)
-                        DrawField(x, currentY, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                        DrawField(x, currentY, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-            }
-
-            index++;
-            return number;
-        }
-
-        private string TextInputField(int x, int y, int width, string text, bool isCentered)
-        {
-            switch (eventType)
-            {
-                case EventType.CLICK:
-                    if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
-                    {
-                        DrawField(x, y, width, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight, isCentered);
-                        PrepareFieldForInput(x, y, width, text, false, isCentered);
-                    }
-                    else
-                        DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-
-                case EventType.LOST_FOCUS:
-                    if (focusedIndex == index)
-                    {
-                        changeTypes |= VALUE_SET;
-                        text = textBox1.Text;
-                    }
-
-                    if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                        DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-
-                default:
-                    if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
-                    else
-                        DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
-
-                    break;
-            }
-
-            index++;
-            return text;
-        }
-
-        private bool Button(int x, int y, int width, string name)
-        {
-            bool clicked = false;
-
-            if (new Rectangle(x, y, width, textBoxHeight + 6).Contains(mousePos))
-            {
-                if (mouseDown)
-                {
-                    g.FillRectangle(SystemBrushes.HotTrack, x, y, width, textBoxHeight + 6);
-                    g.FillRectangle(SystemBrushes.GradientInactiveCaption, x + 1, y + 1, width - 2, textBoxHeight + 4);
-                }
-                else
-                {
-                    g.FillRectangle(SystemBrushes.Highlight, x, y, width, textBoxHeight + 6);
-                    g.FillRectangle(buttonHighlight, x + 1, y + 1, width - 2, textBoxHeight + 4);
-                }
-
-                clicked = eventType == EventType.CLICK;
-            }
-            else
-            {
-                g.FillRectangle(SystemBrushes.ControlDark, x, y, width, textBoxHeight + 6);
-                g.FillRectangle(SystemBrushes.ControlLight, x + 1, y + 1, width - 2, textBoxHeight + 4);
-
-
-            }
-
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText,
-                x + (width - (int)g.MeasureString(name, textBox1.Font).Width) / 2, y + 3);
-
-            index++;
-
-            return clicked;
-        }
-        #endregion
-
-        public struct NumberInputInfo
-        {
-            public readonly float increment;
-            public readonly int incrementDragDivider;
-            public readonly float min;
-            public readonly float max;
-            public readonly bool wrapAround;
-
-            public NumberInputInfo(float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
-            {
-                this.increment = increment;
-                this.incrementDragDivider = incrementDragDivider;
-                this.min = min;
-                this.max = max;
-                this.wrapAround = wrapAround;
-            }
-        }
-
-        const int fieldWidth = 50;
-        const int fieldSpace = 2;
-        const int beforeTwoLineSpacing = 5;
-        const int fullWidthSpace = 5;
-        const int margin = 10;
-        const int rowHeight = 20;
 
         #region IObjectControl
         public float NumberInput(float number, string name,
@@ -892,46 +333,12 @@ namespace GL_EditorFramework
             int width = fieldWidth * 3 + fieldSpace * 2;
 
             g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
-            DrawField(usableWidth - width - margin, currentY, width, value.ToString(), SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
 
-            float arrowWidth = g.MeasureString(">", textBox1.Font).Width;
-
-            int index = values.IndexOf(value);
-            if (index > 0)
-            {
-                g.DrawString("<", textBox1.Font, SystemBrushes.ControlText, usableWidth - width - margin + 1, currentY);
-                if (new Rectangle(usableWidth - width - margin + 1, currentY + 1, fieldWidth, textBoxHeight - 2).Contains(mousePos))
-                {
-                    if (eventType == EventType.DRAG_START)
-                        changeTypes |= VALUE_CHANGE_START;
-
-                    if (eventType == EventType.CLICK)
-                        value = values[index - 1];
-                }
-            }
-
-            if (index < values.Count - 1)
-            {
-                g.DrawString(">", textBox1.Font, SystemBrushes.ControlText, usableWidth - margin - 1 - arrowWidth, currentY);
-                if (new Rectangle(usableWidth - margin - 1 - fieldWidth, currentY + 1, fieldWidth, textBoxHeight - 2).Contains(mousePos))
-                {
-                    if (eventType == EventType.DRAG_START)
-                        changeTypes |= VALUE_CHANGE_START;
-
-                    if (eventType == EventType.CLICK)
-                        value = values[index + 1];
-                }
-            }
+            value = ChoicePickerField(usableWidth - width - margin, currentY, width, value, values);
 
             currentY += rowHeight;
             return value;
         }
-
-        int autoScrollRestoreHeight;
-        int autoScrollRestoreY;
-        string comboBoxName;
-
-        class ControlInvalidatedException : Exception { }
 
         public string AdvancedTextInput(string name, string text, object[] recommendations)
         {
@@ -943,19 +350,7 @@ namespace GL_EditorFramework
                 case EventType.CLICK:
                     if (new Rectangle(margin + 1, currentY + 1, usableWidth - margin * 2 - 2, textBoxHeight - 2).Contains(mousePos))
                     {
-                        comboBoxName = name;
-                        autoScrollRestoreHeight = AutoScrollMinSize.Height;
-                        autoScrollRestoreY = -AutoScrollPosition.Y;
-                        comboBox1.Text = text;
-                        comboBox1.Items.Clear();
-                        if (recommendations != null && recommendations.Length != 0)
-                            comboBox1.Items.AddRange(recommendations);
-                        comboBox1.Visible = true;
-                        comboBox1.Focus();
-                        Invalidate();
-                        focusedIndex = index;
-                        changeTypes |= VALUE_CHANGE_START;
-                        throw new ControlInvalidatedException();
+                        ShowComboBox(name, text, recommendations);
                     }
                     else
                         DrawField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
@@ -989,7 +384,7 @@ namespace GL_EditorFramework
             currentY += rowHeight;
             return text;
         }
-
+        
         public void Spacing(int amount)
         {
             currentY += amount;
@@ -1002,26 +397,6 @@ namespace GL_EditorFramework
             currentY += 2;
         }
         #endregion
-
-        static Color MixedColor(Color color1, Color color2)
-        {
-            byte a1 = color1.A;
-            byte r1 = color1.R;
-            byte g1 = color1.G;
-            byte b1 = color1.B;
-
-            byte a2 = color2.A;
-            byte r2 = color2.R;
-            byte g2 = color2.G;
-            byte b2 = color2.B;
-
-            int a3 = (a1 + a2) / 2;
-            int r3 = (r1 + r2) / 2;
-            int g3 = (g1 + g2) / 2;
-            int b3 = (b1 + b2) / 2;
-
-            return Color.FromArgb(a3, r3, g3, b3);
-        }
     }
 
     /// <summary>
@@ -1029,10 +404,10 @@ namespace GL_EditorFramework
     /// </summary>
     public interface IObjectUIControl
     {
-        float NumberInput(float number, string name, 
+        float NumberInput(float number, string name,
             float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
 
-        OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name, 
+        OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name,
             float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
 
         OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
