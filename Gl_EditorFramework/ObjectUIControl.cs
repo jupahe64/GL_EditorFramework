@@ -19,17 +19,6 @@ namespace GL_EditorFramework
         const int rowHeight = 20;
 
         private int currentY;
-        int usableWidth;
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            if (VScroll)
-                usableWidth = Width - SystemInformation.VerticalScrollBarWidth - 2;
-            else
-                usableWidth = Width - 2;
-            Refresh();
-        }
 
         protected override bool HasNoUIContent() => containerInfos.Count == 0;
 

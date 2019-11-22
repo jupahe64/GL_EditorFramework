@@ -89,6 +89,18 @@ namespace GL_EditorFramework
             textBoxHeight = textBox1.Height;
         }
 
+        protected int usableWidth;
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            if (VScroll)
+                usableWidth = Width - SystemInformation.VerticalScrollBarWidth - 2;
+            else
+                usableWidth = Width - 2;
+            Refresh();
+        }
+
         private void TextBox1_MouseClick(object sender, MouseEventArgs e)
         {
             if (acceptDoubleClick || e.Clicks == 2)
@@ -176,14 +188,7 @@ namespace GL_EditorFramework
             base.OnScroll(se);
             Refresh();
         }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-
-            Refresh();
-        }
-
+        
         protected static Brush backBrush = new SolidBrush(MixedColor(SystemColors.ControlDark, SystemColors.Control));
 
         protected static Point[] arrowDown = new Point[]
