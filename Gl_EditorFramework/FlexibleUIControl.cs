@@ -18,13 +18,19 @@ namespace GL_EditorFramework
     /// <summary>
     /// A control for displaying object specific UI that an <see cref="IObjectUIContainer"/> provides
     /// </summary>
-    public abstract partial class FlexibleUIControl : UserControl
+    public partial class FlexibleUIControl : UserControl
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         protected static extern IntPtr SendMessage(HandleRef hWnd, int msg, int wParam, int lParam);
 
         public Font HeadingFont;
         public Font LinkFont;
+
+        public new Font Font
+        {
+            get => textBox1.Font;
+            set => textBox1.Font = value;
+        }
 
         protected enum EventType
         {
@@ -68,6 +74,9 @@ namespace GL_EditorFramework
 
         bool textBoxHasNumericFilter = false;
 
+        protected TextBox textBox1;
+        protected ComboBox comboBox1;
+
         public FlexibleUIControl()
         {
             SetStyle(
@@ -76,11 +85,53 @@ namespace GL_EditorFramework
             ControlStyles.OptimizedDoubleBuffer,
             true);
 
-            InitializeComponent();
+            SuspendLayout();
+
+            textBox1 = new TextBox
+            {
+                BorderStyle = BorderStyle.None,
+                Location = new Point(83, 76),
+                Name = "textBox1",
+                Size = new Size(67, 13),
+                TabIndex = 0,
+                TextAlign = HorizontalAlignment.Center
+            };
+            textBox1.MouseClick += new MouseEventHandler(TextBox1_MouseClick);
+            textBox1.KeyDown += new KeyEventHandler(TextBox1_KeyDown);
+            textBox1.LostFocus += new EventHandler(TextBox1_LostFocus);
+
+
+            comboBox1 = new ComboBox
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom
+            | AnchorStyles.Left
+            | AnchorStyles.Right,
+                DropDownStyle = ComboBoxStyle.Simple,
+                FormattingEnabled = true,
+                Location = new Point(10, 30),
+                Margin = new Padding(0),
+                Name = "comboBox1",
+                Size = new Size(200, 123),
+                TabIndex = 1,
+                Visible = false
+            };
+            comboBox1.KeyDown += new KeyEventHandler(ComboBox1_KeyDown);
+            comboBox1.LostFocus += new EventHandler(ComboBox1_LostFocus);
+
+
+            AutoScaleDimensions = new SizeF(6F, 13F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = SystemColors.Control;
+            Controls.Add(comboBox1);
+            Controls.Add(textBox1);
+            Size = new Size(220, 160);
+            ResumeLayout(false);
+            PerformLayout();
+
 
             HeadingFont = new Font(Font.FontFamily, 10);
 
-            LinkFont = new Font(textBox1.Font, FontStyle.Underline);
+            LinkFont = new Font(Font, FontStyle.Underline);
 
             doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
             doubleClickTimer.Tick += DoubleClickTimer_Tick;
@@ -168,7 +219,7 @@ namespace GL_EditorFramework
             if (e.KeyCode == Keys.Return && comboBox1.Focused)
                 Focus();
         }
-        
+
         private void TextBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
             NumberFormatInfo numberFormat = CultureInfo.CurrentCulture.NumberFormat;
@@ -176,7 +227,7 @@ namespace GL_EditorFramework
             string numberGroupSeparator = numberFormat.NumberGroupSeparator;
             string negativeSign = numberFormat.NegativeSign;
             string text = e.KeyChar.ToString();
-            if (!char.IsDigit(e.KeyChar) && !text.Equals(numberDecimalSeparator) && !text.Equals(numberGroupSeparator) && !text.Equals(negativeSign) && 
+            if (!char.IsDigit(e.KeyChar) && !text.Equals(numberDecimalSeparator) && !text.Equals(numberGroupSeparator) && !text.Equals(negativeSign) &&
                 e.KeyChar != '\b' && (ModifierKeys & (Keys.Control | Keys.Alt)) == Keys.None)
             {
                 e.Handled = true;
@@ -188,7 +239,7 @@ namespace GL_EditorFramework
             base.OnScroll(se);
             Refresh();
         }
-        
+
         protected static Brush backBrush = new SolidBrush(MixedColor(SystemColors.ControlDark, SystemColors.Control));
 
         protected static Point[] arrowDown = new Point[]
@@ -204,7 +255,7 @@ namespace GL_EditorFramework
             new Point(14, 18),
             new Point( 6, 10)
         };
-        
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (comboBox1.Visible)
@@ -253,7 +304,7 @@ namespace GL_EditorFramework
             changeTypes = 0;
         }
 
-        protected abstract bool HasNoUIContent();
+        protected virtual bool HasNoUIContent() => false;
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
@@ -318,7 +369,7 @@ namespace GL_EditorFramework
 
             if (comboBox1.Visible)
             {
-                g.DrawString(comboBoxName, textBox1.Font, SystemBrushes.ControlText, 10, 10);
+                g.DrawString(comboBoxName, Font, SystemBrushes.ControlText, 10, 10);
                 return false;
             }
 
@@ -338,11 +389,11 @@ namespace GL_EditorFramework
                 width - 2,
                 textBoxHeight));
 
-            if(isCentered)
-                g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
-                x + 1 + (width - (int)Math.Ceiling(g.MeasureString(value, textBox1.Font).Width)) / 2, y);
+            if (isCentered)
+                g.DrawString(value, Font, SystemBrushes.ControlText,
+                x + 1 + (width - (int)Math.Ceiling(g.MeasureString(value, Font).Width)) / 2, y);
             else
-                g.DrawString(value, textBox1.Font, SystemBrushes.ControlText,
+                g.DrawString(value, Font, SystemBrushes.ControlText,
                 x + 1, y);
 
             g.ResetClip();
@@ -373,7 +424,7 @@ namespace GL_EditorFramework
         private void PrepareFieldForInput(int x, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
         {
             textBoxRequest = new TextBoxSetup(x + 1, y + 1, width - 2, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput);
-            
+
             focusedIndex = index;
 
             changeTypes |= VALUE_CHANGE_START;
@@ -563,6 +614,53 @@ namespace GL_EditorFramework
             return text;
         }
 
+        protected virtual void DrawText(int x, int y, string text)
+        {
+            g.DrawString(text, Font, SystemBrushes.ControlText, x, y);
+        }
+
+        protected virtual void DrawLink(int x, int y, string text, InteractionType linkInteraction)
+        {
+            switch (linkInteraction)
+            {
+                case InteractionType.MOUSE_DOWN:
+                    g.DrawString(text, LinkFont, Brushes.Red, x, y);
+                    break;
+                case InteractionType.HOVER:
+                    g.DrawString(text, LinkFont, Brushes.Blue, x, y);
+                    break;
+                default:
+                    g.DrawString(text, Font, Brushes.Blue, x, y);
+                    break;
+            }
+        }
+
+        protected enum InteractionType
+        {
+            NONE,
+            HOVER,
+            MOUSE_DOWN
+        }
+
+        protected virtual void DrawButton(int x, int y, int width, string name, InteractionType buttonInteraction)
+        {
+            switch (buttonInteraction)
+            {
+                case InteractionType.MOUSE_DOWN:
+                    g.FillRectangle(SystemBrushes.HotTrack, x, y, width, textBoxHeight + 6);
+                    g.FillRectangle(SystemBrushes.GradientInactiveCaption, x + 1, y + 1, width - 2, textBoxHeight + 4);
+                    break;
+                case InteractionType.HOVER:
+                    g.FillRectangle(SystemBrushes.Highlight, x, y, width, textBoxHeight + 6);
+                    g.FillRectangle(buttonHighlight, x + 1, y + 1, width - 2, textBoxHeight + 4);
+                    break;
+                default:
+                    g.FillRectangle(SystemBrushes.ControlDark, x, y, width, textBoxHeight + 6);
+                    g.FillRectangle(SystemBrushes.ControlLight, x + 1, y + 1, width - 2, textBoxHeight + 4);
+                    break;
+            }
+        }
+
         protected bool Button(int x, int y, int width, string name)
         {
             bool clicked = false;
@@ -571,27 +669,22 @@ namespace GL_EditorFramework
             {
                 if (mouseDown)
                 {
-                    g.FillRectangle(SystemBrushes.HotTrack, x, y, width, textBoxHeight + 6);
-                    g.FillRectangle(SystemBrushes.GradientInactiveCaption, x + 1, y + 1, width - 2, textBoxHeight + 4);
+                    DrawButton(x, y, width, name, InteractionType.MOUSE_DOWN);
                 }
                 else
                 {
-                    g.FillRectangle(SystemBrushes.Highlight, x, y, width, textBoxHeight + 6);
-                    g.FillRectangle(buttonHighlight, x + 1, y + 1, width - 2, textBoxHeight + 4);
+                    DrawButton(x, y, width, name, InteractionType.HOVER);
                 }
 
                 clicked = eventType == EventType.CLICK;
             }
             else
             {
-                g.FillRectangle(SystemBrushes.ControlDark, x, y, width, textBoxHeight + 6);
-                g.FillRectangle(SystemBrushes.ControlLight, x + 1, y + 1, width - 2, textBoxHeight + 4);
-
-
+                DrawButton(x, y, width, name, InteractionType.NONE);
             }
 
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText,
-                x + (width - (int)g.MeasureString(name, textBox1.Font).Width) / 2, y + 3);
+            g.DrawString(name, Font, SystemBrushes.ControlText,
+                x + (width - (int)g.MeasureString(name, Font).Width) / 2, y + 3);
 
             index++;
 
@@ -603,12 +696,12 @@ namespace GL_EditorFramework
             int clickAreaWidth = width / 3;
             DrawField(x, y, width, value.ToString(), SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
 
-            float arrowWidth = g.MeasureString(">", textBox1.Font).Width;
+            float arrowWidth = g.MeasureString(">", Font).Width;
 
             int index = values.IndexOf(value);
             if (index > 0)
             {
-                g.DrawString("<", textBox1.Font, SystemBrushes.ControlText, x + 1, y);
+                g.DrawString("<", Font, SystemBrushes.ControlText, x + 1, y);
                 if (new Rectangle(x + 1, y + 1, clickAreaWidth, textBoxHeight - 2).Contains(mousePos))
                 {
                     if (eventType == EventType.DRAG_START)
@@ -621,7 +714,7 @@ namespace GL_EditorFramework
 
             if (index < values.Count - 1)
             {
-                g.DrawString(">", textBox1.Font, SystemBrushes.ControlText, x + width - 1 - arrowWidth, y);
+                g.DrawString(">", Font, SystemBrushes.ControlText, x + width - 1 - arrowWidth, y);
                 if (new Rectangle(x + width - clickAreaWidth, y + 1, clickAreaWidth, textBoxHeight - 2).Contains(mousePos))
                 {
                     if (eventType == EventType.DRAG_START)

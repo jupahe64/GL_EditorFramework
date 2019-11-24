@@ -70,7 +70,7 @@ namespace GL_EditorFramework
                 return;
 
             currentY = margin + AutoScrollPosition.Y;
-            
+
             try
             {
                 foreach (ContainerInfo containerInfo in containerInfos)
@@ -117,7 +117,7 @@ namespace GL_EditorFramework
         public float NumberInput(float number, string name,
             float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, name);
 
             number = NumericInputField(usableWidth - fieldWidth - margin, currentY, fieldWidth, number,
                 new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround), true);
@@ -130,7 +130,7 @@ namespace GL_EditorFramework
         {
             NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
 
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, name);
 
             vec.X = NumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.X, input, true);
             vec.Y = NumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Y, input, true);
@@ -154,13 +154,13 @@ namespace GL_EditorFramework
             g.DrawString(name, HeadingFont, SystemBrushes.ControlText, margin, currentY);
             currentY += rowHeight;
 
-            g.DrawString("X", textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, "X");
             vec.X = NumericInputField(margin + nameWidth, currentY, width - nameWidth, vec.X, input, true);
 
-            g.DrawString("Y", textBox1.Font, SystemBrushes.ControlText, 10 + width + fullWidthSpace, currentY);
+            DrawText(10 + width + fullWidthSpace, currentY, "Y");
             vec.Y = NumericInputField(margin + nameWidth + width + fullWidthSpace, currentY, width - nameWidth, vec.Y, input, true);
 
-            g.DrawString("Z", textBox1.Font, SystemBrushes.ControlText, 10 + width * 2 + fullWidthSpace * 2, currentY);
+            DrawText(10 + width * 2 + fullWidthSpace * 2, currentY, "Z");
             vec.Z = NumericInputField(margin + nameWidth + width * 2 + fullWidthSpace * 2, currentY, width - nameWidth, vec.Z, input, true);
 
 
@@ -234,7 +234,7 @@ namespace GL_EditorFramework
         {
             bool clicked = false;
 
-            if (new Rectangle(margin, currentY, (int)g.MeasureString(name, textBox1.Font).Width, textBoxHeight).Contains(mousePos))
+            if (new Rectangle(margin, currentY, (int)g.MeasureString(name, Font).Width, textBoxHeight).Contains(mousePos))
             {
                 if (mouseDown)
                     g.DrawString(name, LinkFont, Brushes.Red, margin, currentY);
@@ -246,8 +246,6 @@ namespace GL_EditorFramework
             else
             {
                 g.DrawString(name, LinkFont, Brushes.Blue, margin, currentY);
-
-
             }
 
             currentY += rowHeight;
@@ -258,7 +256,7 @@ namespace GL_EditorFramework
 
         public void PlainText(string text)
         {
-            g.DrawString(text, Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, text);
             currentY += rowHeight;
         }
 
@@ -270,7 +268,7 @@ namespace GL_EditorFramework
 
         public bool CheckBox(string name, bool isChecked)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, name);
 
             if (new Rectangle(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, textBoxHeight + 2).Contains(mousePos))
             {
@@ -300,7 +298,7 @@ namespace GL_EditorFramework
 
         public string TextInput(string text, string name)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, name);
 
             text = TextInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth * 3 + fieldSpace * 2, text, false);
 
@@ -310,7 +308,7 @@ namespace GL_EditorFramework
 
         public string FullWidthTextInput(string text, string name)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, name);
             currentY += rowHeight;
             text = TextInputField(margin, currentY, usableWidth - margin * 2, text, false);
             currentY += rowHeight;
@@ -321,7 +319,7 @@ namespace GL_EditorFramework
         {
             int width = fieldWidth * 3 + fieldSpace * 2;
 
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, name);
 
             value = ChoicePickerField(usableWidth - width - margin, currentY, width, value, values);
 
@@ -331,7 +329,7 @@ namespace GL_EditorFramework
 
         public string AdvancedTextInput(string name, string text, object[] recommendations)
         {
-            g.DrawString(name, textBox1.Font, SystemBrushes.ControlText, margin, currentY);
+            DrawText(margin, currentY, name);
             currentY += rowHeight;
 
             switch (eventType)
@@ -373,7 +371,7 @@ namespace GL_EditorFramework
             currentY += rowHeight;
             return text;
         }
-        
+
         public void Spacing(int amount)
         {
             currentY += amount;
