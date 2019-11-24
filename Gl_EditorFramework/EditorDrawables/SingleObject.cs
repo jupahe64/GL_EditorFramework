@@ -163,12 +163,12 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             boundingBox.Include(new BoundingBox(
-                Position.X - 0.5f,
-                Position.X + 0.5f,
-                Position.Y - 0.5f,
-                Position.Y + 0.5f,
-                Position.Z - 0.5f,
-                Position.Z + 0.5f
+                GlobalPosition.X - 0.5f,
+                GlobalPosition.X + 0.5f,
+                GlobalPosition.Y - 0.5f,
+                GlobalPosition.Y + 0.5f,
+                GlobalPosition.Z - 0.5f,
+                GlobalPosition.Z + 0.5f
             ));
         }
 
@@ -179,7 +179,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
         {
-            return (pos - Position).LengthSquared < rangeSquared;
+            return (pos - GlobalPosition).LengthSquared < rangeSquared;
         }
         
         public override uint SelectAll(GL_ControlBase control)
