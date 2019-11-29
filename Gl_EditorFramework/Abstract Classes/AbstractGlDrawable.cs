@@ -37,5 +37,8 @@ namespace GL_EditorFramework.Interfaces
         public virtual uint MouseLeave(int index, GL_ControlBase control) { return 0; }
         public virtual uint MouseLeaveEntirely(GL_ControlBase control) { return 0; }
         public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control) { return REPICK; }
+
+        public virtual void Connect(GL_ControlBase control) { }
+        public virtual void Disconnect(GL_ControlBase control) { }
     }
 }

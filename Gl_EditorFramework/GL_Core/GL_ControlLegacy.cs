@@ -40,7 +40,12 @@ namespace GL_EditorFramework.GL_Core
             set
             {
                 if (value == null || DesignMode) return;
+
+                if (mainDrawable != null)
+                    mainDrawable.Disconnect(this);
+
                 mainDrawable = value;
+                mainDrawable.Connect(this);
                 MakeCurrent();
                 mainDrawable.Prepare(this);
                 Refresh();

@@ -63,6 +63,26 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap CloseTabIcon {
+            get {
+                object obj = ResourceManager.GetObject("CloseTabIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap CloseTabIconHover {
+            get {
+                object obj = ResourceManager.GetObject("CloseTabIconHover", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap TextureSheet {
             get {
                 object obj = ResourceManager.GetObject("TextureSheet", resourceCulture);

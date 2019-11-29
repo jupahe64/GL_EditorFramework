@@ -169,10 +169,52 @@ namespace GL_EditorFramework.EditorDrawables
             public int Count => scene.GetObjects().Count(x => x.IsSelected());
         }
 
+        protected struct CameraStateSave
+        {
+            public readonly Vector3 Target;
+            public readonly float RotX;
+            public readonly float RotY;
+            public readonly float Distance;
+
+            public CameraStateSave(Vector3 target, float rotX, float rotY, float distance)
+            {
+                Target = target;
+                RotX = rotX;
+                RotY = rotY;
+                Distance = distance;
+            }
+        }
+
+        protected CameraStateSave? cameraSave;
 
         public EditorSceneBase()
         {
             SelectedObjects = new SelectionSet(this);
+        }
+
+        public override void Connect(GL_ControlBase control)
+        {
+            this.control = control;
+
+            if (cameraSave.HasValue)
+            {
+                control.CameraTarget = cameraSave.Value.Target;
+                control.CamRotX = cameraSave.Value.RotX;
+                control.CamRotY = cameraSave.Value.RotY;
+                control.CameraDistance = cameraSave.Value.Distance;
+            }
+        }
+
+        public override void Disconnect(GL_ControlBase control)
+        {
+            this.control = null;
+
+            cameraSave = new CameraStateSave(
+                control.CameraTarget, 
+                control.CamRotX, 
+                control.CamRotY, 
+                control.CameraDistance
+                );
         }
 
         public IList CurrentList { get; set; }
