@@ -54,7 +54,9 @@
     <Compile Include="ClosableTabControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Abstract Classes\AbstractDrawableCollection.cs" />
     <Compile Include="EditorDrawables\EditorScene\CategorizedScene.cs" />
+    <Compile Include="EditorDrawables\DrawableCollection.cs" />
     <Compile Include="EditorDrawables\EditorScene\EditorSceneBase.cs" />
     <Compile Include="EditorDrawables\EditorScene\SceneDrawing.cs" />
     <Compile Include="EditorDrawables\EditorScene\SceneEvents.cs" />
