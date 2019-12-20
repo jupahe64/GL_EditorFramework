@@ -177,7 +177,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             foreach (AbstractGlDrawable obj in GetDrawables())
             {
-                obj.Disconnect(control);
+                obj.Connect(control);
             }
         }
 
