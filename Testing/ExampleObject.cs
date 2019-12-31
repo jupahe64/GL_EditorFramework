@@ -29,6 +29,8 @@ namespace Example
 
         static new Vector4 Color = new Vector4(1f, 0f, 0f, 1f);
 
+        ulong animationStartFrame;
+
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)
@@ -54,7 +56,10 @@ namespace Example
             else
                 lineBoxColor = new Vector4(1, 1, 1, 1);
 
-            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+            if(Selected)
+                control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));
+            else
+                control.UpdateModelMatrix(mtx);
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
 
@@ -81,7 +86,10 @@ namespace Example
 
             Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 
-            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+            if (Selected)
+                control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));
+            else
+                control.UpdateModelMatrix(mtx);
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
 
@@ -119,7 +127,10 @@ namespace Example
             else
                 lineBoxColor = new Vector4(1, 1, 1, 1);
 
-            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+            if (Selected)
+                control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));
+            else
+                control.UpdateModelMatrix(mtx);
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
 
@@ -146,7 +157,10 @@ namespace Example
 
             Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
 
-            control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs(control.RedrawerFrame * 0.0625f % 6f - 3f))));
+            if (Selected)
+                control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));
+            else
+                control.UpdateModelMatrix(mtx);
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, pickingColor);
 
@@ -177,6 +191,7 @@ namespace Example
             if (!Selected)
             {
                 Selected = true;
+                animationStartFrame = control.RedrawerFrame;
                 control.AttachPickingRedrawer();
             }
             return 0;
@@ -188,6 +203,7 @@ namespace Example
             if (!Selected)
             {
                 Selected = true;
+                animationStartFrame = control.RedrawerFrame;
                 control.AttachPickingRedrawer();
             }
             return 0;
@@ -199,6 +215,7 @@ namespace Example
             if (!Selected)
             {
                 Selected = true;
+                animationStartFrame = control.RedrawerFrame;
                 control.AttachPickingRedrawer();
             }
             return 0;

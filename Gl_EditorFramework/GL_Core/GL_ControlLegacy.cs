@@ -88,6 +88,12 @@ namespace GL_EditorFramework.GL_Core
 
             MakeCurrent();
 
+            Matrix4 mtxOrientation = GetAnimOrientationMatrix();
+
+            Vector3 camTarget = GetAnimCameraTarget();
+
+            float camDistance = GetAnimCameraDistance();
+
             GL.ClearColor(BackgroundColor1);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -99,10 +105,9 @@ namespace GL_EditorFramework.GL_Core
 
                 ResetModelMatrix();
                 mtxCam =
-                    Matrix4.CreateTranslation(-CameraTarget) *
-                    Matrix4.CreateRotationY(camRotX) *
-                    Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(0.25f, 0, -CameraDistance) *
+                    Matrix4.CreateTranslation(-camTarget) *
+                    mtxOrientation *
+                    Matrix4.CreateTranslation(0.25f, 0, -camDistance) *
                     Matrix4.CreateRotationY(0.02f) *
                     Matrix4.CreateScale(0.03125f);
 
@@ -148,10 +153,9 @@ namespace GL_EditorFramework.GL_Core
 
                 ResetModelMatrix();
                 mtxCam =
-                    Matrix4.CreateTranslation(-CameraTarget) *
-                    Matrix4.CreateRotationY(camRotX) *
-                    Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateTranslation(-0.25f, 0, -CameraDistance) *
+                    Matrix4.CreateTranslation(-camTarget) *
+                    mtxOrientation *
+                    Matrix4.CreateTranslation(-0.25f, 0, -camDistance) *
                     Matrix4.CreateRotationY(-0.02f) *
                     Matrix4.CreateScale(0.03125f);
 
@@ -198,9 +202,8 @@ namespace GL_EditorFramework.GL_Core
 
                 ResetModelMatrix();
                 mtxCam =
-                    Matrix4.CreateTranslation(-CameraTarget) *
-                    Matrix4.CreateRotationY(camRotX) *
-                    Matrix4.CreateRotationX(camRotY) *
+                    Matrix4.CreateTranslation(-camTarget) *
+                    mtxOrientation *
                     Matrix4.CreateTranslation(0, 0, -CameraDistance) *
                     Matrix4.CreateScale(0.03125f);
 
@@ -224,8 +227,7 @@ namespace GL_EditorFramework.GL_Core
                 {
                     GL.MatrixMode(MatrixMode.Modelview);
                     orientationCubeMtx =
-                        Matrix4.CreateRotationY(camRotX) *
-                        Matrix4.CreateRotationX(camRotY) *
+                        mtxOrientation *
                         Matrix4.CreateScale(40f / Width, 40f / Height, 0.25f) *
                         Matrix4.CreateTranslation(1 - 80f / Width, 1 - 80f / Height, 0);
                     GL.LoadMatrix(ref orientationCubeMtx);
@@ -255,9 +257,8 @@ namespace GL_EditorFramework.GL_Core
             ResetModelMatrix();
             mtxCam =
                 Matrix4.CreateTranslation(-CameraTarget) *
-                Matrix4.CreateRotationY(camRotX) *
-                Matrix4.CreateRotationX(camRotY) *
-                Matrix4.CreateTranslation(0, 0, -CameraDistance) *
+                GetAnimOrientationMatrix() *
+                Matrix4.CreateTranslation(0, 0, -GetAnimCameraDistance()) *
                 Matrix4.CreateScale(0.03125f);
 
             GL.MatrixMode(MatrixMode.Projection);
@@ -265,58 +266,13 @@ namespace GL_EditorFramework.GL_Core
             GL.LoadMatrix(ref computedMatrix);
 
             if (showOrientationCube)
-                SkipPickingColors(6); //the orientation cube faces
+                SkipPickingColors(orientationCubePickingColors); //the orientation cube faces
 
             mainDrawable.Draw(this, Pass.PICKING);
 
             if (showOrientationCube)
             {
-                GL.Disable(EnableCap.Texture2D);
-                GL.MatrixMode(MatrixMode.Projection);
-                GL.LoadIdentity();
-                GL.MatrixMode(MatrixMode.Modelview);
-                orientationCubeMtx =
-                    Matrix4.CreateRotationY(camRotX) *
-                    Matrix4.CreateRotationX(camRotY) *
-                    Matrix4.CreateScale((stereoscopy ? 80f : 40f) / Width, 40f / Height, 0.25f) *
-                    Matrix4.CreateTranslation(1 - (stereoscopy ? 160f : 80f) / Width, 1 - 80f / Height, 0);
-                GL.LoadMatrix(ref orientationCubeMtx);
-                GL.Disable(EnableCap.DepthTest);
-
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(Color.FromArgb(1)); //UP
-                GL.Vertex3(-1f, 1f, 1f);
-                GL.Vertex3(1f, 1f, 1f);
-                GL.Vertex3(1f, 1f, -1f);
-                GL.Vertex3(-1f, 1f, -1f);
-                GL.Color4(Color.FromArgb(2)); //DOWN
-                GL.Vertex3(-1f, -1f, -1f);
-                GL.Vertex3(1f, -1f, -1f);
-                GL.Vertex3(1f, -1f, 1f);
-                GL.Vertex3(-1f, -1f, 1f);
-                GL.Color4(Color.FromArgb(3)); //FRONT
-                GL.Vertex3(1f, 1f, 1f);
-                GL.Vertex3(-1f, 1f, 1f);
-                GL.Vertex3(-1f, -1f, 1f);
-                GL.Vertex3(1f, -1f, 1f);
-                GL.Color4(Color.FromArgb(4)); //BACK
-                GL.Vertex3(-1f, 1f, -1f);
-                GL.Vertex3(1f, 1f, -1f);
-                GL.Vertex3(1f, -1f, -1f);
-                GL.Vertex3(-1f, -1f, -1f);
-                GL.Color4(Color.FromArgb(5)); //LEFT
-                GL.Vertex3(1f, 1f, -1f);
-                GL.Vertex3(1f, 1f, 1f);
-                GL.Vertex3(1f, -1f, 1f);
-                GL.Vertex3(1f, -1f, -1f);
-                GL.Color4(Color.FromArgb(6)); //RIGHT
-                GL.Vertex3(-1f, 1f, 1f);
-                GL.Vertex3(-1f, 1f, -1f);
-                GL.Vertex3(-1f, -1f, -1f);
-                GL.Vertex3(-1f, -1f, 1f);
-                GL.End();
-                GL.Enable(EnableCap.DepthTest);
-                GL.Enable(EnableCap.Texture2D);
+                DrawOrientationCubePicking();
             }
         }
     }

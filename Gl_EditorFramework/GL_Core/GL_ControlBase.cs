@@ -21,8 +21,61 @@ namespace GL_EditorFramework.GL_Core
             redrawer.Tick += Redrawer_Tick;
         }
 
+        bool drawAnim = false;
+
+        ulong drawAnimStopFrame = 0;
+
+        bool pickingAnim = false;
+
+        ulong pickingAnimStopFrame = 0;
+
+        public void RedrawFor(ulong frames, bool repick)
+        {
+            if (!drawAnim)
+            {
+                drawAnim = true;
+                redrawerOwners++;
+
+                if (redrawerOwners == 1)
+                    redrawer.Start();
+            }
+
+            drawAnimStopFrame = RedrawerFrame + frames;
+            
+            if (repick)
+            {
+                if (!pickingAnim)
+                {
+                    pickingAnim = true;
+                    repickerOwners++;
+                }
+
+                pickingAnimStopFrame = RedrawerFrame + frames;
+            }
+
+
+        }
+
         private void Redrawer_Tick(object sender, EventArgs e)
         {
+            if (drawAnim && RedrawerFrame==drawAnimStopFrame)
+            {
+                drawAnim = false;
+                redrawerOwners--;
+            }
+
+            if (pickingAnim && RedrawerFrame == pickingAnimStopFrame)
+            {
+                pickingAnim = false;
+                repickerOwners--;
+            }
+
+            if (redrawerOwners == 0)
+            {
+                redrawer.Stop();
+                return;
+            }
+
             base.Refresh();
             if (repickerOwners > 0)
                 _Repick();
@@ -87,8 +140,6 @@ namespace GL_EditorFramework.GL_Core
 
         protected Point lastMouseLoc;
         protected Point dragStartPos = new Point(-1, -1);
-        protected float camRotX = 0;
-        protected float camRotY = 0;
 
         protected Matrix3 mtxRotInv;
         public Vector3 CameraPosition;
@@ -152,9 +203,55 @@ namespace GL_EditorFramework.GL_Core
             set
             {
                 showOrientationCube = value;
-                PickingIndexOffset = value?7:1;
+                PickingIndexOffset = value?orientationCubePickingColors+1:1;
                 Refresh();
             }
+        }
+
+        Matrix3 animOrientationMatrix = Matrix3.Identity;
+
+        protected Matrix4 GetAnimOrientationMatrix()
+        {
+            float blendFactor = 0.25f;
+
+            Matrix3 desired = Matrix3.CreateRotationY(camRotX) * Matrix3.CreateRotationX(camRotY);
+
+            if (!drawAnim)
+                return new Matrix4(desired);
+
+            return new Matrix4(animOrientationMatrix = new Matrix3(
+                desired.Row0 * blendFactor + animOrientationMatrix.Row0 * (1 - blendFactor),
+                desired.Row1 * blendFactor + animOrientationMatrix.Row1 * (1 - blendFactor),
+                desired.Row2 * blendFactor + animOrientationMatrix.Row2 * (1 - blendFactor)
+                ));
+        }
+
+        Vector3 animCameraTarget = Vector3.Zero;
+
+        protected Vector3 GetAnimCameraTarget()
+        {
+            float blendFactor = 0.5f;
+
+            Vector3 desired = CameraTarget;
+
+            if (!drawAnim)
+                return desired;
+
+            return animCameraTarget = desired * blendFactor + animCameraTarget * (1 - blendFactor);
+        }
+
+        float animCameraDistance = 0;
+
+        protected float GetAnimCameraDistance()
+        {
+            float blendFactor = 0.125f;
+
+            float desired = CameraDistance;
+
+            if (!drawAnim)
+                return desired;
+
+            return animCameraDistance = desired * blendFactor + animCameraDistance * (1 - blendFactor);
         }
 
         public Vector3 CoordFor(int x, int y, float depth)
@@ -208,7 +305,7 @@ namespace GL_EditorFramework.GL_Core
         public virtual AbstractGlDrawable MainDrawable { get; set; }
 
         protected AbstractCamera activeCamera;
-        public int PickingIndexOffset { get; private set; } = 7;
+        public int PickingIndexOffset { get; private set; } = 1+orientationCubePickingColors;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AbstractCamera ActiveCamera
@@ -282,22 +379,56 @@ namespace GL_EditorFramework.GL_Core
 
         public float FactorY { get; protected set; }
 
-        public Vector3 CameraTarget;
-        public float CameraDistance = 10f;
-        public float CamRotX { get => camRotX; set { camRotX = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI; ; } }
+        private Vector3 cameraTarget;
+        public Vector3 CameraTarget
+        {
+            get => cameraTarget;
+            set
+            {
+                cameraTarget = value;
+                RedrawFor(60, true);
+            }
+        }
+
+        private float cameraDistance = 10f;
+        public float CameraDistance
+        {
+            get => cameraDistance;
+            set
+            {
+                cameraDistance = value;
+                RedrawFor(60, true);
+            }
+        }
+
+        protected float camRotX = 0;
+        public float CamRotX {
+            get => camRotX;
+            set {
+                camRotX = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
+                RedrawFor(60, true);
+            }
+        }
 
         public bool RotXIsReversed { get; protected set; }
 
         public void RotateCameraX(float amount)
         {
             if (RotXIsReversed)
-                camRotX -= amount;
+                CamRotX -= amount;
             else
-                camRotX += amount;
-
-            camRotX = ((camRotX % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
+                CamRotX += amount;
         }
-        public float CamRotY { get => camRotY; set { camRotY = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI; } }
+
+
+        protected float camRotY = 0;
+        public float CamRotY {
+            get => camRotY;
+            set {
+                camRotY = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
+                RedrawFor(60, true);
+            }
+        }
 
         public float PickingDepth { get; protected set; } = 0;
 
@@ -372,37 +503,6 @@ namespace GL_EditorFramework.GL_Core
             Refresh();
         }
 
-        public void ApplyCameraOrientation(int pickingBuffer)
-        {
-            switch (pickingBuffer)
-            {
-                case 1:
-                    camRotX = 0;
-                    camRotY = Framework.HALF_PI;
-                    break;
-                case 2:
-                    camRotX = 0;
-                    camRotY = -Framework.HALF_PI;
-                    break;
-                case 3:
-                    camRotX = 0;
-                    camRotY = 0;
-                    break;
-                case 4:
-                    camRotX = Framework.PI;
-                    camRotY = 0;
-                    break;
-                case 5:
-                    camRotX = -Framework.HALF_PI;
-                    camRotY = 0;
-                    break;
-                case 6:
-                    camRotX = Framework.HALF_PI;
-                    camRotY = 0;
-                    break;
-            }
-        }
-
         public void Repick()
         {
             if (redrawerOwners == 0) //Redrawer is deactivated?
@@ -465,70 +565,394 @@ namespace GL_EditorFramework.GL_Core
             GL.End();
             GL.Enable(EnableCap.Texture2D);
         }
-
+        
         protected void DrawOrientationCube()
         {
+            float oc_faceSize = 0.85f;
+
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
             GL.Disable(EnableCap.DepthTest);
 
+            #region generated code
             GL.Begin(PrimitiveType.Quads);
-            GL.Color3(new Vector3(pickingFrameBuffer == 1 ? 1f : 0.75f)); //UP
-            GL.TexCoord2(0f, 1f);
-            GL.Vertex3(-1f, 1f, 1f);
-            GL.TexCoord2(0.25f, 1f);
-            GL.Vertex3(1f, 1f, 1f);
-            GL.TexCoord2(0.25f, 0.5f);
-            GL.Vertex3(1f, 1f, -1f);
-            GL.TexCoord2(0f, 0.5f);
-            GL.Vertex3(-1f, 1f, -1f);
-            GL.Color3(new Vector3(pickingFrameBuffer == 2 ? 1f : 0.75f)); //DOWN
-            GL.TexCoord2(0.25f, 1f);
-            GL.Vertex3(-1f, -1f, -1f);
-            GL.TexCoord2(0.5f, 1f);
-            GL.Vertex3(1f, -1f, -1f);
-            GL.TexCoord2(0.5f, 0.5f);
-            GL.Vertex3(1f, -1f, 1f);
-            GL.TexCoord2(0.25f, 0.5f);
-            GL.Vertex3(-1f, -1f, 1f);
-            GL.Color3(new Vector3(pickingFrameBuffer == 3 ? 1f : 0.75f)); //FRONT
-            GL.TexCoord2(0.25f, 0f);
-            GL.Vertex3(1f, 1f, 1f);
-            GL.TexCoord2(0f, 0f);
-            GL.Vertex3(-1f, 1f, 1f);
-            GL.TexCoord2(0f, 0.5f);
-            GL.Vertex3(-1f, -1f, 1f);
-            GL.TexCoord2(0.25f, 0.5f);
-            GL.Vertex3(1f, -1f, 1f);
-            GL.Color3(new Vector3(pickingFrameBuffer == 4 ? 1f : 0.75f)); //BACK	
-            GL.TexCoord2(0.75f, 0.0f);
-            GL.Vertex3(-1f, 1f, -1f);
-            GL.TexCoord2(0.5f, 0.0f);
-            GL.Vertex3(1f, 1f, -1f);
-            GL.TexCoord2(0.5f, 0.5f);
-            GL.Vertex3(1f, -1f, -1f);
-            GL.TexCoord2(0.75f, 0.5f);
-            GL.Vertex3(-1f, -1f, -1f);
-            GL.Color3(new Vector3(pickingFrameBuffer == 5 ? 1f : 0.75f)); //LEFT
-            GL.TexCoord2(0.5f, 0f);
-            GL.Vertex3(1f, 1f, -1f);
-            GL.TexCoord2(0.25f, 0f);
-            GL.Vertex3(1f, 1f, 1f);
-            GL.TexCoord2(0.25f, 0.5f);
-            GL.Vertex3(1f, -1f, 1f);
-            GL.TexCoord2(0.5f, 0.5f);
-            GL.Vertex3(1f, -1f, -1f);
-            GL.Color3(new Vector3(pickingFrameBuffer == 6 ? 1f : 0.75f)); //RIGHT
-            GL.TexCoord2(1f, 0f);
-            GL.Vertex3(-1f, 1f, 1f);
-            GL.TexCoord2(0.75f, 0f);
-            GL.Vertex3(-1f, 1f, -1f);
-            GL.TexCoord2(0.75f, 0.5f);
-            GL.Vertex3(-1f, -1f, -1f);
-            GL.TexCoord2(1f, 0.5f);
-            GL.Vertex3(-1f, -1f, 1f);
+            GL.Color3(new Vector3(pickingFrameBuffer == 1 ? 1f : 0.75f));
+            GL.TexCoord2(0.257452, 0.514903);
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.TexCoord2(0.492548, 0.514903);
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.TexCoord2(0.492548, 0.985097);
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.TexCoord2(0.257452, 0.985097);
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 2 ? 1f : 0.75f));
+            GL.TexCoord2(0.992548, 0.485097);
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.992548, 0.01490301);
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.757452, 0.01490301);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.757452, 0.485097);
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 3 ? 1f : 0.75f));
+            GL.TexCoord2(0.242548, 0.485097);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.TexCoord2(0.242548, 0.01490301);
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.TexCoord2(0.007452, 0.01490301);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.TexCoord2(0.007452, 0.485097);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.Color3(new Vector3(pickingFrameBuffer == 4 ? 1f : 0.75f));
+            GL.TexCoord2(0.242548, 0.514903);
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.TexCoord2(0.007452, 0.514903);
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.TexCoord2(0.007452, 0.985097);
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.TexCoord2(0.242548, 0.985097);
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 5 ? 1f : 0.75f));
+            GL.TexCoord2(0.492548, 0.485097);
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.492548, 0.01490301);
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.257452, 0.01490301);
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.257452, 0.485097);
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 14 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 15 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
+            GL.Color3(new Vector3(pickingFrameBuffer == 16 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.Color3(new Vector3(pickingFrameBuffer == 17 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 18 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 19 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.8125, 0.625);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 20 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.Color3(new Vector3(pickingFrameBuffer == 21 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 22 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.Color3(new Vector3(pickingFrameBuffer == 23 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 24 ? 1f : 0.75f));
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.TexCoord2(0.8125, 0.875);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.Color3(new Vector3(pickingFrameBuffer == 25 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.625);
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 26 ? 1f : 0.75f));
+            GL.TexCoord2(0.742548, 0.485097);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.TexCoord2(0.742548, 0.01490301);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.TexCoord2(0.507452, 0.01490301);
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.TexCoord2(0.507452, 0.485097);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
             GL.End();
+
+            GL.Begin(PrimitiveType.Triangles);
+            GL.Color3(new Vector3(pickingFrameBuffer == 6 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 7 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 8 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.Color3(new Vector3(pickingFrameBuffer == 9 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 10 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 11 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 12 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.Color3(new Vector3(pickingFrameBuffer == 13 ? 1f : 0.75f));
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.TexCoord2(0.9375, 0.875);
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.End();
+            #endregion
+
             GL.Enable(EnableCap.DepthTest);
+        }
+
+        protected const int orientationCubePickingColors = 6 + 12 + 8;
+
+        protected void DrawOrientationCubePicking()
+        {
+            float oc_faceSize = 0.7f;
+
+            GL.Disable(EnableCap.Texture2D);
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadIdentity();
+            GL.MatrixMode(MatrixMode.Modelview);
+            orientationCubeMtx =
+                Matrix4.CreateRotationY(camRotX) *
+                Matrix4.CreateRotationX(camRotY) *
+                Matrix4.CreateScale((stereoscopy ? 80f : 40f) / Width, 40f / Height, 0.25f) *
+                Matrix4.CreateTranslation(1 - (stereoscopy ? 160f : 80f) / Width, 1 - 80f / Height, 0);
+            GL.LoadMatrix(ref orientationCubeMtx);
+            GL.Disable(EnableCap.DepthTest);
+            
+            #region generated code
+            GL.Begin(PrimitiveType.Quads);
+            GL.Color4(Color.FromArgb(1));
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.Color4(Color.FromArgb(2));
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.Color4(Color.FromArgb(3));
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.Color4(Color.FromArgb(4));
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.Color4(Color.FromArgb(5));
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.Color4(Color.FromArgb(14));
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.Color4(Color.FromArgb(15));
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
+            GL.Color4(Color.FromArgb(16));
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.Color4(Color.FromArgb(17));
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.Color4(Color.FromArgb(18));
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.Color4(Color.FromArgb(19));
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.Color4(Color.FromArgb(20));
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.Color4(Color.FromArgb(21));
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.Color4(Color.FromArgb(22));
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.Color4(Color.FromArgb(23));
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.Color4(Color.FromArgb(24));
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.Color4(Color.FromArgb(25));
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.Color4(Color.FromArgb(26));
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
+            GL.End();
+
+            GL.Begin(PrimitiveType.Triangles);
+            GL.Color4(Color.FromArgb(6));
+            GL.Vertex3(oc_faceSize, oc_faceSize, -1);
+            GL.Vertex3(oc_faceSize, 1, -oc_faceSize);
+            GL.Vertex3(1, oc_faceSize, -oc_faceSize);
+            GL.Color4(Color.FromArgb(7));
+            GL.Vertex3(oc_faceSize, -1, -oc_faceSize);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, -1);
+            GL.Vertex3(1, -oc_faceSize, -oc_faceSize);
+            GL.Color4(Color.FromArgb(8));
+            GL.Vertex3(1, oc_faceSize, oc_faceSize);
+            GL.Vertex3(oc_faceSize, 1, oc_faceSize);
+            GL.Vertex3(oc_faceSize, oc_faceSize, 1);
+            GL.Color4(Color.FromArgb(9));
+            GL.Vertex3(1, -oc_faceSize, oc_faceSize);
+            GL.Vertex3(oc_faceSize, -oc_faceSize, 1);
+            GL.Vertex3(oc_faceSize, -1, oc_faceSize);
+            GL.Color4(Color.FromArgb(10));
+            GL.Vertex3(-oc_faceSize, oc_faceSize, -1);
+            GL.Vertex3(-1, oc_faceSize, -oc_faceSize);
+            GL.Vertex3(-oc_faceSize, 1, -oc_faceSize);
+            GL.Color4(Color.FromArgb(11));
+            GL.Vertex3(-1, -oc_faceSize, -oc_faceSize);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, -1);
+            GL.Vertex3(-oc_faceSize, -1, -oc_faceSize);
+            GL.Color4(Color.FromArgb(12));
+            GL.Vertex3(-1, oc_faceSize, oc_faceSize);
+            GL.Vertex3(-oc_faceSize, oc_faceSize, 1);
+            GL.Vertex3(-oc_faceSize, 1, oc_faceSize);
+            GL.Color4(Color.FromArgb(13));
+            GL.Vertex3(-oc_faceSize, -1, oc_faceSize);
+            GL.Vertex3(-oc_faceSize, -oc_faceSize, 1);
+            GL.Vertex3(-1, -oc_faceSize, oc_faceSize);
+            GL.End();
+            #endregion
+
+            GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.Texture2D);
         }
 
         protected void DrawGradientBG()

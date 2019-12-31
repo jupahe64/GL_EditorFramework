@@ -139,30 +139,114 @@ namespace GL_EditorFramework.GL_Core
                 shouldRedraw = true;
                 switch (showOrientationCube ? pickingFrameBuffer : 0)
                 {
+                    #region generated code
                     case 1:
-                        camRotX = 0;
-                        camRotY = Framework.HALF_PI;
+                        CamRotX = 0f;
+                        CamRotY = -1.570796f;
                         break;
                     case 2:
-                        camRotX = 0;
-                        camRotY = -Framework.HALF_PI;
+                        CamRotX = 1.570796f;
+                        CamRotY = 0f;
                         break;
                     case 3:
-                        camRotX = 0;
-                        camRotY = 0;
+                        CamRotX = 0f;
+                        CamRotY = 0f;
                         break;
                     case 4:
-                        camRotX = Framework.PI;
-                        camRotY = 0;
+                        CamRotX = 0f;
+                        CamRotY = 1.570796f;
                         break;
                     case 5:
-                        camRotX = -Framework.HALF_PI;
-                        camRotY = 0;
+                        CamRotX = -1.570796f;
+                        CamRotY = 0f;
                         break;
                     case 6:
-                        camRotX = Framework.HALF_PI;
-                        camRotY = 0;
+                        CamRotX = -2.356194f;
+                        CamRotY = 0.6155406f;
                         break;
+                    case 7:
+                        CamRotX = -2.356194f;
+                        CamRotY = -0.6155406f;
+                        break;
+                    case 8:
+                        CamRotX = -0.7853982f;
+                        CamRotY = 0.6155406f;
+                        break;
+                    case 9:
+                        CamRotX = -0.7853982f;
+                        CamRotY = -0.6155406f;
+                        break;
+                    case 10:
+                        CamRotX = 2.356194f;
+                        CamRotY = 0.6155406f;
+                        break;
+                    case 11:
+                        CamRotX = 2.356194f;
+                        CamRotY = -0.6155406f;
+                        break;
+                    case 12:
+                        CamRotX = 0.7853982f;
+                        CamRotY = 0.6155406f;
+                        break;
+                    case 13:
+                        CamRotX = 0.7853982f;
+                        CamRotY = -0.6155406f;
+                        break;
+                    case 14:
+                        CamRotX = 1.570796f;
+                        CamRotY = -0.7853885f;
+                        break;
+                    case 15:
+                        CamRotX = -3.141593f;
+                        CamRotY = -0.7853885f;
+                        break;
+                    case 16:
+                        CamRotX = -2.356194f;
+                        CamRotY = 0f;
+                        break;
+                    case 17:
+                        CamRotX = 0.7853982f;
+                        CamRotY = 0f;
+                        break;
+                    case 18:
+                        CamRotX = -0.7853982f;
+                        CamRotY = 0f;
+                        break;
+                    case 19:
+                        CamRotX = 2.356194f;
+                        CamRotY = 0f;
+                        break;
+                    case 20:
+                        CamRotX = 0f;
+                        CamRotY = 0.7853885f;
+                        break;
+                    case 21:
+                        CamRotX = -1.570796f;
+                        CamRotY = 0.7853885f;
+                        break;
+                    case 22:
+                        CamRotX = 0f;
+                        CamRotY = -0.7853885f;
+                        break;
+                    case 23:
+                        CamRotX = 1.570796f;
+                        CamRotY = 0.7853885f;
+                        break;
+                    case 24:
+                        CamRotX = -3.141593f;
+                        CamRotY = 0.7853885f;
+                        break;
+                    case 25:
+                        CamRotX = -1.570796f;
+                        CamRotY = -0.7853885f;
+                        break;
+                    case 26:
+                        CamRotX = -3.141593f;
+                        CamRotY = 0f;
+                        break;
+
+
+                    #endregion
                     default:
                         shouldRedraw = false;
                         if (e.Button == MouseButtons.Right && ModifierKeys == Keys.None)
