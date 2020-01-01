@@ -273,7 +273,7 @@ namespace GL_EditorFramework.GL_Core
 
         public override void DrawPicking()
         {
-            if (DesignMode) return;
+            if (DesignMode || MainDrawable==null) return;
             MakeCurrent();
             GL.ClearColor(0f, 0f, 0f, 0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);

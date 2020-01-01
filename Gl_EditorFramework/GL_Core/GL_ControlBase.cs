@@ -31,6 +31,9 @@ namespace GL_EditorFramework.GL_Core
 
         public void RedrawFor(ulong frames, bool repick)
         {
+            if (mainDrawable == null)
+                return;
+
             if (!drawAnim)
             {
                 drawAnim = true;
@@ -505,7 +508,7 @@ namespace GL_EditorFramework.GL_Core
 
         public void Repick()
         {
-            if (redrawerOwners == 0) //Redrawer is deactivated?
+            if (repickerOwners == 0)
                 _Repick();
         }
 
