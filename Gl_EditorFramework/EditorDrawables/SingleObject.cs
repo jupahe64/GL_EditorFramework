@@ -30,9 +30,9 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override bool IsSelected(int partIndex) => Selected;
 
-        protected static Vector4 Color = new Vector4(0f, 0.25f, 1f, 1f);
+        protected virtual Vector4 Color => new Vector4(0f, 0.25f, 1f, 1f);
 
-        
+        protected virtual float BoxScale => 0.5f;
 
         public SingleObject(Vector3 pos)
         {
@@ -49,7 +49,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
@@ -78,7 +78,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
                 Matrix4.CreateTranslation(Position));
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
@@ -95,7 +95,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
@@ -123,7 +123,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
                 Matrix4.CreateTranslation(Position));
 
             Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
@@ -163,12 +163,12 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             boundingBox.Include(new BoundingBox(
-                GlobalPosition.X - 0.5f,
-                GlobalPosition.X + 0.5f,
-                GlobalPosition.Y - 0.5f,
-                GlobalPosition.Y + 0.5f,
-                GlobalPosition.Z - 0.5f,
-                GlobalPosition.Z + 0.5f
+                GlobalPosition.X - BoxScale,
+                GlobalPosition.X + BoxScale,
+                GlobalPosition.Y - BoxScale,
+                GlobalPosition.Y + BoxScale,
+                GlobalPosition.Z - BoxScale,
+                GlobalPosition.Z + BoxScale
             ));
         }
 

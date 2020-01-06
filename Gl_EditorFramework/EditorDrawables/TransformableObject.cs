@@ -55,7 +55,7 @@ namespace GL_EditorFramework.EditorDrawables
             Matrix3 rotMtx = GlobalRotation;
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * 0.5f) *
+                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * BoxScale) *
                 new Matrix4(Selected ? editorScene.CurrentAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
@@ -93,7 +93,7 @@ namespace GL_EditorFramework.EditorDrawables
             Matrix3 rotMtx = GlobalRotation;
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * 0.5f) *
+                Matrix4.CreateScale((Selected ? editorScene.CurrentAction.NewScale(Scale, rotMtx) : Scale) * BoxScale) *
                 new Matrix4(Selected ? editorScene.CurrentAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
 
