@@ -38,6 +38,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void Draw(GL_ControlModern control, Pass pass)
         {
+            ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
+
             if (XRaySelection)
             {
                 #region xray picking
@@ -149,6 +151,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             }
 
+            ObjectRenderState.ShouldBeDrawn = ObjectRenderState.ShouldBeDrawn_Default;
 
             if (pass == Pass.OPAQUE)
             {
@@ -300,8 +303,8 @@ namespace GL_EditorFramework.EditorDrawables
         {
             int var = 0;
             foreach (IEditableObject obj in GetObjects())
-                if (obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition))
-                    var += obj.GetPickableSpan();
+                var += obj.GetPickableSpan();
+
             foreach (AbstractGlDrawable obj in StaticObjects)
                 var += obj.GetPickableSpan();
             return var;
@@ -325,7 +328,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        protected Vector4 SelectColorHijack() => new Vector4(1, 1f, 0.25f, 1);
+        protected static Vector4 SelectColorHijack() => new Vector4(1, 1f, 0.25f, 1);
 
         protected Vector4 ExtraPickingHijack()
         {

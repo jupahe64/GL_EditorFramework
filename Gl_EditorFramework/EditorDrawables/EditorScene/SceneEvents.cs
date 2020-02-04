@@ -327,8 +327,6 @@ namespace GL_EditorFramework.EditorDrawables
 
             foreach (IEditableObject obj in GetObjects())
             {
-                if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
-                    continue;
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
                 {
@@ -359,8 +357,6 @@ namespace GL_EditorFramework.EditorDrawables
                 return 0;
             foreach (IEditableObject obj in GetObjects())
             {
-                if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
-                    continue;
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
                 {

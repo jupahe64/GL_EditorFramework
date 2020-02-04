@@ -61,7 +61,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!editorScene.ShouldBeDrawn(this))
+            if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
 
             if(pass == Pass.PICKING)
@@ -293,7 +293,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!editorScene.ShouldBeDrawn(this))
+            if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
 
             GL.Disable(EnableCap.Texture2D);
@@ -949,6 +949,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override int GetPickableSpan()
         {
+            if (!ObjectRenderState.ShouldBeDrawn(this))
+                return 0;
             int i = 1;
             foreach (PathPoint point in pathPoints)
                 i += point.GetPickableSpan();

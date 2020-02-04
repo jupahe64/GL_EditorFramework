@@ -44,7 +44,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!editorScene.ShouldBeDrawn(this))
+            if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
 
             bool hovered = editorScene.Hovered == this;
@@ -90,7 +90,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!editorScene.ShouldBeDrawn(this))
+            if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
 
             bool hovered = editorScene.Hovered == this;

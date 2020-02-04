@@ -29,9 +29,9 @@ namespace GL_EditorFramework
         }
 
         public static Matrix3 Mat3FromEulerAnglesDeg(Vector3 eulerAngles) =>
-            Matrix3.CreateRotationX(PI * eulerAngles.X / 180f) *
-            Matrix3.CreateRotationY(PI * eulerAngles.Y / 180f) *
-            Matrix3.CreateRotationZ(PI * eulerAngles.Z / 180f);
+            Extensions.CreateRotationX(Math.PI * eulerAngles.X / 180.0) *
+            Extensions.CreateRotationY(Math.PI * eulerAngles.Y / 180.0) *
+            Extensions.CreateRotationZ(Math.PI * eulerAngles.Z / 180.0);
 
         public static void Initialize()
         {
@@ -68,19 +68,19 @@ namespace GL_EditorFramework
     {
         public static Vector3 ExtractDegreeEulerAngles(this Matrix3 mtx)
         {
-            if (mtx.M13 - 1.0 < -0.0001)
+            if (mtx.M13 - 1.0 < -1/256f)
             {
-                if (mtx.M13 + 1.0 > 0.0001)
+                if (mtx.M13 + 1.0 > 1/256f)
                 {
                     return new Vector3(
-                         180f * (float)Math.Atan2(mtx.M23, mtx.M33) / MathHelper.Pi,
-                        -180f * (float)Math.Asin(mtx.M13)           / MathHelper.Pi,
-                         180f * (float)Math.Atan2(mtx.M12, mtx.M11) / MathHelper.Pi);
+                        (float)( 180 * Math.Atan2(mtx.M23, mtx.M33) / Math.PI),
+                        (float)(-180 * Math.Asin(mtx.M13)           / Math.PI),
+                        (float)( 180 * Math.Atan2(mtx.M12, mtx.M11) / Math.PI));
                 }
                 else
                 {
                     return new Vector3(
-                        180f * (float)Math.Atan2(mtx.M21, mtx.M31),
+                        (float)(180 * Math.Atan2(mtx.M21, mtx.M31) / Math.PI),
                         90,
                         0f);
                 }
@@ -88,10 +88,46 @@ namespace GL_EditorFramework
             else
             {
                 return new Vector3(
-                        180f * (float)Math.Atan2(mtx.M21, mtx.M31),
-                        90,
+                        (float)(180 * Math.Atan2(mtx.M21, -mtx.M31) / Math.PI),
+                        -90,
                         0f);
             }
+        }
+
+        public static Matrix3 CreateRotationX(double angle)
+        {
+            Matrix3 result;
+            float cos = (float)(Math.Round(Math.Cos(angle)*256f)/256.0);
+            float sin = (float)(Math.Round(Math.Sin(angle)*256f)/256.0);
+
+            result.Row0 = Vector3.UnitX;
+            result.Row1 = new Vector3(0.0f, cos, sin);
+            result.Row2 = new Vector3(0.0f, -sin, cos);
+            return result;
+        }
+
+        public static Matrix3 CreateRotationY(double angle)
+        {
+            Matrix3 result;
+            float cos = (float)(Math.Round(Math.Cos(angle) * 256f) / 256.0);
+            float sin = (float)(Math.Round(Math.Sin(angle) * 256f) / 256.0);
+
+            result.Row0 = new Vector3(cos, 0.0f, -sin);
+            result.Row1 = Vector3.UnitY;
+            result.Row2 = new Vector3(sin, 0.0f, cos);
+            return result;
+        }
+
+        public static Matrix3 CreateRotationZ(double angle)
+        {
+            Matrix3 result;
+            float cos = (float)(Math.Round(Math.Cos(angle) * 256f) / 256.0);
+            float sin = (float)(Math.Round(Math.Sin(angle) * 256f) / 256.0);
+
+            result.Row0 = new Vector3(cos, sin, 0.0f);
+            result.Row1 = new Vector3(-sin, cos, 0.0f);
+            result.Row2 = Vector3.UnitZ;
+            return result;
         }
     }
 }

@@ -113,6 +113,7 @@
     <Compile Include="Abstract Classes\AbstractEventHandlingObj.cs" />
     <Compile Include="Abstract Classes\AbstractGlDrawable.cs" />
     <Compile Include="Abstract Classes\AbstractPropertyContainer.cs" />
+    <Compile Include="ObjectRenderState.cs" />
     <Compile Include="ObjectUIControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
