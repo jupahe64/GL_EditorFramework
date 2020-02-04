@@ -162,6 +162,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void Draw(GL_ControlLegacy control, Pass pass)
         {
+            ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
+
             if (XRaySelection)
             {
                 #region xray picking
@@ -273,6 +275,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             }
 
+            ObjectRenderState.ShouldBeDrawn = ObjectRenderState.ShouldBeDrawn_Default;
 
             if (pass == Pass.OPAQUE)
             {

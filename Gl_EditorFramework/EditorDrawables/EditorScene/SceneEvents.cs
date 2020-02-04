@@ -325,6 +325,8 @@ namespace GL_EditorFramework.EditorDrawables
             if (CurrentAction != NoAction || ExclusiveAction != NoAction)
                 return 0;
 
+            ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
+
             foreach (IEditableObject obj in GetObjects())
             {
                 int span = obj.GetPickableSpan();
@@ -348,6 +350,9 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 inObjectIndex -= span;
             }
+
+            ObjectRenderState.ShouldBeDrawn = ObjectRenderState.ShouldBeDrawn_Default;
+
             return 0;
         }
 
@@ -355,6 +360,9 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (CurrentAction != NoAction || ExclusiveAction != NoAction)
                 return 0;
+
+            ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
+
             foreach (IEditableObject obj in GetObjects())
             {
                 int span = obj.GetPickableSpan();
@@ -374,6 +382,9 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 inObjectIndex -= span;
             }
+
+            ObjectRenderState.ShouldBeDrawn = ObjectRenderState.ShouldBeDrawn_Default;
+
             return 0;
         }
 
