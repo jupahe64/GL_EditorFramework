@@ -71,10 +71,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClosableTabControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Abstract Classes\AbstractDrawableCollection.cs" />
+    <Compile Include="DocumentTabControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="EditorDrawables\EditorScene\CategorizedScene.cs" />
     <Compile Include="EditorDrawables\DrawableCollection.cs" />
     <Compile Include="EditorDrawables\EditorScene\EditorSceneBase.cs" />
@@ -138,6 +138,9 @@
     <Content Include="Resources\CloseTabIconHover.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="DocumentTabControl.resx">
+      <DependentUpon>DocumentTabControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
