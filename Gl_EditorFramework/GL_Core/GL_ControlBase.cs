@@ -10,12 +10,19 @@ using GL_EditorFramework.StandardCameras;
 using System.Drawing;
 using System.Windows.Forms;
 using System.ComponentModel;
+using OpenTK.Graphics;
 
 namespace GL_EditorFramework.GL_Core
 {
     public partial class GL_ControlBase : GLControl
     {
-        public GL_ControlBase(int maxGL_Version, int redrawerInterval) : base(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(), 24), maxGL_Version, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
+        public GL_ControlBase(int maxGL_Version, int redrawerInterval) : base(
+            new GraphicsMode(
+                32, //color bits
+                24, // Depth bits
+                1 //stencil bits
+            )
+            , maxGL_Version, 1, GraphicsContextFlags.Default)
         {
             redrawer.Interval = redrawerInterval;
             redrawer.Tick += Redrawer_Tick;
@@ -44,7 +51,7 @@ namespace GL_EditorFramework.GL_Core
             }
 
             drawAnimStopFrame = RedrawerFrame + frames;
-            
+
             if (repick)
             {
                 if (!pickingAnim)
@@ -61,7 +68,7 @@ namespace GL_EditorFramework.GL_Core
 
         private void Redrawer_Tick(object sender, EventArgs e)
         {
-            if (drawAnim && RedrawerFrame==drawAnimStopFrame)
+            if (drawAnim && RedrawerFrame == drawAnimStopFrame)
             {
                 drawAnim = false;
                 redrawerOwners--;
@@ -87,7 +94,7 @@ namespace GL_EditorFramework.GL_Core
 
         public GL_ControlBase() : base(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(), 24), 1, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
         {
-            
+
         }
 
         //For framing the camera
@@ -128,7 +135,7 @@ namespace GL_EditorFramework.GL_Core
                 CameraDistance = 10f;
             }
         }
-        
+
         public Random RNG;
 
         protected Matrix4 orientationCubeMtx;
@@ -206,7 +213,7 @@ namespace GL_EditorFramework.GL_Core
             set
             {
                 showOrientationCube = value;
-                PickingIndexOffset = value?orientationCubePickingColors+1:1;
+                PickingIndexOffset = value ? orientationCubePickingColors + 1 : 1;
                 Refresh();
             }
         }
@@ -260,11 +267,11 @@ namespace GL_EditorFramework.GL_Core
         public Vector3 CoordFor(int x, int y, float depth)
         {
             Vector3 vec;
-            
+
             Vector2 normCoords = NormMouseCoords(x, y);
 
             vec.X = (-normCoords.X * depth) * FactorX;
-            vec.Y = ( normCoords.Y * depth) * FactorY;
+            vec.Y = (normCoords.Y * depth) * FactorY;
 
             vec.Z = depth - CameraDistance;
 
@@ -290,19 +297,19 @@ namespace GL_EditorFramework.GL_Core
             Vector2 normCoords = NormMouseCoords(point.X, point.Y);
 
             ray.X = (-normCoords.X * zfar) * FactorX;
-            ray.Y = ( normCoords.Y * zfar) * FactorY;
+            ray.Y = (normCoords.Y * zfar) * FactorY;
             ray.Z = zfar;
             return IntersectPoint(
-                Vector3.Transform(mtxRotInv,ray), 
-                -CameraTarget - Vector3.Transform(mtxRotInv, new Vector3(0,0,CameraDistance)), 
+                Vector3.Transform(mtxRotInv, ray),
+                -CameraTarget - Vector3.Transform(mtxRotInv, new Vector3(0, 0, CameraDistance)),
                 planeNormal, planeOrigin);
         }
 
         public Point ScreenCoordFor(Vector3 coord)
         {
-            Vector3 vec = Vector3.Project(coord, 0, 0, Width, Height, -1, 1,  mtxCam * mtxProj);
+            Vector3 vec = Vector3.Project(coord, 0, 0, Width, Height, -1, 1, mtxCam * mtxProj);
 
-            return new Point((int)vec.X, Height-(int)(vec.Y));
+            return new Point((int)vec.X, Height - (int)(vec.Y));
         }
 
         protected AbstractGlDrawable mainDrawable;
@@ -310,7 +317,7 @@ namespace GL_EditorFramework.GL_Core
         public virtual AbstractGlDrawable MainDrawable { get; set; }
 
         protected AbstractCamera activeCamera;
-        public int PickingIndexOffset { get; private set; } = 1+orientationCubePickingColors;
+        public int PickingIndexOffset { get; private set; } = 1 + orientationCubePickingColors;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AbstractCamera ActiveCamera
@@ -329,11 +336,15 @@ namespace GL_EditorFramework.GL_Core
 
         public int ViewHeighth => Height;
 
-        public Vector2 NormMouseCoords(int x, int y) {
+        public Vector2 NormMouseCoords(int x, int y)
+        {
             return new Vector2(x - Width / 2, y - Height / 2);
         }
 
-        public float ZFar { get => zfar * 32; set {
+        public float ZFar
+        {
+            get => zfar * 32; set
+            {
                 zfar = value * 0.03125f;
 
                 if (DesignMode) return;
@@ -345,9 +356,13 @@ namespace GL_EditorFramework.GL_Core
                     aspect_ratio = Width / (float)Height;
 
                 mtxProj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect_ratio, znear, zfar);
-            } }
+            }
+        }
 
-        public float ZNear { get => znear * 32; set {
+        public float ZNear
+        {
+            get => znear * 32; set
+            {
                 znear = value * 0.03125f;
 
                 if (DesignMode) return;
@@ -359,9 +374,13 @@ namespace GL_EditorFramework.GL_Core
                     aspect_ratio = Width / (float)Height;
 
                 mtxProj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect_ratio, znear, zfar);
-            } }
+            }
+        }
 
-        public float Fov { get => fov; set {
+        public float Fov
+        {
+            get => fov; set
+            {
                 fov = value;
 
                 if (DesignMode) return;
@@ -378,7 +397,8 @@ namespace GL_EditorFramework.GL_Core
                 FactorX = (2f * (float)Math.Tan(fov * 0.5f) * aspect_ratio) / Width;
 
                 FactorY = (2f * (float)Math.Tan(fov * 0.5f)) / Height;
-            } }
+            }
+        }
 
         public float FactorX { get; protected set; }
 
@@ -407,9 +427,11 @@ namespace GL_EditorFramework.GL_Core
         }
 
         protected float camRotX = 0;
-        public float CamRotX {
+        public float CamRotX
+        {
             get => camRotX;
-            set {
+            set
+            {
                 camRotX = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
                 RedrawFor(60, true);
             }
@@ -427,9 +449,11 @@ namespace GL_EditorFramework.GL_Core
 
 
         protected float camRotY = 0;
-        public float CamRotY {
+        public float CamRotY
+        {
             get => camRotY;
-            set {
+            set
+            {
                 camRotY = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
                 RedrawFor(60, true);
             }
@@ -438,9 +462,13 @@ namespace GL_EditorFramework.GL_Core
         public float PickingDepth { get; protected set; } = 0;
 
         protected float normPickingDepth = 0;
-        public float NormPickingDepth { get => normPickingDepth; set {
+        public float NormPickingDepth
+        {
+            get => normPickingDepth; set
+            {
                 normPickingDepth = value;
-            } }
+            }
+        }
 
         public ulong RedrawerFrame { get; private set; } = 0;
 
@@ -450,8 +478,8 @@ namespace GL_EditorFramework.GL_Core
         {
             return NextPickingColorHijack?.Invoke() ??
             new Vector4(
-                ((pickingIndex >> 16) & 0xFF)/255f,
-                ((pickingIndex >>  8) & 0xFF)/255f,
+                ((pickingIndex >> 16) & 0xFF) / 255f,
+                ((pickingIndex >> 8) & 0xFF) / 255f,
                 (pickingIndex & 0xFF) / 255f,
                 ((pickingIndex++ >> 24) & 0xFF) / 255f
                 );
@@ -469,24 +497,27 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnLoad(EventArgs e)
         {
-            
+
             if (DesignMode) return;
 
             activeCamera = new WalkaroundCamera();
 
-            
+
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Lequal);
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(CullFaceMode.Back);
             GL.Enable(EnableCap.Texture2D);
 
+            GL.Enable(EnableCap.LineSmooth);
+            GL.Enable(EnableCap.PolygonSmooth);
+
             GL.Enable(EnableCap.AlphaTest);
 
             GL.LineWidth(2f);
 
             GL.Hint(HintTarget.MultisampleFilterHintNv, HintMode.Nicest);
-            
+
         }
 
         protected override void OnResize(EventArgs e)
@@ -530,7 +561,7 @@ namespace GL_EditorFramework.GL_Core
 
             GL.ReadPixels(pickingMouseX, Height - lastMouseLoc.Y, 1, 1, PixelFormat.DepthComponent, PixelType.Float, ref normPickingDepth);
 
-            PickingDepth = -(zfar * znear / (NormPickingDepth * (zfar - znear) - zfar))*32;
+            PickingDepth = -(zfar * znear / (NormPickingDepth * (zfar - znear) - zfar)) * 32;
 
             int picked = (int)pickingFrameBuffer - PickingIndexOffset;
             if (lastPicked != picked || forceReEnter)
@@ -570,7 +601,7 @@ namespace GL_EditorFramework.GL_Core
             GL.End();
             GL.Enable(EnableCap.Texture2D);
         }
-        
+
         protected void DrawOrientationCube()
         {
             float oc_faceSize = 0.85f;
@@ -825,7 +856,7 @@ namespace GL_EditorFramework.GL_Core
                 Matrix4.CreateTranslation(1 - (stereoscopy ? 160f : 80f) / Width, 1 - 80f / Height, 0);
             GL.LoadMatrix(ref orientationCubeMtx);
             GL.Disable(EnableCap.DepthTest);
-            
+
             #region generated code
             GL.Begin(PrimitiveType.Quads);
             GL.Color4(Color.FromArgb(1));
@@ -968,7 +999,7 @@ namespace GL_EditorFramework.GL_Core
             GL.Begin(PrimitiveType.TriangleStrip);
             GL.Color3(BackgroundColor2);
             GL.Vertex3(1, 1, 0.99998);
-            GL.Vertex3(-1, 1,  0.99998);
+            GL.Vertex3(-1, 1, 0.99998);
             GL.Color3(BackgroundColor1);
             GL.Vertex3(1, -1, 0.99998);
             GL.Vertex3(-1, -1, 0.99998);
@@ -978,7 +1009,7 @@ namespace GL_EditorFramework.GL_Core
 
         public override void Refresh()
         {
-            if(redrawerOwners==0) //Redrawer is deactivated?
+            if (redrawerOwners == 0) //Redrawer is deactivated?
                 base.Refresh();   //event can force a redraw
         }
 
