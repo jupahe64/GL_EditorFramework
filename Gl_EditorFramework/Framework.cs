@@ -38,6 +38,37 @@ namespace GL_EditorFramework
             if (initialized)
                 return;
 
+            //string GetCondition(int row, Vector3 vec)
+            //{
+            //    if (vec.X != 0)
+            //        return $"mtx.M{row}1=={vec.X}";
+            //    else if (vec.Y != 0)
+            //        return $"mtx.M{row}2=={vec.Y}";
+            //    else
+            //        return $"mtx.M{row}3=={vec.Z}";
+            //}
+
+            //string edgeCases = "";
+
+            //for (float x = -90; x <= 180; x+=90)
+            //{
+            //    for (float y = -90; y <= 180; y += 90)
+            //    {
+            //        for (float z = -90; z <= 180; z += 90)
+            //        {
+            //            var mat = Mat3FromEulerAnglesDeg(new Vector3(x, y, z));
+
+            //            var mat2 = Mat3FromEulerAnglesDeg(mat.ExtractDegreeEulerAngles());
+
+            //            if (mat != mat2)
+            //            {
+            //                edgeCases += $"if({GetCondition(1,mat.Row0)} && {GetCondition(2, mat.Row1)} && {GetCondition(3, mat.Row2)})\n";
+            //                edgeCases += $"    return new Vector3({x},{y},{z});\n";
+            //            }
+            //        }
+            //    }
+            //}
+
             //texture sheet
             TextureSheet = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, TextureSheet);
@@ -68,30 +99,61 @@ namespace GL_EditorFramework
     {
         public static Vector3 ExtractDegreeEulerAngles(this Matrix3 mtx)
         {
-            if (mtx.M13 - 1.0 < -1/256f)
-            {
-                if (mtx.M13 + 1.0 > 1/256f)
-                {
-                    return new Vector3(
-                        (float)( 180 * Math.Atan2(mtx.M23, mtx.M33) / Math.PI),
-                        (float)(-180 * Math.Asin(mtx.M13)           / Math.PI),
-                        (float)( 180 * Math.Atan2(mtx.M12, mtx.M11) / Math.PI));
-                }
-                else
-                {
-                    return new Vector3(
-                        (float)(180 * Math.Atan2(mtx.M21, mtx.M31) / Math.PI),
-                        90,
-                        0f);
-                }
-            }
-            else
-            {
-                return new Vector3(
-                        (float)(180 * Math.Atan2(mtx.M21, -mtx.M31) / Math.PI),
-                        -90,
-                        0f);
-            }
+            #region generated code
+            if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
+                return new Vector3(-90, -90, -90);
+            if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
+                return new Vector3(-90, -90, 0);
+            if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
+                return new Vector3(-90, -90, 180);
+            if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
+                return new Vector3(-90, 90, 0);
+            if (mtx.M13 == -1 && mtx.M22 == -1 && mtx.M31 == -1)
+                return new Vector3(-90, 90, 90);
+            if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
+                return new Vector3(-90, 90, 180);
+            if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
+                return new Vector3(0, -90, -90);
+            if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
+                return new Vector3(0, -90, 90);
+            if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
+                return new Vector3(0, -90, 180);
+            if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
+                return new Vector3(0, 90, -90);
+            if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
+                return new Vector3(0, 90, 90);
+            if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
+                return new Vector3(90, -90, 0);
+            if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
+                return new Vector3(90, -90, 90);
+            if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
+                return new Vector3(90, -90, 180);
+            if (mtx.M13 == -1 && mtx.M22 == -1 && mtx.M31 == -1)
+                return new Vector3(90, 90, -90);
+            if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
+                return new Vector3(90, 90, 0);
+            if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
+                return new Vector3(90, 90, 180);
+            if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
+                return new Vector3(180, -90, -90);
+            if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
+                return new Vector3(180, -90, 0);
+            if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
+                return new Vector3(180, -90, 90);
+            if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
+                return new Vector3(180, 90, -90);
+            if (mtx.M13 == -1 && mtx.M22 == -1 && mtx.M31 == -1)
+                return new Vector3(180, 90, 0);
+            if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
+                return new Vector3(180, 90, 90);
+            if (mtx.M13 == -1 && mtx.M22 == 1 && mtx.M31 == 1)
+                return new Vector3(180, 90, 180);
+            #endregion
+
+            return new Vector3(
+                        (float)(180 * Math.Atan2(mtx.M23, mtx.M33) / Math.PI),
+                        (float)(-180 * Math.Asin(mtx.M13) / Math.PI),
+                        (float)(180 * Math.Atan2(mtx.M12, mtx.M11) / Math.PI));
         }
 
         public static Matrix3 CreateRotationX(double angle)
