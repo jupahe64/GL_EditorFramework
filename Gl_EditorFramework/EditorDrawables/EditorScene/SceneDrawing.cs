@@ -29,127 +29,16 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        protected int xrayPickingIndex;
-
-        public bool XRaySelection = false;
-
-        protected bool drawSelection = false;
-        protected bool drawOthers = false;
-
         public override void Draw(GL_ControlModern control, Pass pass)
         {
             ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
 
-            if (XRaySelection)
-            {
-                #region xray picking
-                if (pass == Pass.OPAQUE)
-                {
-                    //draw all GetObjects() except Selection
-                    drawOthers = true;
-                    drawSelection = false;
+            foreach (IEditableObject obj in GetObjects())
+                obj.Draw(control, pass, this);
 
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.OPAQUE, this);
+            foreach (AbstractGlDrawable obj in StaticObjects)
+                obj.Draw(control, pass);
 
-                    foreach (AbstractGlDrawable obj in StaticObjects)
-                        obj.Draw(control, Pass.OPAQUE);
-
-
-                    //draw selection XRay
-                    drawOthers = false;
-                    drawSelection = true;
-
-                    control.NextPickingColorHijack = SelectColorHijack;
-
-                    GL.DepthMask(false);
-                    GL.DepthFunc(DepthFunction.Greater);
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-
-                    //draw visible selection
-                    GL.DepthMask(true);
-                    GL.DepthFunc(DepthFunction.Lequal);
-
-                    control.NextPickingColorHijack = null;
-                    control.RNG = new Random(0);
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.OPAQUE, this);
-
-                }
-                else if (pass == Pass.PICKING)
-                {
-                    //draw all GetObjects() except Selection
-                    drawOthers = true;
-                    drawSelection = false;
-
-                    control.NextPickingColorHijack = ExtraPickingHijack;
-                    xrayPickingIndex = control.PickingIndexOffset;
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-                    foreach (AbstractGlDrawable obj in StaticObjects)
-                        obj.Draw(control, Pass.PICKING);
-
-
-                    //clear depth where selected GetObjects() are
-                    drawOthers = false;
-                    drawSelection = true;
-
-                    GL.ColorMask(false, false, false, false);
-                    GL.DepthFunc(DepthFunction.Always);
-                    GL.DepthRange(1, 1);
-
-                    control.NextPickingColorHijack = SelectColorHijack;
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-
-                    //draw "emulated x-ray"
-                    control.NextPickingColorHijack = ExtraPickingHijack;
-                    xrayPickingIndex = control.PickingIndexOffset;
-
-                    GL.ColorMask(true, true, true, true);
-                    GL.DepthFunc(DepthFunction.Lequal);
-                    GL.DepthRange(0, 1);
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-
-
-                    control.NextPickingColorHijack = null;
-                }
-                #endregion
-                else
-                {
-                    drawOthers = true;
-                    drawSelection = true;
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.TRANSPARENT, this);
-
-                    foreach (AbstractGlDrawable obj in StaticObjects)
-                        obj.Draw(control, Pass.TRANSPARENT);
-                }
-            }
-            else
-            {
-                drawOthers = true;
-                drawSelection = true;
-
-                foreach (IEditableObject obj in GetObjects())
-                    obj.Draw(control, pass, this);
-
-                foreach (AbstractGlDrawable obj in StaticObjects)
-                    obj.Draw(control, pass);
-
-            }
 
             ObjectRenderState.ShouldBeDrawn = ObjectRenderState.ShouldBeDrawn_Default;
 
@@ -164,116 +53,12 @@ namespace GL_EditorFramework.EditorDrawables
         {
             ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
 
-            if (XRaySelection)
-            {
-                #region xray picking
-                if (pass == Pass.OPAQUE)
-                {
-                    //draw all GetObjects() except Selection
-                    drawOthers = true;
-                    drawSelection = false;
+            foreach (IEditableObject obj in GetObjects())
+                obj.Draw(control, pass, this);
 
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.OPAQUE, this);
+            foreach (AbstractGlDrawable obj in StaticObjects)
+                obj.Draw(control, pass);
 
-                    foreach (AbstractGlDrawable obj in StaticObjects)
-                        obj.Draw(control, Pass.OPAQUE);
-
-
-                    //draw selection XRay
-                    drawOthers = false;
-                    drawSelection = true;
-
-                    control.NextPickingColorHijack = SelectColorHijack;
-
-                    GL.DepthMask(false);
-                    GL.DepthFunc(DepthFunction.Greater);
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-
-                    //draw visible selection
-                    GL.DepthMask(true);
-                    GL.DepthFunc(DepthFunction.Lequal);
-
-                    control.NextPickingColorHijack = null;
-                    control.RNG = new Random(0);
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.OPAQUE, this);
-
-                }
-                else if (pass == Pass.PICKING)
-                {
-                    //draw all GetObjects() except Selection
-                    drawOthers = true;
-                    drawSelection = false;
-
-                    control.NextPickingColorHijack = ExtraPickingHijack;
-                    xrayPickingIndex = control.PickingIndexOffset;
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-                    foreach (AbstractGlDrawable obj in StaticObjects)
-                        obj.Draw(control, Pass.PICKING);
-
-
-                    //clear depth where selected GetObjects() are
-                    drawOthers = false;
-                    drawSelection = true;
-
-                    GL.ColorMask(false, false, false, false);
-                    GL.DepthFunc(DepthFunction.Always);
-                    GL.DepthRange(1, 1);
-
-                    control.NextPickingColorHijack = SelectColorHijack;
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-
-                    //draw "emulated x-ray"
-                    control.NextPickingColorHijack = ExtraPickingHijack;
-                    xrayPickingIndex = control.PickingIndexOffset;
-
-                    GL.ColorMask(true, true, true, true);
-                    GL.DepthFunc(DepthFunction.Lequal);
-                    GL.DepthRange(0, 1);
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.PICKING, this);
-
-
-
-                    control.NextPickingColorHijack = null;
-                }
-                #endregion
-                else
-                {
-                    drawOthers = true;
-                    drawSelection = true;
-
-                    foreach (IEditableObject obj in GetObjects())
-                        obj.Draw(control, Pass.TRANSPARENT, this);
-
-                    foreach (AbstractGlDrawable obj in StaticObjects)
-                        obj.Draw(control, Pass.TRANSPARENT);
-                }
-            }
-            else
-            {
-                drawOthers = true;
-                drawSelection = true;
-
-                foreach (IEditableObject obj in GetObjects())
-                    obj.Draw(control, pass, this);
-
-                foreach (AbstractGlDrawable obj in StaticObjects)
-                    obj.Draw(control, pass);
-
-            }
 
             ObjectRenderState.ShouldBeDrawn = ObjectRenderState.ShouldBeDrawn_Default;
 
@@ -318,29 +103,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (!(obj.Visible && obj.IsInRange(renderDistance, renderDistanceSquared, control.CameraPosition)))
                 return false;
 
-            if ((drawSelection && obj.IsSelected()) || (drawOthers && !obj.IsSelected()))
-                return true;
-
-            else
-            {
-                xrayPickingIndex += obj.GetPickableSpan();
-                for (int i = 0; i < obj.GetRandomNumberSpan(); i++)
-                    control.RNG?.Next();
-
-                return false;
-            }
-        }
-
-        protected static Vector4 SelectColorHijack() => new Vector4(1, 1f, 0.25f, 1);
-
-        protected Vector4 ExtraPickingHijack()
-        {
-            return new Vector4(
-                ((xrayPickingIndex >> 16) & 0xFF) / 255f,
-                ((xrayPickingIndex >> 8) & 0xFF) / 255f,
-                (xrayPickingIndex & 0xFF) / 255f,
-                ((xrayPickingIndex++ >> 24) & 0xFF) / 255f
-            );
+            return true;
         }
     }
 }

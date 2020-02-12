@@ -162,16 +162,6 @@ namespace GL_EditorFramework.EditorDrawables
             }
             return span;
         }
-
-        public override int GetRandomNumberSpan()
-        {
-            int span = 0;
-            foreach (AbstractGlDrawable obj in GetDrawables())
-            {
-                span += obj.GetRandomNumberSpan();
-            }
-            return span;
-        }
         
         public override void Connect(GL_ControlBase control)
         {

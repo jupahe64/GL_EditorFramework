@@ -81,7 +81,7 @@
     <Compile Include="EditorDrawables\EditorScene\SceneDrawing.cs" />
     <Compile Include="EditorDrawables\EditorScene\SceneEvents.cs" />
     <Compile Include="EditorDrawables\EditorScene\SceneTransformations.cs" />
-    <Compile Include="EditorDrawables\PathPoint.cs" />
+    <Compile Include="EditorDrawables\Path\PathPoint.cs" />
     <Compile Include="EditorDrawables\SingleObject.cs" />
     <Compile Include="EditorDrawables\EditorScene\UndoAndRedo.cs" />
     <Compile Include="EditorDrawables\TransformableObject.cs" />
@@ -93,7 +93,7 @@
     <Compile Include="GL_Core\Cameras\Walkaround.cs" />
     <Compile Include="EditorDrawables\EditableObject.cs" />
     <Compile Include="EditorDrawables\EditorScene\EditorScene.cs" />
-    <Compile Include="EditorDrawables\Path.cs" />
+    <Compile Include="EditorDrawables\Path\Path.cs" />
     <Compile Include="Framework.cs" />
     <Compile Include="GL_Core\GL_ControlBase.cs">
       <SubType>UserControl</SubType>
@@ -152,6 +152,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Shaders\LineShader.geom">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Shaders\TriangleShader.geom">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
   </ItemGroup>

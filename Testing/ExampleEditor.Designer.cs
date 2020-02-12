@@ -35,7 +35,7 @@
             this.sceneListView1 = new GL_EditorFramework.SceneListView();
             this.objectUIControl1 = new GL_EditorFramework.ObjectUIControl();
             this.gL_ControlLegacy1 = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
-            this.gL_ControlModern1 = new GL_EditorFramework.GL_Core.GL_ControlModern();
+            this.gL_Control = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.hideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -71,7 +71,7 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.gL_ControlModern1);
+            this.splitContainer1.Panel2.Controls.Add(this.gL_Control);
             this.splitContainer1.Size = new System.Drawing.Size(998, 747);
             this.splitContainer1.SplitterDistance = 332;
             this.splitContainer1.TabIndex = 7;
@@ -120,25 +120,24 @@
             // 
             // gL_ControlModern1
             // 
-            this.gL_ControlModern1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.gL_Control.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.gL_ControlModern1.BackColor = System.Drawing.Color.Black;
-            this.gL_ControlModern1.CamRotX = 0F;
-            this.gL_ControlModern1.CamRotY = 0F;
-            this.gL_ControlModern1.ContextMenuStrip = this.contextMenuStrip1;
-            this.gL_ControlModern1.CurrentShader = null;
-            this.gL_ControlModern1.Fov = 0.7853982F;
-            this.gL_ControlModern1.Location = new System.Drawing.Point(3, 3);
-            this.gL_ControlModern1.Name = "gL_ControlModern1";
-            this.gL_ControlModern1.NormPickingDepth = 0F;
-            this.gL_ControlModern1.ShowOrientationCube = true;
-            this.gL_ControlModern1.Size = new System.Drawing.Size(656, 741);
-            this.gL_ControlModern1.Stereoscopy = false;
-            this.gL_ControlModern1.TabIndex = 1;
-            this.gL_ControlModern1.VSync = false;
-            this.gL_ControlModern1.ZFar = 32000F;
-            this.gL_ControlModern1.ZNear = 0.32F;
+            this.gL_Control.BackColor = System.Drawing.Color.Black;
+            this.gL_Control.CamRotX = 0F;
+            this.gL_Control.CamRotY = 0F;
+            this.gL_Control.ContextMenuStrip = this.contextMenuStrip1;
+            this.gL_Control.Fov = 0.7853982F;
+            this.gL_Control.Location = new System.Drawing.Point(3, 3);
+            this.gL_Control.Name = "gL_ControlModern1";
+            this.gL_Control.NormPickingDepth = 0F;
+            this.gL_Control.ShowOrientationCube = true;
+            this.gL_Control.Size = new System.Drawing.Size(656, 741);
+            this.gL_Control.Stereoscopy = false;
+            this.gL_Control.TabIndex = 1;
+            this.gL_Control.VSync = false;
+            this.gL_Control.ZFar = 32000F;
+            this.gL_Control.ZNear = 0.32F;
             // 
             // contextMenuStrip1
             // 
@@ -180,7 +179,7 @@
         }
 
         #endregion
-        private GL_EditorFramework.GL_Core.GL_ControlModern gL_ControlModern1;
+        private GL_EditorFramework.GL_Core.GL_ControlBase gL_Control;
         private GL_EditorFramework.GL_Core.GL_ControlLegacy gL_ControlLegacy1;
         private System.Windows.Forms.Button btnAdd;
         private GL_EditorFramework.ObjectUIControl objectUIControl1;

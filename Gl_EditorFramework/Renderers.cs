@@ -56,7 +56,8 @@ namespace GL_EditorFramework
             });
         }
 
-        public static class ColorBlockRenderer {
+        public static class ColorBlockRenderer
+        {
             private static bool Initialized = false;
             private static bool InitializedLegacy = false;
 
@@ -224,7 +225,7 @@ namespace GL_EditorFramework
                 }
             }
 
-            public static void Draw(GL_ControlModern control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
+            public static void Draw(GL_ControlModern control, Pass pass, Vector4 boxColor, Vector4 outlineColor, Vector4 pickingColor)
             {
                 if (pass == Pass.OPAQUE)
                 {
@@ -233,7 +234,7 @@ namespace GL_EditorFramework
                     GL.ActiveTexture(TextureUnit.Texture0);
                     GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
 
-                    DefaultShaderProgram.SetVector4("color", blockColor);
+                    DefaultShaderProgram.SetVector4("color", boxColor);
 
                     blockVao.Use(control);
                     GL.DrawArrays(PrimitiveType.Quads, 0, 24);
@@ -242,7 +243,7 @@ namespace GL_EditorFramework
                     GL.LineWidth(2.0f);
 
                     control.CurrentShader = SolidColorShaderProgram;
-                    SolidColorShaderProgram.SetVector4("color", lineColor);
+                    SolidColorShaderProgram.SetVector4("color", outlineColor);
 
                     linesVao.Use(control);
                     GL.DrawArrays(PrimitiveType.Lines, 0, 24);
@@ -258,7 +259,7 @@ namespace GL_EditorFramework
                 }
             }
 
-            public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 blockColor, Vector4 lineColor, Vector4 pickingColor)
+            public static void Draw(GL_ControlLegacy control, Pass pass, Vector4 boxColor, Vector4 lineColor, Vector4 pickingColor)
             {
                 if (pass == Pass.OPAQUE)
                 {
@@ -267,10 +268,10 @@ namespace GL_EditorFramework
                     GL.ActiveTexture(TextureUnit.Texture0);
                     GL.BindTexture(TextureTarget.Texture2D, Framework.TextureSheet);
 
-                    #region draw faces
-                    Vector4 darkerColor = blockColor * 0.71875f;
+                    #region draw textured faces
+                    Vector4 darkerColor = boxColor * 0.71875f;
                     GL.Begin(PrimitiveType.Quads);
-                    GL.Color4(blockColor);
+                    GL.Color4(boxColor);
                     GL.TexCoord2(0.71875f, 0.515625f);
                     GL.Vertex3(points[7]);
                     GL.TexCoord2(0.53125f, 0.515625f);
@@ -293,23 +294,23 @@ namespace GL_EditorFramework
 
                     GL.Begin(PrimitiveType.QuadStrip);
                     GL.TexCoord2(0.71875f, 0.515625f);
-                    GL.Color4(blockColor);
+                    GL.Color4(boxColor);
                     GL.Vertex3(points[7]);
                     GL.Color4(darkerColor);
                     GL.Vertex3(points[5]);
-                    GL.Color4(blockColor);
+                    GL.Color4(boxColor);
                     GL.Vertex3(points[6]);
                     GL.Color4(darkerColor);
                     GL.Vertex3(points[4]);
-                    GL.Color4(blockColor);
+                    GL.Color4(boxColor);
                     GL.Vertex3(points[2]);
                     GL.Color4(darkerColor);
                     GL.Vertex3(points[0]);
-                    GL.Color4(blockColor);
+                    GL.Color4(boxColor);
                     GL.Vertex3(points[3]);
                     GL.Color4(darkerColor);
                     GL.Vertex3(points[1]);
-                    GL.Color4(blockColor);
+                    GL.Color4(boxColor);
                     GL.Vertex3(points[7]);
                     GL.Color4(darkerColor);
                     GL.Vertex3(points[5]);
@@ -323,8 +324,8 @@ namespace GL_EditorFramework
                 }
                 else if(pass == Pass.PICKING)
                 {
+                    #region draw colored faces
                     GL.Color4(pickingColor);
-
                     GL.Begin(PrimitiveType.Quads);
                     GL.Vertex3(points[7]);
                     GL.Vertex3(points[6]);
@@ -349,6 +350,107 @@ namespace GL_EditorFramework
                     GL.Vertex3(points[7]);
                     GL.Vertex3(points[5]);
                     GL.End();
+                    #endregion
+
+                    GL.CallList(lineDrawList);
+                }
+            }
+
+            public static void DrawWithoutTextures(GL_ControlModern control, Pass pass, Vector4 boxColor, Vector4 lineColor, Vector4 pickingColor)
+            {
+                control.CurrentShader = SolidColorShaderProgram;
+
+                if (pass == Pass.OPAQUE)
+                {
+                    SolidColorShaderProgram.SetVector4("color", boxColor);
+
+                    blockVao.Use(control);
+                    GL.DrawArrays(PrimitiveType.Quads, 0, 24);
+
+                    #region outlines
+                    GL.LineWidth(2.0f);
+
+                    SolidColorShaderProgram.SetVector4("color", lineColor);
+
+                    linesVao.Use(control);
+                    GL.DrawArrays(PrimitiveType.Lines, 0, 24);
+                    #endregion
+                }
+                else
+                {
+                    SolidColorShaderProgram.SetVector4("color", pickingColor);
+
+                    blockVao.Use(control);
+                    GL.DrawArrays(PrimitiveType.Quads, 0, 24);
+                }
+            }
+
+            public static void DrawWithoutTextures(GL_ControlLegacy control, Pass pass, Vector4 boxColor, Vector4 lineColor, Vector4 pickingColor)
+            {
+                if (pass == Pass.OPAQUE)
+                {
+                    GL.Enable(EnableCap.Texture2D);
+
+                    #region draw colored faces
+                    GL.Color4(boxColor);
+                    GL.Begin(PrimitiveType.Quads);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[6]);
+                    GL.Vertex3(points[2]);
+                    GL.Vertex3(points[3]);
+
+                    GL.Vertex3(points[4]);
+                    GL.Vertex3(points[5]);
+                    GL.Vertex3(points[1]);
+                    GL.Vertex3(points[0]);
+                    GL.End();
+
+                    GL.Begin(PrimitiveType.QuadStrip);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[5]);
+                    GL.Vertex3(points[6]);
+                    GL.Vertex3(points[4]);
+                    GL.Vertex3(points[2]);
+                    GL.Vertex3(points[0]);
+                    GL.Vertex3(points[3]);
+                    GL.Vertex3(points[1]);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[5]);
+                    GL.End();
+                    #endregion
+
+                    GL.Color4(lineColor);
+                    GL.CallList(lineDrawList);
+                }
+                else if (pass == Pass.PICKING)
+                {
+                    #region draw colored faces
+                    GL.Color4(pickingColor);
+                    GL.Begin(PrimitiveType.Quads);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[6]);
+                    GL.Vertex3(points[2]);
+                    GL.Vertex3(points[3]);
+
+                    GL.Vertex3(points[4]);
+                    GL.Vertex3(points[5]);
+                    GL.Vertex3(points[1]);
+                    GL.Vertex3(points[0]);
+                    GL.End();
+
+                    GL.Begin(PrimitiveType.QuadStrip);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[5]);
+                    GL.Vertex3(points[6]);
+                    GL.Vertex3(points[4]);
+                    GL.Vertex3(points[2]);
+                    GL.Vertex3(points[0]);
+                    GL.Vertex3(points[3]);
+                    GL.Vertex3(points[1]);
+                    GL.Vertex3(points[7]);
+                    GL.Vertex3(points[5]);
+                    GL.End();
+                    #endregion
 
                     GL.CallList(lineDrawList);
                 }

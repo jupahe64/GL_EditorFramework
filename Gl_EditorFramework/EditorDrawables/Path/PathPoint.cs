@@ -249,7 +249,7 @@ namespace GL_EditorFramework.EditorDrawables
                     GlobalCP1 = transformAction.NewPos(GlobalPosition + GlobalCP1, out bool posHasChanged) - GlobalPosition;
 
                     if (posHasChanged)
-                        transformChangeInfos.Add(this, 0, pc, null, null);
+                        transformChangeInfos.Add(this, 1, pc, null, null);
 
                     return;
                 }
@@ -264,7 +264,7 @@ namespace GL_EditorFramework.EditorDrawables
                     GlobalCP2 = transformAction.NewPos(GlobalPosition + GlobalCP2, out bool posHasChanged) - GlobalPosition;
 
                     if (posHasChanged)
-                        transformChangeInfos.Add(this, 0, pc, null, null);
+                        transformChangeInfos.Add(this, 2, pc, null, null);
 
                     return;
                 }

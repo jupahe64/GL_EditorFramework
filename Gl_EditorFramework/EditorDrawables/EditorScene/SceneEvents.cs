@@ -494,12 +494,6 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 var = REDRAW;
             }
-            else if (e.KeyCode == Keys.V)
-            {
-                XRaySelection = true;
-                control.Refresh();
-                control.Repick();
-            }
 
             foreach (IEditableObject obj in GetObjects())
             {
@@ -519,13 +513,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint KeyUp(KeyEventArgs e, GL_ControlBase control)
         {
-            if (e.KeyCode == Keys.V)
-            {
-                XRaySelection = false;
-                control.Refresh();
-                control.Repick();
-            }
-
             uint var = 0;
             foreach (IEditableObject obj in GetObjects())
             {

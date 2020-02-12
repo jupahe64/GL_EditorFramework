@@ -13,6 +13,7 @@ using OpenTK.Graphics.OpenGL;
 using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 using static GL_EditorFramework.Renderers;
+using System.IO;
 
 namespace GL_EditorFramework.EditorDrawables
 {
@@ -20,9 +21,10 @@ namespace GL_EditorFramework.EditorDrawables
     {
         private static bool Initialized = false;
         private static bool InitializedLegacy = false;
-        private static ShaderProgram defaultShaderProgram;
-        private static ShaderProgram bezierCurveShaderProgram;
-        private static int lineColorLoc, gapIndexLoc, isPickingModeLoc;
+        private static ShaderProgram triangleShaderProgram;
+        private static ShaderProgram lineShaderProgram;
+        private static int colorLoc_Line, gapIndexLoc_Line, isPickingModeLoc_Line, 
+            isPickingModeLoc_Tri, colorLoc_Tri;
 
         private static int drawLists;
 
@@ -34,9 +36,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         [PropertyCapture.Undoable]
         public bool Closed { get; set; } = false;
-
-        public new static Vector4 hoverColor = new Vector4(1, 1, 0.925f, 1);
-        public new static Vector4 selectColor = new Vector4(1, 1f, 0.5f, 1);
 
         public Path(List<PathPoint> pathPoints)
         {
@@ -63,52 +62,59 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
-
-            if(pass == Pass.PICKING)
-                GL.LineWidth(4f);
-            else
-                GL.LineWidth(1f);
+                
 
             GL.BindVertexArray(pathPointVao);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, pathPointBuffer);
 
+            Vector4 color;
+
             float[] data = new float[pathPoints.Count * 12]; //px, py, pz, pCol, cp1x, cp1y, cp1z, cp1Col,  cp2x, cp2y, cp2z, cp2Col
 
-            int i = 0;
-            int index = 0;
-            
+            int bufferIndex = 0;
+
+            bool hovered = editorScene.Hovered == this;
+
             Vector4 col;
             Vector3 pos;
             if (pass == Pass.OPAQUE)
             {
-                int part = 1;
+                GL.LineWidth(1f);
 
                 int randomColor = control.RNG.Next();
-                Vector4 color = new Vector4(
-                    ((randomColor >> 16) & 0xFF) / 255f,
-                    ((randomColor >> 8) & 0xFF) / 255f,
-                    (randomColor & 0xFF) / 255f,
+                color = new Vector4(
+                    (((randomColor >> 16) & 0xFF) / 255f) * 0.5f + 0.25f,
+                    (((randomColor >> 8)  & 0xFF) / 255f) * 0.5f + 0.25f,
+                    ((randomColor         & 0xFF) / 255f) * 0.5f + 0.25f,
                     1f
                     );
-                foreach (PathPoint point in pathPoints)
+
+                #region generate buffer
+                int part = 1;
+                for (int i = 0; i < pathPoints.Count; i++)
                 {
+                    PathPoint point = pathPoints[i];
                     #region Point
+                    //determine position
                     if (point.Selected)
                         pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
                         pos = point.GlobalPosition;
 
-                    data[i] =     pos.X;
-                    data[i + 1] = pos.Y;
-                    data[i + 2] = pos.Z;
-
-                    if (point.Selected)
+                    //determine color
+                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
+                        col = hoverColor;
+                    else if (point.Selected)
                         col = selectColor;
                     else
                         col = color;
 
-                    data[i + 3] =  BitConverter.ToSingle(new byte[]{
+                    //write data
+                    data[bufferIndex]     = pos.X;
+                    data[bufferIndex + 1] = pos.Y;
+                    data[bufferIndex + 2] = pos.Z;
+                    data[bufferIndex + 3] =  BitConverter.ToSingle(new byte[]{
                     (byte)(col.X * 255),
                     (byte)(col.Y * 255),
                     (byte)(col.Z * 255),
@@ -118,8 +124,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #endregion
 
                     #region ControlPoint1
+                    //determine position
                     if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction!=NoAction && 
-                        editorScene.Hovered == this && editorScene.HoveredPart==part)
+                        hovered && editorScene.HoveredPart==part)
 
                         pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
 
@@ -128,10 +135,19 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         pos = point.GlobalPosition + point.GlobalCP1;
 
-                    data[i + 4] =  pos.X;
-                    data[i + 5] =  pos.Y;
-                    data[i + 6] =  pos.Z;
-                    data[i + 7] =  BitConverter.ToSingle(new byte[]{
+                    //determine color
+                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
+                        col = hoverColor;
+                    else if (point.Selected)
+                        col = selectColor;
+                    else
+                        col = color;
+
+                    //write data
+                    data[bufferIndex + 4] =  pos.X;
+                    data[bufferIndex + 5] =  pos.Y;
+                    data[bufferIndex + 6] =  pos.Z;
+                    data[bufferIndex + 7] =  BitConverter.ToSingle(new byte[]{
                     (byte)(col.X * 255),
                     (byte)(col.Y * 255),
                     (byte)(col.Z * 255),
@@ -141,8 +157,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #endregion
 
                     #region ControlPoint2
+                    //determine position
                     if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        editorScene.Hovered == this && editorScene.HoveredPart == part)
+                        hovered && editorScene.HoveredPart == part)
 
                         pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
 
@@ -151,10 +168,19 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         pos = point.GlobalPosition + point.GlobalCP2;
 
-                    data[i + 8] =  pos.X;
-                    data[i + 9] =  pos.Y;
-                    data[i + 10] = pos.Z;
-                    data[i + 11] = BitConverter.ToSingle(new byte[]{
+                    //determine color
+                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
+                        col = hoverColor;
+                    else if (point.Selected)
+                        col = selectColor;
+                    else
+                        col = color;
+
+                    //write data
+                    data[bufferIndex + 8] =  pos.X;
+                    data[bufferIndex + 9] =  pos.Y;
+                    data[bufferIndex + 10] = pos.Z;
+                    data[bufferIndex + 11] = BitConverter.ToSingle(new byte[]{
                     (byte)(col.X * 255),
                     (byte)(col.Y * 255),
                     (byte)(col.Z * 255),
@@ -163,53 +189,37 @@ namespace GL_EditorFramework.EditorDrawables
                     part++;
                     #endregion;
 
-                    i += 12;
-                    index++;
+                    bufferIndex += 12;
                 }
                 GL.BufferData(BufferTarget.ArrayBuffer, data.Length * 4, data, BufferUsageHint.DynamicDraw);
-
-                #region draw path vao
-                GL.BindVertexArray(pathPointVao);
-
-                control.CurrentShader = defaultShaderProgram;
-                control.ResetModelMatrix();
-                
-                GL.DrawArrays(PrimitiveType.Points, 0, pathPoints.Count);
-
-                control.CurrentShader = bezierCurveShaderProgram;
-                
-                GL.Uniform4(lineColorLoc, color);
-                GL.Uniform1(gapIndexLoc, Closed ? -1 : pathPoints.Count - 1);
-                GL.Uniform1(isPickingModeLoc, 0);
-
-                GL.DrawArrays(PrimitiveType.LineLoop, 0, pathPoints.Count);
                 #endregion
             }
             else
             {
+                GL.LineWidth(4f);
+
+                color = control.NextPickingColor();
+
+                #region generate buffer
                 int part = 1;
-
-                control.CurrentShader = bezierCurveShaderProgram;
-
-                GL.Uniform4(lineColorLoc, control.NextPickingColor());
-                GL.Uniform1(gapIndexLoc, Closed ? -1 : pathPoints.Count - 1);
-                GL.Uniform1(isPickingModeLoc, 1);
-
-                foreach (PathPoint point in pathPoints)
+                for (int i = 0; i < pathPoints.Count; i++)
                 {
+                    PathPoint point = pathPoints[i];
                     #region Point
+                    //determine position
                     if (point.Selected)
                         pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
                         pos = point.GlobalPosition;
 
-                    data[i] = pos.X;
-                    data[i + 1] = pos.Y;
-                    data[i + 2] = pos.Z;
-
+                    //determine color
                     col = control.NextPickingColor();
 
-                    data[i + 3] = BitConverter.ToSingle(new byte[]{
+                    //write data
+                    data[bufferIndex]     = pos.X;
+                    data[bufferIndex + 1] = pos.Y;
+                    data[bufferIndex + 2] = pos.Z;
+                    data[bufferIndex + 3] = BitConverter.ToSingle(new byte[]{
                     (byte)(col.X * 255),
                     (byte)(col.Y * 255),
                     (byte)(col.Z * 255),
@@ -219,10 +229,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #endregion
 
                     #region ControlPoint1
-                    col = control.NextPickingColor();
-
+                    //determine position
                     if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        editorScene.Hovered == this && editorScene.HoveredPart == part)
+                        hovered && editorScene.HoveredPart == part)
 
                         pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
 
@@ -231,10 +240,14 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         pos = point.GlobalPosition + point.GlobalCP1;
 
-                    data[i + 4] = pos.X;
-                    data[i + 5] = pos.Y;
-                    data[i + 6] = pos.Z;
-                    data[i + 7] = BitConverter.ToSingle(new byte[]{
+                    //determine color
+                    col = control.NextPickingColor();
+
+                    //write data
+                    data[bufferIndex + 4] = pos.X;
+                    data[bufferIndex + 5] = pos.Y;
+                    data[bufferIndex + 6] = pos.Z;
+                    data[bufferIndex + 7] = BitConverter.ToSingle(new byte[]{
                     (byte)(col.X * 255),
                     (byte)(col.Y * 255),
                     (byte)(col.Z * 255),
@@ -244,10 +257,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #endregion
 
                     #region ControlPoint2
-                    col = control.NextPickingColor();
-
+                    //determine position
                     if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        editorScene.Hovered == this && editorScene.HoveredPart == part)
+                        hovered && editorScene.HoveredPart == part)
 
                         pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
 
@@ -256,10 +268,14 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         pos = point.GlobalPosition + point.GlobalCP2;
 
-                    data[i + 8] = pos.X;
-                    data[i + 9] = pos.Y;
-                    data[i + 10] = pos.Z;
-                    data[i + 11] = BitConverter.ToSingle(new byte[]{
+                    //determine color
+                    col = control.NextPickingColor();
+
+                    //write data
+                    data[bufferIndex + 8]  = pos.X;
+                    data[bufferIndex + 9]  = pos.Y;
+                    data[bufferIndex + 10] = pos.Z;
+                    data[bufferIndex + 11] = BitConverter.ToSingle(new byte[]{
                     (byte)(col.X * 255),
                     (byte)(col.Y * 255),
                     (byte)(col.Z * 255),
@@ -268,24 +284,31 @@ namespace GL_EditorFramework.EditorDrawables
                     part++;
                     #endregion
 
-                    i += 12;
-                    index++;
+                    bufferIndex += 12;
                 }
                 GL.BufferData(BufferTarget.ArrayBuffer, data.Length * 4, data, BufferUsageHint.DynamicDraw);
-
-                #region draw path vao
-                GL.BindVertexArray(pathPointVao);
-
-                control.ResetModelMatrix();
-
-                GL.DrawArrays(PrimitiveType.LineLoop, 0, pathPoints.Count);
-
-                control.CurrentShader = defaultShaderProgram;
-                GL.DrawArrays(PrimitiveType.Points, 0, pathPoints.Count);
                 #endregion
 
                 GL.LineWidth(2f);
             }
+
+            GL.BindVertexArray(pathPointVao);
+
+            //draw triangles
+            control.CurrentShader = triangleShaderProgram;
+            control.ResetModelMatrix();
+            GL.Uniform4(colorLoc_Tri, color);
+            GL.Uniform1(isPickingModeLoc_Tri, (pass == Pass.PICKING) ? 1 : 0);
+
+            GL.DrawArrays(PrimitiveType.Points, 0, pathPoints.Count);
+
+            //draw lines
+            control.CurrentShader = lineShaderProgram;
+            GL.Uniform4(colorLoc_Line, color);
+            GL.Uniform1(gapIndexLoc_Line, Closed ? -1 : pathPoints.Count - 1);
+            GL.Uniform1(isPickingModeLoc_Line, (pass == Pass.PICKING) ? 1 : 0);
+
+            GL.DrawArrays(PrimitiveType.LineLoop, 0, pathPoints.Count);
         }
 
         public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
@@ -298,201 +321,289 @@ namespace GL_EditorFramework.EditorDrawables
 
             GL.Disable(EnableCap.Texture2D);
 
-            Vector4 color = new Vector4();
+            Vector3[] connectLinePositions = new Vector3[pathPoints.Count*3];
 
-            int part = 1;
+            Vector4[] connectLineColors = new Vector4[pathPoints.Count];
 
-            Vector3[] positions = new Vector3[pathPoints.Count*3];
-
-            Vector4[] colors = new Vector4[pathPoints.Count];
+            Vector4 color;
 
             int posIndex = 0;
-            int colorIndex = 0;
 
+            bool hovered = editorScene.Hovered == this;
+
+            Vector4 col;
+            Vector3 pos;
             if (pass == Pass.OPAQUE)
             {
+                GL.LineWidth(1f);
+
                 int randomColor = control.RNG.Next();
                 color = new Vector4(
-                        ((randomColor >> 16) & 0xFF) / 256f,
-                        ((randomColor >> 8) & 0xFF) / 256f,
-                        (randomColor & 0xFF) / 256f,
-                        1f
-                        );
-                GL.Color4(color);
-                GL.LineWidth(1.0f);
-                
-                foreach (PathPoint point in pathPoints)
+                    ((randomColor >> 16) & 0xFF) / 255f * 0.5f + 0.25f,
+                    ((randomColor >> 8) & 0xFF)  / 255f * 0.5f + 0.25f,
+                    (randomColor        & 0xFF)  / 255f * 0.5f + 0.25f,
+                    1f
+                    );
+
+                #region generate buffer
+                int part = 1;
+                for (int i = 0; i < pathPoints.Count; i++)
                 {
-                    Vector3 pos;
+                    PathPoint point = pathPoints[i];
+                    #region Point
+                    //determine position
                     if (point.Selected)
-                        positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
-                        positions[posIndex] = pos = point.GlobalPosition;
+                        pos = point.GlobalPosition;
 
+                    //determine color
+                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
+                        col = hoverColor;
+                    else if (point.Selected)
+                        col = selectColor;
+                    else
+                        col = color;
+
+                    //write data
+                    connectLinePositions[posIndex] = pos;
+                    connectLineColors[i] = col;
+
+                    //draw point
                     control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
-
-                    if (point.Selected)
-                        GL.Color4(colors[colorIndex] = selectColor);
-                    else
-                        GL.Color4(colors[colorIndex] = color);
+                    GL.Color4(color * .125f + col * .125f);
                     GL.CallList(drawLists);
+                    GL.Color4(col);
+                    GL.CallList(drawLists+1);
 
-                    GL.CallList(drawLists + 1); //white lines
                     part++;
+                    #endregion
 
+                    #region ControlPoint1
+                    //determine position
+                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                        hovered && editorScene.HoveredPart == part)
 
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
 
-                    if (point.GlobalCP1 != Vector3.Zero)
-                    {
-                        if (editorScene.ExclusiveAction != NoAction &&
-                            editorScene.Hovered == this && editorScene.HoveredPart == part)
-
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1)));
-                        else if (point.Selected)
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1)));
-                        else
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + point.GlobalCP1));
-
-                        GL.Color4(colors[colorIndex]);
-
-                        GL.CallList(drawLists);
-
-                        GL.CallList(drawLists + 1); //white lines
-                        part++;
-                    }
+                    else if (point.Selected)
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        positions[posIndex + 1] = pos;
+                        pos = point.GlobalPosition + point.GlobalCP1;
 
-                    if (point.GlobalCP2 != Vector3.Zero)
-                    {
-                        if (editorScene.ExclusiveAction != NoAction &&
-                            editorScene.Hovered == this && editorScene.HoveredPart == part)
-
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex+2] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2)));
-                        else if (point.Selected)
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2)));
-                        else
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex+2] = pos + point.GlobalCP2));
-
-                        GL.Color4(colors[colorIndex]);
-
-                        GL.CallList(drawLists);
-
-                        GL.CallList(drawLists + 1); //white lines
-                        part++;
-                    }
+                    //determine color
+                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
+                        col = hoverColor;
+                    else if (point.Selected)
+                        col = selectColor;
                     else
-                        positions[posIndex + 2] = pos;
-                    
+                        col = color;
+
+                    //write data
+                    connectLinePositions[posIndex+1] = pos;
+
+                    //draw point
+                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    GL.Color4(color * .125f + col * .125f);
+                    GL.CallList(drawLists);
+                    GL.Color4(col);
+                    GL.CallList(drawLists + 1);
+
+                    part++;
+                    #endregion
+
+                    #region ControlPoint2
+                    //determine position
+                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                        hovered && editorScene.HoveredPart == part)
+
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
+
+                    else if (point.Selected)
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                    else
+                        pos = point.GlobalPosition + point.GlobalCP2;
+
+                    //determine color
+                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
+                        col = hoverColor;
+                    else if (point.Selected)
+                        col = selectColor;
+                    else
+                        col = color;
+
+                    //write data
+                    connectLinePositions[posIndex+2] = pos;
+
+                    //draw point
+                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    GL.Color4(color * .125f + col * .125f);
+                    GL.CallList(drawLists);
+                    GL.Color4(col);
+                    GL.CallList(drawLists + 1);
+
+                    part++;
+                    #endregion;
+
                     posIndex += 3;
-                    colorIndex++;
                 }
+                #endregion
             }
             else
             {
+                GL.LineWidth(4f);
+
                 color = control.NextPickingColor();
-                GL.LineWidth(4.0f);
 
-                foreach (PathPoint point in pathPoints)
+                #region generate buffer
+                int part = 1;
+                for (int i = 0; i < pathPoints.Count; i++)
                 {
-                    Vector3 pos;
+                    PathPoint point = pathPoints[i];
+                    #region Point
+                    //determine position
                     if (point.Selected)
-                        positions[posIndex] = pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
                     else
-                        positions[posIndex] = pos = point.GlobalPosition;
+                        pos = point.GlobalPosition;
 
+                    //determine color
+                    col = control.NextPickingColor();
+
+                    //write data
+                    connectLinePositions[posIndex] = pos;
+                    connectLineColors[i] = color; //colors need to be the same for proper picking
+
+                    //draw point
                     control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
-
-                    GL.Color4(control.NextPickingColor());
+                    GL.Color4(col);
                     GL.CallList(drawLists);
+
                     part++;
+                    #endregion
 
-                    colors[colorIndex] = color;
+                    #region ControlPoint1
+                    //determine position
+                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                        hovered && editorScene.HoveredPart == part)
 
-                    if (point.GlobalCP1 != Vector3.Zero)
-                    {
-                        if (editorScene.ExclusiveAction != NoAction &&
-                            editorScene.Hovered == this && editorScene.HoveredPart == part)
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
 
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1)));
-                        else if (point.Selected)
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1)));
-                        else
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 1] = pos + point.GlobalCP1));
-
-                        GL.Color4(control.NextPickingColor());
-                        GL.CallList(drawLists);
-                        part++;
-                    }
+                    else if (point.Selected)
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        positions[posIndex + 1] = pos;
+                        pos = point.GlobalPosition + point.GlobalCP1;
 
-                    if (point.GlobalCP2 != Vector3.Zero)
-                    {
-                        if (editorScene.ExclusiveAction != NoAction &&
-                            editorScene.Hovered == this && editorScene.HoveredPart == part)
+                    //determine color
+                    col = control.NextPickingColor();
 
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2)));
-                        else if (point.Selected)
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2)));
-                        else
-                            control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) *
-                            Matrix4.CreateTranslation(
-                                positions[posIndex + 2] = pos + point.GlobalCP2));
+                    //write data
+                    connectLinePositions[posIndex+1] = pos;
 
-                        GL.Color4(control.NextPickingColor());
-                        GL.CallList(drawLists);
-                        part++;
-                    }
+                    //draw point
+                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    GL.Color4(col);
+                    GL.CallList(drawLists);
+
+                    part++;
+                    #endregion
+
+                    #region ControlPoint2
+                    //determine position
+                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
+                        hovered && editorScene.HoveredPart == part)
+
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
+
+                    else if (point.Selected)
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
                     else
-                        positions[posIndex + 2] = pos;
+                        pos = point.GlobalPosition + point.GlobalCP2;
+
+                    //determine color
+                    col = control.NextPickingColor();
+
+                    //draw point
+                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    GL.Color4(col);
+                    GL.CallList(drawLists);
+
+                    //write data
+                    connectLinePositions[posIndex+2] = pos;
+
+                    part++;
+                    #endregion
 
                     posIndex += 3;
-                    colorIndex++;
                 }
+                #endregion
+
+                GL.LineWidth(2f);
             }
 
+            #region draw connection line(s)
             control.ResetModelMatrix();
 
-            GL.Color4(color);
+            if (pass != Pass.PICKING)
+            {
+                //draw control handles for first point
+                GL.Color4(color * 0.5f);
+
+                pos = connectLinePositions[0];
+
+                if (pathPoints[0].ControlPoint1 != Vector3.Zero)
+                {
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(pos);
+                    GL.Vertex3(connectLinePositions[1]);
+                    GL.End();
+                }
+
+                if (pathPoints[0].ControlPoint2 != Vector3.Zero)
+                {
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex3(pos);
+                    GL.Vertex3(connectLinePositions[2]);
+                    GL.End();
+                }
+            }
 
             posIndex = 0;
             for(int i = 1; i<pathPoints.Count; i++)
             {
-                GL.Begin(PrimitiveType.LineStrip);
-                if (pathPoints[i-1].GlobalCP2 != Vector3.Zero || pathPoints[i].GlobalCP1 != Vector3.Zero)//bezierCurve
+                if (pass != Pass.PICKING)
                 {
-                    Vector3 p0 = positions[posIndex];
-                    Vector3 p1 = positions[posIndex+2];
-                    Vector3 p2 = positions[posIndex+4];
-                    Vector3 p3 = positions[posIndex+3];
+                    //draw control handles for point
+                    GL.Color4(color * 0.5f);
 
-                    if (pathPoints[i-1].GlobalCP2 != Vector3.Zero)
-                        GL.Vertex3(p1);
+                    pos = connectLinePositions[posIndex + 3];
 
-                    for (float t = 0f; t<=1.0; t += 0.125f)
+                    if (pathPoints[i].ControlPoint1 != Vector3.Zero)
+                    {
+                        GL.Begin(PrimitiveType.Lines);
+                        GL.Vertex3(pos);
+                        GL.Vertex3(connectLinePositions[posIndex + 4]);
+                        GL.End();
+                    }
+
+                    if (pathPoints[i].ControlPoint2 != Vector3.Zero)
+                    {
+                        GL.Begin(PrimitiveType.Lines);
+                        GL.Vertex3(pos);
+                        GL.Vertex3(connectLinePositions[posIndex + 5]);
+                        GL.End();
+                    }
+                }
+
+                GL.Begin(PrimitiveType.LineStrip);
+                if (pathPoints[i-1].ControlPoint2 != Vector3.Zero || pathPoints[i].ControlPoint1 != Vector3.Zero) //bezierCurve
+                {
+                    Vector3 p0 = connectLinePositions[posIndex];
+                    Vector3 p1 = connectLinePositions[posIndex+2];
+                    Vector3 p2 = connectLinePositions[posIndex+4];
+                    Vector3 p3 = connectLinePositions[posIndex+3];
+
+                    for (float t = 0f; t<=1.0; t += 0.0625f)
                     {
                         float u = 1f - t;
                         float tt = t * t;
@@ -500,39 +611,35 @@ namespace GL_EditorFramework.EditorDrawables
                         float uuu = uu * u;
                         float ttt = tt * t;
 
-                        GL.Color4(Vector4.Lerp(colors[i-1], colors[i], t));
+                        GL.Color4(Vector4.Lerp(connectLineColors[i-1], connectLineColors[i], t));
                         GL.Vertex3(uuu * p0 +
                                         3 * uu * t * p1 +
                                         3 * u * tt * p2 +
                                             ttt * p3);
                     }
-
-                    if (pathPoints[i].GlobalCP1 != Vector3.Zero)
-                        GL.Vertex3(p2);
                 }
                 else
                 {
-                    GL.Vertex3(positions[posIndex]);
-
-                    GL.Vertex3(positions[posIndex+3]);
+                    GL.Color4(connectLineColors[i - 1]);
+                    GL.Vertex3(connectLinePositions[posIndex]);
+                    GL.Color4(connectLineColors[i]);
+                    GL.Vertex3(connectLinePositions[posIndex+3]);
                 }
                 GL.End();
                 posIndex += 3;
             }
+
             if (Closed)
             {
                 GL.Begin(PrimitiveType.LineStrip);
-                if (pathPoints[pathPoints.Count - 1].GlobalCP2 != Vector3.Zero || pathPoints[0].GlobalCP1 != Vector3.Zero)//bezierCurve
+                if (pathPoints[pathPoints.Count - 1].ControlPoint2 != Vector3.Zero || pathPoints[0].ControlPoint1 != Vector3.Zero) //bezierCurve
                 {
-                    Vector3 p0 = positions[posIndex];
-                    Vector3 p1 = positions[posIndex + 2];
-                    Vector3 p2 = positions[1];
-                    Vector3 p3 = positions[0];
+                    Vector3 p0 = connectLinePositions[posIndex];
+                    Vector3 p1 = connectLinePositions[posIndex + 2];
+                    Vector3 p2 = connectLinePositions[1];
+                    Vector3 p3 = connectLinePositions[0];
 
-                    if (pathPoints[pathPoints.Count - 1].GlobalCP2 != Vector3.Zero)
-                        GL.Vertex3(p1);
-
-                    for (float t = 0f; t <= 1.0; t += 0.25f)
+                    for (float t = 0f; t <= 1.0; t += 0.0625f)
                     {
                         float u = 1f - t;
                         float tt = t * t;
@@ -540,26 +647,22 @@ namespace GL_EditorFramework.EditorDrawables
                         float uuu = uu * u;
                         float ttt = tt * t;
 
-                        GL.Color4(Vector4.Lerp(colors[pathPoints.Count - 1], colors[0], t));
+                        GL.Color4(Vector4.Lerp(connectLineColors[pathPoints.Count - 1], connectLineColors[0], t));
                         GL.Vertex3(uuu * p0 +
                                         3 * uu * t * p1 +
                                         3 * u * tt * p2 +
                                             ttt * p3);
                     }
-
-                    if (pathPoints[0].GlobalCP1 != Vector3.Zero)
-                        GL.Vertex3(p2);
                 }
                 else
                 {
-                    GL.Vertex3(positions[posIndex]);
+                    GL.Vertex3(connectLinePositions[posIndex]);
 
-                    GL.Vertex3(positions[0]);
+                    GL.Vertex3(connectLinePositions[0]);
                 }
                 GL.End();
             }
-            
-            
+            #endregion
         }
 
         public override void Prepare(GL_ControlModern control)
@@ -627,260 +730,28 @@ namespace GL_EditorFramework.EditorDrawables
                     color_cp2 = _color_cp2;
                 }");
 
-                #region block shader
-                defaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert, new GeomertyShader(
-              @"#version 330
-                layout(points) in;
-                layout(triangle_strip, max_vertices = 72) out;
-                
-                in vec4 color[];
-                in vec4 color_cp1[];
-                in vec4 color_cp2[];
-                in vec3 cp1[];
-                in vec3 cp2[];
-                out vec4 fragColor;
-
-                uniform mat4 mtxMdl;
-                uniform mat4 mtxCam;
-                
-                float cubeScale = 0.5;
-                vec4 pos;
-
-                mat4 mtx = mtxCam*mtxMdl;
-                
-                vec4 points[8] = vec4[](
-                    vec4(-1.0,-1.0,-1.0, 0.0),
-                    vec4( 1.0,-1.0,-1.0, 0.0),
-                    vec4(-1.0, 1.0,-1.0, 0.0),
-                    vec4( 1.0, 1.0,-1.0, 0.0),
-                    vec4(-1.0,-1.0, 1.0, 0.0),
-                    vec4( 1.0,-1.0, 1.0, 0.0),
-                    vec4(-1.0, 1.0, 1.0, 0.0),
-                    vec4( 1.0, 1.0, 1.0, 0.0)
-                );
-
-                void face(int p1, int p2, int p3, int p4){
-                    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p3]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p4]*cubeScale); EmitVertex();
-                    EndPrimitive();
-                }
-
-                void faceInv(int p3, int p4, int p1, int p2){
-                    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p3]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p4]*cubeScale); EmitVertex();
-                    EndPrimitive();
-                }
-                
-                void main(){
-                    
-                    pos = gl_in[0].gl_Position;
-                    fragColor = color[0];
-                    faceInv(0,1,2,3);
-                    face(4,5,6,7);
-                    face(0,1,4,5);
-                    faceInv(2,3,6,7);
-                    faceInv(0,2,4,6);
-                    face(1,3,5,7);
-                    cubeScale = 0.25;
-
-                    if(cp1[0]-gl_in[0].gl_Position.xyz!=vec3(0,0,0)){
-                        fragColor = color_cp1[0];
-                        pos = vec4(cp1[0],1);
-                        faceInv(0,1,2,3);
-                        face(4,5,6,7);
-                        face(0,1,4,5);
-                        faceInv(2,3,6,7);
-                        faceInv(0,2,4,6);
-                        face(1,3,5,7);
-                    }
-
-                    if(cp2[0]-gl_in[0].gl_Position.xyz!=vec3(0,0,0)){
-                        fragColor = color_cp2[0];
-                        pos = vec4(cp2[0],1);
-                        faceInv(0,1,2,3);
-                        face(4,5,6,7);
-                        face(0,1,4,5);
-                        faceInv(2,3,6,7);
-                        faceInv(0,2,4,6);
-                        face(1,3,5,7);
-                    }
-                }
-                "), control);
-                #endregion
+                triangleShaderProgram = new ShaderProgram(defaultFrag, defaultVert, 
+                    new GeomertyShader(File.ReadAllText(
+                        System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\Shaders\\TriangleShader.geom"
+                        )), control);
                 
 
-                #region connections shader
-                bezierCurveShaderProgram = new ShaderProgram(defaultFrag, defaultVert, new GeomertyShader(
-              @"#version 330
-                layout(lines) in;
-                layout(line_strip, max_vertices = 119) out;
+                lineShaderProgram = new ShaderProgram(defaultFrag, defaultVert,
+                    new GeomertyShader(File.ReadAllText(System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\Shaders\\LineShader.geom")), control);
                 
-                in vec4 color[];
-                in vec4 color_cp1[];
-                in vec4 color_cp2[];
-                in vec3 cp1[];
-                in vec3 cp2[];
-                in int gl_PrimitiveIDIn[];
-                out vec4 fragColor;
+                colorLoc_Line = lineShaderProgram["pathColor"];
+                gapIndexLoc_Line = lineShaderProgram["gapIndex"];
+                isPickingModeLoc_Line = lineShaderProgram["isPickingMode"];
 
-                uniform mat4 mtxMdl;
-                uniform mat4 mtxCam;
-                uniform vec4 lineColor;
-                uniform int gapIndex;
-                uniform bool isPickingMode;
-                
-                float cubeScale;
-                vec4 pos;
-
-                mat4 mtx = mtxCam*mtxMdl;
-                
-                vec3 p0 = gl_in[0].gl_Position.xyz;
-                vec3 p1 = cp2[0];
-                vec3 p2 = cp1[1];
-                vec3 p3 = gl_in[1].gl_Position.xyz;
-                
-                vec4 points[8] = vec4[](
-                    vec4(-1.0,-1.0,-1.0, 0.0),
-                    vec4( 1.0,-1.0,-1.0, 0.0),
-                    vec4(-1.0, 1.0,-1.0, 0.0),
-                    vec4( 1.0, 1.0,-1.0, 0.0),
-                    vec4(-1.0,-1.0, 1.0, 0.0),
-                    vec4( 1.0,-1.0, 1.0, 0.0),
-                    vec4(-1.0, 1.0, 1.0, 0.0),
-                    vec4( 1.0, 1.0, 1.0, 0.0)
-                );
-
-                void face(int p1, int p2, int p4, int p3){
-                    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p3]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p4]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-                    EndPrimitive();
-                }
-
-                void line(int p1, int p2){
-                    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-                    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
-                    EndPrimitive();
-                }
-
-                void getPointAtTime(float t){
-                    float u = 1.0 - t;
-                    float tt = t * t;
-                    float uu = u * u;
-                    float uuu = uu * u;
-                    float ttt = tt * t;
-
-                    gl_Position = mtx * vec4(uuu    * p0 +
-                                    3 * uu * t * p1 +
-                                    3 * u  *tt * p2 +
-                                        ttt    * p3, 1);
-                    EmitVertex();
-                }
-
-
-                void main(){                  
-                    if(!isPickingMode){
-                        //draw Point
-                        fragColor = vec4(1,1,1,1);
-                        
-                        cubeScale = 0.5f;
-                        pos = vec4(p0,1);
-                        face(0,1,2,3);
-                        face(4,5,6,7);
-                        line(0,4);
-                        line(1,5);
-                        line(2,6);
-                        line(3,7);
-                        
-                        pos = vec4(p3,1);
-                        face(0,1,2,3);
-                        face(4,5,6,7);
-                        line(0,4);
-                        line(1,5);
-                        line(2,6);
-                        line(3,7);
-                    }
-                    
-                    cubeScale = 0.25f;
-                    
-                    if(p1!=p0){
-                        //draw ControlPoint1 Handle
-                        fragColor = color[0];
-                        gl_Position = mtx * vec4(p0,1); EmitVertex();
-                        gl_Position = mtx * vec4(p1,1); EmitVertex();
-                        EndPrimitive();
-                        
-                        if(!isPickingMode){
-                            fragColor = vec4(1,1,1,1);
-                            
-                            pos = vec4(p1,1);
-                            face(0,1,2,3);
-                            face(4,5,6,7);
-                            line(0,4);
-                            line(1,5);
-                            line(2,6);
-                            line(3,7);
-                        }
-                    }
-                    
-                    if(p2!=p3){
-                        fragColor = color[1];
-                        gl_Position = mtx * vec4(p2,1); EmitVertex();
-                        gl_Position = mtx * vec4(p3,1); EmitVertex();
-                        EndPrimitive();
-                        
-                        if(!isPickingMode){
-                            fragColor = vec4(1,1,1,1);
-                        
-                            pos = vec4(p2,1);
-                            face(0,1,2,3);
-                            face(4,5,6,7);
-                            line(0,4);
-                            line(1,5);
-                            line(2,6);
-                            line(3,7);
-                        }
-                    }
-                    if(gl_PrimitiveIDIn[0]!=gapIndex){
-                        fragColor = lineColor;
-                        if(p1!=p0||p2!=p3){
-                            if(isPickingMode)
-                                for(float t = 0; t<=1.0; t+=0.0625){
-                                    getPointAtTime(t);
-                                }
-                            else
-                                for(float t = 0; t<=1.0; t+=0.0625){
-                                    getPointAtTime(t);
-                                    fragColor = mix(color[0], color[1], t);
-                                }
-                        }else{
-                            gl_Position = mtx * vec4(p0, 1);
-                            EmitVertex();
-                            gl_Position = mtx * vec4(p3, 1);
-                            EmitVertex(); 
-                        }
-                        EndPrimitive();
-                    }
-                }
-                "), control);
-                #endregion
-                
-                lineColorLoc = bezierCurveShaderProgram["lineColor"];
-                gapIndexLoc = bezierCurveShaderProgram["gapIndex"];
-                isPickingModeLoc = bezierCurveShaderProgram["isPickingMode"];
+                colorLoc_Tri = triangleShaderProgram["pathColor"];
+                isPickingModeLoc_Tri = triangleShaderProgram["isPickingMode"];
 
                 Initialized = true;
             }
             else
             {
-                defaultShaderProgram.Link(control);
-                bezierCurveShaderProgram.Link(control);
+                triangleShaderProgram.Link(control);
+                lineShaderProgram.Link(control);
             }
         }
 
@@ -919,7 +790,6 @@ namespace GL_EditorFramework.EditorDrawables
 
 
                 GL.NewList(drawLists + 1, ListMode.Compile);
-                GL.Color4(Color.White);
                 GL.Begin(PrimitiveType.LineStrip);
                 GL.Vertex3(ColorBlockRenderer.points[6]);
                 GL.Vertex3(ColorBlockRenderer.points[2]);
@@ -957,8 +827,6 @@ namespace GL_EditorFramework.EditorDrawables
 
             return i;
         }
-
-        public override int GetRandomNumberSpan() => 1;
 
         public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
         {

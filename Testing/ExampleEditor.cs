@@ -59,57 +59,34 @@ namespace Example
             
             scene.objects.Add(obj = new Path(pathPoints));
 
-            pathPoints = new List<PathPoint>
+            for (int i = 0; i < 20; i++)
+            {
+                pathPoints = new List<PathPoint>
             {
                 new PathPoint(
-                new Vector3(-3, 6, 0),
+                new Vector3(-3, 6+i*2, 0),
                 new Vector3(0, 0, -1.75f),
                 new Vector3(0, 0, 1.75f)
                 ),
                 new PathPoint(
-                new Vector3(0, 6, 3),
+                new Vector3(0, 6+i*2, 3),
                 new Vector3(-1.75f, 0, 0),
                 new Vector3(1.75f, 0, 0)
                 ),
                 new PathPoint(
-                new Vector3(3, 6, 0),
+                new Vector3(3, 6+i*2, 0),
                 new Vector3(0, 0, 1.75f),
                 new Vector3(0, 0, -1.75f)
                 ),
                 new PathPoint(
-                new Vector3(0, 6, -3),
-                new Vector3(1.75f, 0, 0),
-                new Vector3(-1.75f, 0, 0)
-                )
-            };
-            
-            scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
-
-            pathPoints = new List<PathPoint>
-            {
-                new PathPoint(
-                new Vector3(-3, 6, 0),
-                new Vector3(0, 0, -1.75f),
-                new Vector3(0, 0, 1.75f)
-                ),
-                new PathPoint(
-                new Vector3(0, 6, 3),
-                new Vector3(-1.75f, 0, 0),
-                new Vector3(1.75f, 0, 0)
-                ),
-                new PathPoint(
-                new Vector3(3, 6, 0),
-                new Vector3(0, 0, 1.75f),
-                new Vector3(0, 0, -1.75f)
-                ),
-                new PathPoint(
-                new Vector3(0, 6, -3),
+                new Vector3(0, 6+i*2, -3),
                 new Vector3(1.75f, 0, 0),
                 new Vector3(-1.75f, 0, 0)
                 )
             };
 
-            scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
+                scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
+            }
             
             for (int i = 5; i<10000; i++)
             {
@@ -118,11 +95,11 @@ namespace Example
             #endregion
 
             //setup the gl controls
-            gL_ControlModern1.MainDrawable = scene;
-            gL_ControlModern1.ActiveCamera = new GL_EditorFramework.StandardCameras.InspectCamera(1f);
+            gL_Control.MainDrawable = scene;
+            gL_Control.ActiveCamera = new GL_EditorFramework.StandardCameras.InspectCamera(1f);
 
             gL_ControlLegacy1.MainDrawable = new SingleObject(new Vector3());
-            gL_ControlModern1.CameraDistance = 20;
+            gL_Control.CameraDistance = 20;
 
             //add event handlers to scene and gl control
             scene.SelectionChanged += Scene_SelectionChanged;
@@ -130,7 +107,7 @@ namespace Example
             scene.ListChanged += Scene_ListChanged;
             scene.ListEntered += Scene_ListEntered;
             scene.ListInvalidated += Scene_ListInvalidated;
-            gL_ControlModern1.KeyDown += GL_ControlModern1_KeyDown;
+            gL_Control.KeyDown += GL_ControlModern1_KeyDown;
 
             //add categories to sceneListView (in this case 15 references to the same list, 
             //which should never be done and only serves for demonstration purposes)
@@ -180,7 +157,7 @@ namespace Example
         {
             scene.ReorderObjects(sceneListView1.CurrentList, e.OriginalIndex, e.Count, e.Offset);
             e.Handled = true;
-            gL_ControlModern1.Refresh();
+            gL_Control.Refresh();
         }
 
         private void Scene_ListChanged(object sender, ListChangedEventArgs e)
@@ -200,21 +177,21 @@ namespace Example
                 scene.SelectedObjects.Clear();
 
                 foreach (ISelectable obj in e.Items)
-                    obj.SelectDefault(gL_ControlModern1);
+                    obj.SelectDefault(gL_Control);
             }
             else if (e.SelectionChangeMode == SelectionChangeMode.ADD)
             {
                 foreach (ISelectable obj in e.Items)
-                    obj.SelectDefault(gL_ControlModern1);
+                    obj.SelectDefault(gL_Control);
             }
             else //SelectionChangeMode.SUBTRACT
             {
                 foreach (ISelectable obj in e.Items)
-                    obj.DeselectAll(gL_ControlModern1);
+                    obj.DeselectAll(gL_Control);
             }
 
             e.Handled = true;
-            gL_ControlModern1.Refresh();
+            gL_Control.Refresh();
 
             Scene_SelectionChanged(this, null);
         }
@@ -226,7 +203,7 @@ namespace Example
                 //delete all selected objects if possible
                 //the deletion is handled by the scene and it's objects
                 scene.DeleteSelected();
-                gL_ControlModern1.Refresh();
+                gL_Control.Refresh();
                 sceneListView1.UpdateAutoScrollHeight();
                 Scene_SelectionChanged(this, null);
             }
@@ -274,7 +251,7 @@ namespace Example
         private void SceneListView1_ItemDoubleClicked(object sender, ItemDoubleClickedEventArgs e)
         {
             if (e.Item is IEditableObject obj)
-                gL_ControlModern1.CameraTarget = obj.GetFocusPoint();
+                gL_Control.CameraTarget = obj.GetFocusPoint();
         }
 
         private void HideToolStripMenuItem_Click(object sender, EventArgs e)
@@ -282,8 +259,8 @@ namespace Example
             if (scene.Hovered?.Visible == true)
             {
                 scene.Hovered.Visible = false;
-                gL_ControlModern1.Repick();
-                gL_ControlModern1.Refresh();
+                gL_Control.Repick();
+                gL_Control.Refresh();
             }
         }
 
@@ -292,8 +269,8 @@ namespace Example
             foreach (var obj in scene.EditableObjects)
                 obj.Visible = true;
 
-            gL_ControlModern1.Repick();
-            gL_ControlModern1.Refresh();
+            gL_Control.Repick();
+            gL_Control.Refresh();
         }
     }
     /*
