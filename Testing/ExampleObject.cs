@@ -10,14 +10,10 @@ using GL_EditorFramework.EditorDrawables;
 using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using OpenTK;
-using OpenTK.Graphics.OpenGL;
-using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
-using WinInput = System.Windows.Input;
 
 namespace Example
 {
     //This class is supposed to show of some very basic animation stuff you could do with this framework
-    //but it's highly recommended to add members like startTime and isPlaying if you want to make your own animated object class
     class ExampleObject : SingleObject
     {
         public ExampleObject(Vector3 pos) : base(pos)
@@ -50,11 +46,13 @@ namespace Example
             Vector4 lineBoxColor;
 
             if (hovered && Selected)
-                lineBoxColor = hoverColor;
-            else if (hovered || Selected)
+                lineBoxColor = hoverSelectColor;
+            else if (Selected)
                 lineBoxColor = selectColor;
+            else if (hovered)
+                lineBoxColor = hoverColor;
             else
-                lineBoxColor = new Vector4(1, 1, 1, 1);
+                lineBoxColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
 
             if(Selected)
                 control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));
@@ -84,7 +82,7 @@ namespace Example
 
             Vector4 pickingColor = control.NextPickingColor();
 
-            Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
+            Vector4 lineBoxColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
 
             if (Selected)
                 control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));
@@ -121,11 +119,13 @@ namespace Example
             Vector4 lineBoxColor;
 
             if (hovered && Selected)
-                lineBoxColor = hoverColor;
-            else if (hovered || Selected)
+                lineBoxColor = hoverSelectColor;
+            else if (Selected)
                 lineBoxColor = selectColor;
+            else if (hovered)
+                lineBoxColor = hoverColor;
             else
-                lineBoxColor = new Vector4(1, 1, 1, 1);
+                lineBoxColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
 
             if (Selected)
                 control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));
@@ -155,7 +155,7 @@ namespace Example
 
             Vector4 pickingColor = control.NextPickingColor();
 
-            Vector4 lineBoxColor = new Vector4(1, 1, 1, 1);
+            Vector4 lineBoxColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
 
             if (Selected)
                 control.UpdateModelMatrix(mtx * Matrix4.CreateTranslation(Vector3.UnitX * (3f - Math.Abs((control.RedrawerFrame-animationStartFrame) * 0.0625f % 6f - 3f))));

@@ -103,10 +103,14 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = point.GlobalPosition;
 
                     //determine color
-                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
-                        col = hoverColor;
+                    bool _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
+
+                    if (point.Selected && _hovered)
+                        col = hoverSelectColor;
                     else if (point.Selected)
                         col = selectColor;
+                    else if (_hovered)
+                        col = hoverColor;
                     else
                         col = color;
 
@@ -136,10 +140,14 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = point.GlobalPosition + point.GlobalCP1;
 
                     //determine color
-                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
-                        col = hoverColor;
+                    _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
+
+                    if (point.Selected && _hovered)
+                        col = hoverSelectColor;
                     else if (point.Selected)
                         col = selectColor;
+                    else if (_hovered)
+                        col = hoverColor;
                     else
                         col = color;
 
@@ -169,10 +177,14 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = point.GlobalPosition + point.GlobalCP2;
 
                     //determine color
-                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
-                        col = hoverColor;
+                    _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
+
+                    if (point.Selected && _hovered)
+                        col = hoverSelectColor;
                     else if (point.Selected)
                         col = selectColor;
+                    else if (_hovered)
+                        col = hoverColor;
                     else
                         col = color;
 
@@ -358,10 +370,14 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = point.GlobalPosition;
 
                     //determine color
-                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
-                        col = hoverColor;
+                    bool _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
+
+                    if (point.Selected && _hovered)
+                        col = hoverSelectColor;
                     else if (point.Selected)
                         col = selectColor;
+                    else if (_hovered)
+                        col = hoverColor;
                     else
                         col = color;
 
@@ -392,10 +408,14 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = point.GlobalPosition + point.GlobalCP1;
 
                     //determine color
-                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
-                        col = hoverColor;
+                    _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
+
+                    if (point.Selected && _hovered)
+                        col = hoverSelectColor;
                     else if (point.Selected)
                         col = selectColor;
+                    else if (_hovered)
+                        col = hoverColor;
                     else
                         col = color;
 
@@ -425,10 +445,14 @@ namespace GL_EditorFramework.EditorDrawables
                         pos = point.GlobalPosition + point.GlobalCP2;
 
                     //determine color
-                    if (hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0))
-                        col = hoverColor;
+                    _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
+
+                    if (point.Selected && _hovered)
+                        col = hoverSelectColor;
                     else if (point.Selected)
                         col = selectColor;
+                    else if (_hovered)
+                        col = hoverColor;
                     else
                         col = color;
 

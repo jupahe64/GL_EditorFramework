@@ -19,9 +19,10 @@ namespace GL_EditorFramework.EditorDrawables
     public abstract class EditableObject : AbstractGlDrawable, IEditableObject
     {
 
-        public static Vector4 hoverColor = new Vector4(1, 1, 0.925f,1);
-        public static Vector4 selectColor = new Vector4(1, 1, 0.675f, 1);
-        
+        public static Vector4 hoverColor = new Vector4(1, 1, 1, 1);
+        public static Vector4 hoverSelectColor = new Vector4(1, 1, 0.75f, 1);
+        public static Vector4 selectColor = new Vector4(1, 1, 0.5f, 1);
+
         public EditableObject()
         {
 

@@ -63,16 +63,20 @@ namespace GL_EditorFramework.EditorDrawables
             Vector4 lineColor;
 
             if (hovered && Selected)
-                lineColor = hoverColor;
-            else if (hovered || Selected)
+                lineColor = hoverSelectColor;
+            else if (Selected)
                 lineColor = selectColor;
+            else if (hovered)
+                lineColor = hoverColor;
             else
                 lineColor = Color;
 
             if (hovered && Selected)
-                blockColor = Color * 0.5f + hoverColor * 0.5f;
-            else if (hovered || Selected)
+                blockColor = Color * 0.5f + hoverSelectColor * 0.5f;
+            else if (Selected)
                 blockColor = Color * 0.5f + selectColor * 0.5f;
+            else if (hovered)
+                blockColor = Color * 0.5f + hoverColor * 0.5f;
             else
                 blockColor = Color;
 
@@ -101,16 +105,20 @@ namespace GL_EditorFramework.EditorDrawables
             Vector4 lineColor;
 
             if (hovered && Selected)
-                lineColor = hoverColor;
-            else if (hovered || Selected)
+                lineColor = hoverSelectColor;
+            else if (Selected)
                 lineColor = selectColor;
+            else if (hovered)
+                lineColor = hoverColor;
             else
                 lineColor = Color;
 
             if (hovered && Selected)
-                blockColor = Color * 0.5f + hoverColor * 0.5f;
-            else if (hovered || Selected)
+                blockColor = Color * 0.5f + hoverSelectColor * 0.5f;
+            else if (Selected)
                 blockColor = Color * 0.5f + selectColor * 0.5f;
+            else if (hovered)
+                blockColor = Color * 0.5f + hoverColor * 0.5f;
             else
                 blockColor = Color;
 

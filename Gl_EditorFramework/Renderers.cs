@@ -196,8 +196,6 @@ namespace GL_EditorFramework
                     lineDrawList = GL.GenLists(1);
 
                     GL.NewList(lineDrawList, ListMode.Compile);
-                    GL.LineWidth(2.0f);
-
                     GL.Begin(PrimitiveType.LineStrip);
                     GL.Vertex3(points[6]);
                     GL.Vertex3(points[2]);
@@ -240,13 +238,13 @@ namespace GL_EditorFramework
                     GL.DrawArrays(PrimitiveType.Quads, 0, 24);
 
                     #region outlines
-                    GL.LineWidth(2.0f);
-
+                    GL.LineWidth(1);
                     control.CurrentShader = SolidColorShaderProgram;
                     SolidColorShaderProgram.SetVector4("color", outlineColor);
 
                     linesVao.Use(control);
                     GL.DrawArrays(PrimitiveType.Lines, 0, 24);
+                    GL.LineWidth(2);
                     #endregion
                 }
                 else
@@ -319,8 +317,10 @@ namespace GL_EditorFramework
 
                     GL.Disable(EnableCap.Texture2D);
 
+                    GL.LineWidth(1);
                     GL.Color4(lineColor);
                     GL.CallList(lineDrawList);
+                    GL.LineWidth(2);
                 }
                 else if(pass == Pass.PICKING)
                 {
@@ -351,8 +351,6 @@ namespace GL_EditorFramework
                     GL.Vertex3(points[5]);
                     GL.End();
                     #endregion
-
-                    GL.CallList(lineDrawList);
                 }
             }
 
@@ -368,12 +366,13 @@ namespace GL_EditorFramework
                     GL.DrawArrays(PrimitiveType.Quads, 0, 24);
 
                     #region outlines
-                    GL.LineWidth(2.0f);
+                    GL.LineWidth(1);
 
                     SolidColorShaderProgram.SetVector4("color", lineColor);
 
                     linesVao.Use(control);
                     GL.DrawArrays(PrimitiveType.Lines, 0, 24);
+                    GL.LineWidth(2);
                     #endregion
                 }
                 else
@@ -419,8 +418,10 @@ namespace GL_EditorFramework
                     GL.End();
                     #endregion
 
+                    GL.LineWidth(1);
                     GL.Color4(lineColor);
                     GL.CallList(lineDrawList);
+                    GL.LineWidth(2);
                 }
                 else if (pass == Pass.PICKING)
                 {
@@ -452,7 +453,9 @@ namespace GL_EditorFramework
                     GL.End();
                     #endregion
 
+                    GL.LineWidth(1);
                     GL.CallList(lineDrawList);
+                    GL.LineWidth(2);
                 }
             }
 
@@ -462,17 +465,18 @@ namespace GL_EditorFramework
 
                 if (pass == Pass.OPAQUE)
                 {
-                    GL.LineWidth(4.0f);
                     SolidColorShaderProgram.SetVector4("color", color);
                 }
                 else
                 {
-                    GL.LineWidth(6.0f);
+                    GL.LineWidth(4);
                     SolidColorShaderProgram.SetVector4("color", pickingColor);
                 }
 
+                
                 linesVao.Use(control);
                 GL.DrawArrays(PrimitiveType.Lines, 0, 24);
+                GL.LineWidth(2);
             }
 
             public static void DrawLineBox(GL_ControlLegacy control, Pass pass, Vector4 color, Vector4 pickingColor)
@@ -481,17 +485,16 @@ namespace GL_EditorFramework
 
                 if (pass == Pass.OPAQUE)
                 {
-                    GL.LineWidth(4.0f);
                     GL.Color4(color);
                 }
                 else
                 {
-                    GL.LineWidth(6.0f);
+                    GL.LineWidth(6);
                     GL.Color4(pickingColor);
                 }
 
                 GL.CallList(lineDrawList);
-
+                GL.LineWidth(2);
                 GL.Enable(EnableCap.Texture2D);
             }
         }
