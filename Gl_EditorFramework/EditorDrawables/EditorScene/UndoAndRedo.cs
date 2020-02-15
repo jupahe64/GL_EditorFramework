@@ -21,7 +21,9 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (undoStack.Count > 0)
             {
-                redoStack.Push(undoStack.Pop().Revert(this));
+                var revertable = undoStack.Pop().Revert(this);
+                redoStack.Push(revertable);
+                Reverted?.Invoke(this, new RevertedEventArgs(revertable));
                 ObjectsMoved?.Invoke(this,null);
             }
 
@@ -31,7 +33,9 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if(redoStack.Count > 0)
             {
-                undoStack.Push(redoStack.Pop().Revert(this));
+                var revertable = redoStack.Pop().Revert(this);
+                undoStack.Push(revertable);
+                Reverted?.Invoke(this, new RevertedEventArgs(revertable));
                 ObjectsMoved?.Invoke(this, null);
             }
         }

@@ -12,6 +12,7 @@ using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditableObject;
 using System.Collections;
 using static GL_EditorFramework.Framework;
+using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace GL_EditorFramework.EditorDrawables
 {
@@ -34,6 +35,17 @@ namespace GL_EditorFramework.EditorDrawables
         public DictChangedEventArgs(IDictionary[] dicts)
         {
             Dicts = dicts;
+        }
+    }
+
+    public delegate void RevertedEventHandler(object sender, RevertedEventArgs e);
+
+    public class RevertedEventArgs : EventArgs
+    {
+        public IRevertable Revertable { get; set; }
+        public RevertedEventArgs(IRevertable revertable)
+        {
+            Revertable = revertable;
         }
     }
 
@@ -222,6 +234,7 @@ namespace GL_EditorFramework.EditorDrawables
         public List<AbstractGlDrawable> StaticObjects { get; set; } = new List<AbstractGlDrawable>();
         public IEnumerable<IEditableObject> EditableObjects => GetObjects();
 
+        public event RevertedEventHandler Reverted;
         public event EventHandler SelectionChanged;
         public event EventHandler ObjectsMoved;
         public event ListChangedEventHandler ListChanged;
