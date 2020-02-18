@@ -35,9 +35,9 @@ namespace GL_EditorFramework.EditorDrawables
                 ObjectsMoved?.Invoke(this, null);
 
                 if (undoStack.Count == 0)
-                    IsSaved = lastSavedUndo == null;
+                    IsSaved = LastSavedUndo == null;
                 else
-                    IsSaved = lastSavedUndo == undoStack.Peek();
+                    IsSaved = LastSavedUndo == undoStack.Peek();
             }
 
         }
@@ -54,7 +54,7 @@ namespace GL_EditorFramework.EditorDrawables
                 Reverted?.Invoke(this, new RevertedEventArgs(entry.undoable));
                 ObjectsMoved?.Invoke(this, null);
 
-                IsSaved = undoStack.Peek() == lastSavedUndo;
+                IsSaved = undoStack.Peek() == LastSavedUndo;
             }
         }
 
@@ -182,7 +182,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        IRevertable lastSavedUndo;
+        protected IRevertable LastSavedUndo { get; private set; }
 
         public void AddToUndo(IRevertable revertable)
         {

@@ -254,9 +254,9 @@ namespace GL_EditorFramework.EditorDrawables
                     if (value)
                     {
                         if (undoStack.Count == 0)
-                            lastSavedUndo = null;
+                            LastSavedUndo = null;
                         else
-                            lastSavedUndo = undoStack.Peek();
+                            LastSavedUndo = undoStack.Peek();
                     }
                 }
             } 
