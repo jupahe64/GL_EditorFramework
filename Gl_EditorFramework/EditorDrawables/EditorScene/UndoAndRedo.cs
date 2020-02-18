@@ -12,8 +12,14 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
+        public struct RedoEntry
+        {
+            public IRevertable undoable;
+            public IRevertable redoable;
+        }
+
         protected Stack<IRevertable> undoStack = new Stack<IRevertable>();
-        protected Stack<IRevertable> redoStack = new Stack<IRevertable>();
+        protected Stack<RedoEntry> redoStack = new Stack<RedoEntry>();
 
         public void Undo()
         {
@@ -21,22 +27,34 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (undoStack.Count > 0)
             {
-                var revertable = undoStack.Pop().Revert(this);
-                redoStack.Push(revertable);
-                Reverted?.Invoke(this, new RevertedEventArgs(revertable));
-                ObjectsMoved?.Invoke(this,null);
+                var undoable = undoStack.Pop();
+                var redoable = undoable.Revert(this);
+
+                redoStack.Push(new RedoEntry { undoable = undoable, redoable = redoable });
+                Reverted?.Invoke(this, new RevertedEventArgs(redoable));
+                ObjectsMoved?.Invoke(this, null);
+
+                if (undoStack.Count == 0)
+                    IsSaved = lastSavedUndo == null;
+                else
+                    IsSaved = lastSavedUndo == undoStack.Peek();
             }
 
         }
 
         public void Redo()
         {
-            if(redoStack.Count > 0)
+            if (redoStack.Count > 0)
             {
-                var revertable = redoStack.Pop().Revert(this);
-                undoStack.Push(revertable);
-                Reverted?.Invoke(this, new RevertedEventArgs(revertable));
+                var entry = redoStack.Pop();
+
+                entry.redoable.Revert(this);
+
+                undoStack.Push(entry.undoable);
+                Reverted?.Invoke(this, new RevertedEventArgs(entry.undoable));
                 ObjectsMoved?.Invoke(this, null);
+
+                IsSaved = undoStack.Peek() == lastSavedUndo;
             }
         }
 
@@ -44,10 +62,10 @@ namespace GL_EditorFramework.EditorDrawables
         {
             IRevertable Revert(EditorSceneBase scene);
         }
-        
+
         public void AddTransformToUndo(TransformChangeInfos transformChangeInfos)
         {
-            if(transformChangeInfos.changedRotations > 0)
+            if (transformChangeInfos.changedRotations > 0)
                 AddToUndo(new RevertableRotChange(transformChangeInfos));
 
             else if (transformChangeInfos.changedScales > 0)
@@ -56,7 +74,7 @@ namespace GL_EditorFramework.EditorDrawables
             else if (transformChangeInfos.changedPositions > 0)
                 AddToUndo(new RevertablePosChange(transformChangeInfos));
 
-            if(transformChangeInfos.changedPositions+transformChangeInfos.changedRotations+transformChangeInfos.changedScales>0)
+            if (transformChangeInfos.changedPositions + transformChangeInfos.changedRotations + transformChangeInfos.changedScales > 0)
                 ObjectsMoved?.Invoke(this, null);
         }
 
@@ -114,7 +132,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public IEnumerable<IRevertable> GetRevertables()
             {
-                foreach(IRevertable revertable in revertables)
+                foreach (IRevertable revertable in revertables)
                 {
                     if (revertable is IRevertableCollection)
                     {
@@ -140,7 +158,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return new MultiRevertable(newRevertables);
             }
         }
-        
+
         List<IRevertable> undoCollection;
 
         public void BeginUndoCollection()
@@ -164,9 +182,11 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
+        IRevertable lastSavedUndo;
+
         public void AddToUndo(IRevertable revertable)
         {
-            if(undoCollection != null)
+            if (undoCollection != null)
             {
                 if (revertable is IRevertableCollection)
                 {
@@ -175,9 +195,16 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 else
                     undoCollection.Add(revertable);
+
+
             }
             else
+            {
                 undoStack.Push(revertable);
+
+                IsSaved = false;
+            }
+
             redoStack.Clear();
         }
 
@@ -189,7 +216,7 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 posInfos = new PosInfo[transformChangeInfos.changedPositions];
                 int i = 0;
-                foreach(TransformChangeInfo info in transformChangeInfos.infos)
+                foreach (TransformChangeInfo info in transformChangeInfos.infos)
                 {
                     if (info.position.HasValue)
                         posInfos[i++] = new PosInfo(info.obj, info.part, info.position.Value);
@@ -205,7 +232,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 for (int i = 0; i < posInfos.Length; i++)
                 {
-                    posInfos[i].obj.SetTransform(posInfos[i].pos, null, null, posInfos[i].part, 
+                    posInfos[i].obj.SetTransform(posInfos[i].pos, null, null, posInfos[i].part,
                         out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale);
 
                     revertable.posInfos[i] = new PosInfo(
@@ -852,7 +879,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public void HandleUndo(EditorSceneBase scene)
             {
-                foreach(CapturedProperty cp in capturedProperties)
+                foreach (CapturedProperty cp in capturedProperties)
                 {
                     if (!cp.info.GetValue(obj).Equals(cp.value))
                         scene.AddToUndo(new RevertablePropertyChange(cp.info, obj, cp.value));

@@ -242,6 +242,27 @@ namespace GL_EditorFramework.EditorDrawables
         public event ListEventHandler ListEntered;
         public event ListEventHandler ListInvalidated;
 
+        public event EventHandler IsSavedChanged;
+        public bool IsSaved { 
+            get => isSaved; 
+            set { 
+                if(isSaved != value)
+                {
+                    isSaved = value;
+                    IsSavedChanged?.Invoke(this, null);
+
+                    if (value)
+                    {
+                        if (undoStack.Count == 0)
+                            lastSavedUndo = null;
+                        else
+                            lastSavedUndo = undoStack.Peek();
+                    }
+                }
+            } 
+        }
+        bool isSaved = true;
+
         protected float draggingDepth;
 
         public GL_ControlBase GL_Control => control;
