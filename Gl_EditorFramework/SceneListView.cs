@@ -124,6 +124,11 @@ namespace GL_EditorFramework
             btnBack.Visible = true;
         }
 
+        public void UnselectCurrentList()
+        {
+            listView.CurrentList = null;
+        }
+
         /// <summary>
         /// Tries to go back to the last list in the Stack
         /// </summary>
