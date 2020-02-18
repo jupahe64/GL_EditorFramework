@@ -12,6 +12,19 @@ using System.Windows.Forms.Design;
 
 namespace SpotLight
 {
+    public class DocumentTabClosingEventArgs : CancelEventArgs
+    {
+        public DocumentTabControl.DocumentTab Tab { get; set; }
+
+        public DocumentTabClosingEventArgs(DocumentTabControl.DocumentTab tab)
+        {
+            Tab = tab;
+        }
+    }
+
+    public delegate void DocumentTabClosingEventHandler(object sender, DocumentTabClosingEventArgs e);
+
+
     [Designer("System.Windows.Forms.Design.ParentControlDesigner, System.Design", typeof(IDesigner))]
     public class DocumentTabControl : UserControl
     {
@@ -27,17 +40,17 @@ namespace SpotLight
 
         public event EventHandler SelectedTabChanged;
 
-        public event HandledEventHandler TabClosing;
+        public event DocumentTabClosingEventHandler TabClosing;
 
         public class DocumentTab
         {
             public string Name;
-            public object Tag;
+            public object Document;
 
             public DocumentTab(string name, object tag)
             {
                 Name = name;
-                Tag = tag;
+                Document = tag;
             }
         }
 
@@ -122,7 +135,7 @@ namespace SpotLight
 
         public void RemoveTab(int index)
         {
-            tabs.RemoveAt(hoveredIndex);
+            tabs.RemoveAt(index);
 
             if (selectedIndex > index || selectedIndex > tabs.Count - 1)
             {
@@ -140,6 +153,26 @@ namespace SpotLight
             SelectedTabChanged?.Invoke(this, new EventArgs());
 
             Invalidate();
+        }
+
+        /// <summary>
+        /// Trys clearing all tabs while checking if each one can be closed without interuption
+        /// </summary>
+        /// <returns>Weither there was an interuption</returns>
+        public bool TryClearTabs()
+        {
+            while (tabs.Count!=0)
+            {
+                DocumentTabClosingEventArgs args = new DocumentTabClosingEventArgs(tabs[selectedIndex]);
+                TabClosing?.Invoke(this, args);
+
+                if (args.Cancel)
+                    return false;
+
+                RemoveTab(selectedIndex);
+            }
+
+            return true;
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -203,7 +236,6 @@ namespace SpotLight
 
             Invalidate();
         }
-
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
@@ -212,11 +244,11 @@ namespace SpotLight
             {
                 if (hoveringOverClose)
                 {
-                    HandledEventArgs args = new HandledEventArgs();
+                    DocumentTabClosingEventArgs args = new DocumentTabClosingEventArgs(tabs[hoveredIndex]);
 
                     TabClosing?.Invoke(this, args);
 
-                    if(!args.Handled)
+                    if(!args.Cancel)
                         RemoveTab(hoveredIndex);
                 }
                 else

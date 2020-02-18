@@ -72,9 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abstract Classes\AbstractDrawableCollection.cs" />
-    <Compile Include="DocumentTabControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="DocumentTabControl.cs" />
     <Compile Include="EditorDrawables\EditorScene\CategorizedScene.cs" />
     <Compile Include="EditorDrawables\DrawableCollection.cs" />
     <Compile Include="EditorDrawables\EditorScene\EditorSceneBase.cs" />
