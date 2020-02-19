@@ -243,9 +243,9 @@ namespace GL_EditorFramework.EditorDrawables
         public event ListEventHandler ListInvalidated;
 
         public event EventHandler IsSavedChanged;
-        public bool IsSaved { 
+        public virtual bool IsSaved { 
             get => isSaved; 
-            set { 
+            protected set { 
                 if(isSaved != value)
                 {
                     isSaved = value;

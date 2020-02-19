@@ -182,7 +182,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        protected IRevertable LastSavedUndo { get; private set; }
+        protected IRevertable LastSavedUndo { get; set; }
 
         public void AddToUndo(IRevertable revertable)
         {
