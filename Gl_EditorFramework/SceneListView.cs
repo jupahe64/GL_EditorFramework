@@ -94,6 +94,10 @@ namespace GL_EditorFramework
             {
                 CurrentRootListName = listName;
                 listStack.Clear();
+
+                rootListComboBox.Visible = true;
+                btnBack.Visible = false;
+
                 listView.CurrentList = RootLists[listName];
             }
         }
@@ -127,6 +131,12 @@ namespace GL_EditorFramework
         public void UnselectCurrentList()
         {
             listView.CurrentList = null;
+
+            listStack.Clear();
+
+            rootListComboBox.Visible = true;
+            btnBack.Visible = false;
+
         }
 
         /// <summary>
@@ -134,13 +144,15 @@ namespace GL_EditorFramework
         /// </summary>
         public void ExitList()
         {
+
+            if (listStack.Count != 0)
+                listView.CurrentList = listStack.Pop();
+
             if (listStack.Count == 0)
-                return;
-
-            listView.CurrentList = listStack.Pop();
-
-            rootListComboBox.Visible = true;
-            btnBack.Visible = false;
+            {
+                rootListComboBox.Visible = true;
+                btnBack.Visible = false;
+            } 
         }
 
         public void InvalidateCurrentList()
