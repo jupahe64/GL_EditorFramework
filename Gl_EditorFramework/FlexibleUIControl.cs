@@ -708,7 +708,10 @@ namespace GL_EditorFramework
                         changeTypes |= VALUE_CHANGE_START;
 
                     if (eventType == EventType.CLICK)
+                    {
                         value = values[index - 1];
+                        changeTypes |= VALUE_SET;
+                    }
                 }
             }
 
@@ -721,7 +724,10 @@ namespace GL_EditorFramework
                         changeTypes |= VALUE_CHANGE_START;
 
                     if (eventType == EventType.CLICK)
+                    {
                         value = values[index + 1];
+                        changeTypes |= VALUE_SET;
+                    }
                 }
             }
 
