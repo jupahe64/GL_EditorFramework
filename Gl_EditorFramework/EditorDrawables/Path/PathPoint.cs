@@ -100,12 +100,12 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             boundingBox.Include(new BoundingBox(
-                Position.X - 0.5f,
-                Position.X + 0.5f,
-                Position.Y - 0.5f,
-                Position.Y + 0.5f,
-                Position.Z - 0.5f,
-                Position.Z + 0.5f
+                Position.X - Path.CubeScale,
+                Position.X + Path.CubeScale,
+                Position.Y - Path.CubeScale,
+                Position.Y + Path.CubeScale,
+                Position.Z - Path.CubeScale,
+                Position.Z + Path.CubeScale
             ));
         }
 

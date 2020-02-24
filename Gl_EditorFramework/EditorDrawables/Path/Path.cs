@@ -19,6 +19,9 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public partial class Path : EditableObject
     {
+        protected static float CubeScale => 0.5f;
+        protected static float ControlCubeScale => 0.25f;
+
         private static bool Initialized = false;
         private static bool InitializedLegacy = false;
         private static ShaderProgram triangleShaderProgram;
@@ -311,7 +314,9 @@ namespace GL_EditorFramework.EditorDrawables
             control.ResetModelMatrix();
             GL.Uniform4(colorLoc_Tri, color);
             GL.Uniform1(isPickingModeLoc_Tri, (pass == Pass.PICKING) ? 1 : 0);
-
+            triangleShaderProgram.SetFloat("cubeScale", CubeScale);
+            triangleShaderProgram.SetFloat("controlCubeScale", ControlCubeScale);
+            
             GL.DrawArrays(PrimitiveType.Points, 0, pathPoints.Count);
 
             //draw lines
@@ -386,7 +391,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLineColors[i] = col;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(CubeScale) * Matrix4.CreateTranslation(pos));
                     GL.Color4(color * .125f + col * .125f);
                     GL.CallList(drawLists);
                     GL.Color4(col);
@@ -423,7 +428,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLinePositions[posIndex+1] = pos;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
                     GL.Color4(color * .125f + col * .125f);
                     GL.CallList(drawLists);
                     GL.Color4(col);
@@ -460,7 +465,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLinePositions[posIndex+2] = pos;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
                     GL.Color4(color * .125f + col * .125f);
                     GL.CallList(drawLists);
                     GL.Color4(col);
@@ -499,7 +504,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLineColors[i] = color; //colors need to be the same for proper picking
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(CubeScale) * Matrix4.CreateTranslation(pos));
                     GL.Color4(col);
                     GL.CallList(drawLists);
 
@@ -525,7 +530,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLinePositions[posIndex+1] = pos;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
                     GL.Color4(col);
                     GL.CallList(drawLists);
 
@@ -548,7 +553,7 @@ namespace GL_EditorFramework.EditorDrawables
                     col = control.NextPickingColor();
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(0.25f) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
                     GL.Color4(col);
                     GL.CallList(drawLists);
 
@@ -862,12 +867,12 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (point.Selected)
                         box.Include(new BoundingBox(
-                            point.Position.X - 0.5f,
-                            point.Position.X + 0.5f,
-                            point.Position.Y - 0.5f,
-                            point.Position.Y + 0.5f,
-                            point.Position.Z - 0.5f,
-                            point.Position.Z + 0.5f
+                            point.Position.X - CubeScale,
+                            point.Position.X + CubeScale,
+                            point.Position.Y - CubeScale,
+                            point.Position.Y + CubeScale,
+                            point.Position.Z - CubeScale,
+                            point.Position.Z + CubeScale
                         ));
                     allPointsSelected &= point.Selected;
                 }
