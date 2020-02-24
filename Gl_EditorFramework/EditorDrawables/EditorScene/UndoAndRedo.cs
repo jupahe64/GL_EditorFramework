@@ -179,6 +179,8 @@ namespace GL_EditorFramework.EditorDrawables
                     undoStack.Push(new MultiRevertable(undoCollection.ToArray()));
 
                 undoCollection = null;
+
+                IsSaved = false;
             }
         }
 
