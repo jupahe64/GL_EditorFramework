@@ -16,7 +16,9 @@ uniform bool isPickingMode;
                
 uniform float cubeScale;
 uniform float controlCubeScale;
-			   
+
+float cubeInstanceScale = cubeScale;
+
 vec4 pos;
 
 mat4 mtx = mtxCam*mtxMdl;
@@ -33,18 +35,18 @@ vec4 points[8] = vec4[](
 );
 
 void face(int p1, int p2, int p3, int p4){
-    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p3]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p4]*cubeScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p1]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p2]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p3]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p4]*cubeInstanceScale); EmitVertex();
     EndPrimitive();
 }
 
 void faceInv(int p3, int p4, int p1, int p2){
-    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p3]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p4]*cubeScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p1]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p2]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p3]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p4]*cubeInstanceScale); EmitVertex();
     EndPrimitive();
 }
 
@@ -62,7 +64,7 @@ void main(){
     faceInv(2,3,6,7);
     faceInv(0,2,4,6);
     face(1,3,5,7);
-    cubeScale = controlCubeScale;
+    cubeInstanceScale = controlCubeScale;
 
     if(cp1[0]-gl_in[0].gl_Position.xyz!=vec3(0,0,0)){
         //draw ControlPoint 1

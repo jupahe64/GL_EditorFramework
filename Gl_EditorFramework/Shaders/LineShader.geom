@@ -16,7 +16,10 @@ uniform vec4 pathColor;
 uniform int gapIndex;
 uniform bool isPickingMode;
                 
-float cubeScale;
+uniform float cubeScale;
+uniform float controlCubeScale;
+
+float cubeInstanceScale = cubeScale;
 vec4 pos;
 
 mat4 mtx = mtxCam*mtxMdl;
@@ -40,17 +43,17 @@ vec4 points[8] = vec4[](
 );
 
 void face(int p1, int p2, int p4, int p3){
-    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p3]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p4]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p1]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p2]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p3]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p4]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p1]*cubeInstanceScale); EmitVertex();
     EndPrimitive();
 }
 
 void line(int p1, int p2){
-    gl_Position = mtx * (pos + points[p1]*cubeScale); EmitVertex();
-    gl_Position = mtx * (pos + points[p2]*cubeScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p1]*cubeInstanceScale); EmitVertex();
+    gl_Position = mtx * (pos + points[p2]*cubeInstanceScale); EmitVertex();
     EndPrimitive();
 }
 
@@ -74,8 +77,6 @@ void main(){
         //draw Point 
         //outline
         fragColor = color[0];
-                        
-        cubeScale = 0.5f;
         pos = vec4(point,1);
         face(0,1,2,3);
         face(4,5,6,7);
@@ -84,7 +85,7 @@ void main(){
         line(2,6);
         line(3,7);
 
-        cubeScale = 0.25f;
+        cubeInstanceScale = controlCubeScale;
         if(point!=cp1[0]){
             //draw ControlPoint 1
 
