@@ -221,26 +221,37 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Vector3 pc = ControlPoint1;
 
-                    GlobalCP1 = transformAction.NewIndividualPos(GlobalCP1, out bool cpHasChanged);
+                    var newPos = transformAction.NewIndividualPos(GlobalCP1, out bool cpHasChanged);
                     if (cpHasChanged)
+                    {
+                        GlobalCP1 = newPos;
                         transformChangeInfos.Add(this, 1, pc, null, null);
+                    }
                 }
 
                 if (ControlPoint2 != Vector3.Zero)
                 {
                     Vector3 pc = ControlPoint2;
 
-                    GlobalCP2 = transformAction.NewIndividualPos(GlobalCP2, out bool cpHasChanged);
+                    var newPos = transformAction.NewIndividualPos(GlobalCP2, out bool cpHasChanged);
                     if (cpHasChanged)
+                    {
+                        GlobalCP2 = newPos;
                         transformChangeInfos.Add(this, 2, pc, null, null);
+                    }
                 }
 
                 Vector3 pp = Position;
 
-                GlobalPosition = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
+                {
+                    var newPos = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
 
-                if (posHasChanged)
-                    transformChangeInfos.Add(this, 0, pp, null, null);
+                    if (posHasChanged)
+                    {
+                        GlobalPosition = newPos;
+                        transformChangeInfos.Add(this, 0, pp, null, null);
+                    }
+                }
             }
         }
 
@@ -252,10 +263,13 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Vector3 pc = ControlPoint1;
 
-                    GlobalCP1 = transformAction.NewPos(GlobalPosition + GlobalCP1, out bool posHasChanged) - GlobalPosition;
+                    var newPos = transformAction.NewPos(GlobalPosition + GlobalCP1, out bool posHasChanged) - GlobalPosition;
 
                     if (posHasChanged)
+                    {
+                        GlobalCP1 = newPos;
                         transformChangeInfos.Add(this, 1, pc, null, null);
+                    }
 
                     return;
                 }
@@ -267,10 +281,13 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     Vector3 pc = ControlPoint2;
 
-                    GlobalCP2 = transformAction.NewPos(GlobalPosition + GlobalCP2, out bool posHasChanged) - GlobalPosition;
+                    var newPos = transformAction.NewPos(GlobalPosition + GlobalCP2, out bool posHasChanged) - GlobalPosition;
 
                     if (posHasChanged)
+                    {
+                        GlobalCP1 = newPos;
                         transformChangeInfos.Add(this, 2, pc, null, null);
+                    }
 
                     return;
                 }

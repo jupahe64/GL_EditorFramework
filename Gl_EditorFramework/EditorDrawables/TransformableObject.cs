@@ -169,18 +169,25 @@ namespace GL_EditorFramework.EditorDrawables
 
             Vector3 pp = Position, pr = Rotation, ps = Scale;
 
-            GlobalPosition = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
+            var newPos = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
 
             Matrix3 rotMtx = GlobalRotation;
 
-            GlobalRotation = transformAction.NewRot(GlobalRotation, out bool rotHasChanged);
+            var newRot = transformAction.NewRot(GlobalRotation, out bool rotHasChanged);
 
-            GlobalScale = transformAction.NewScale(GlobalScale, rotMtx, out bool scaleHasChanged);
+            var newScale = transformAction.NewScale(GlobalScale, rotMtx, out bool scaleHasChanged);
+
+            if (posHasChanged)
+                GlobalPosition = newPos;
+            if (rotHasChanged)
+                GlobalRotation = newRot;
+            if (scaleHasChanged)
+                GlobalScale = newScale;
 
             infos.Add(this, 0,
-                posHasChanged   ? new Vector3?(pp) : new Vector3?(), 
-                rotHasChanged   ? new Vector3?(pr) : new Vector3?(),
-                scaleHasChanged ? new Vector3?(ps) : new Vector3?());
+                posHasChanged   ? new Vector3?(pp) : null, 
+                rotHasChanged   ? new Vector3?(pr) : null,
+                scaleHasChanged ? new Vector3?(ps) : null);
         }
 
         public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)

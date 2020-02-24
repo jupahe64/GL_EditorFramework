@@ -245,10 +245,13 @@ namespace GL_EditorFramework.EditorDrawables
 
             Vector3 pp = Position;
 
-            GlobalPosition = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
+            var newPos = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
 
             if(posHasChanged)
+            {
+                GlobalPosition = newPos;
                 infos.Add(this, 0, pp, null, null);
+            }
         }
 
         public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
