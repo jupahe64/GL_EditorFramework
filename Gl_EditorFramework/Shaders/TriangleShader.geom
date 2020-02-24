@@ -13,8 +13,10 @@ uniform mat4 mtxMdl;
 uniform mat4 mtxCam;
 uniform vec4 pathColor;
 uniform bool isPickingMode;
-                
-float cubeScale = 0.5;
+               
+uniform float cubeScale;
+uniform float controlCubeScale;
+			   
 vec4 pos;
 
 mat4 mtx = mtxCam*mtxMdl;
@@ -60,7 +62,7 @@ void main(){
     faceInv(2,3,6,7);
     faceInv(0,2,4,6);
     face(1,3,5,7);
-    cubeScale = 0.25;
+    cubeScale = controlCubeScale;
 
     if(cp1[0]-gl_in[0].gl_Position.xyz!=vec3(0,0,0)){
         //draw ControlPoint 1

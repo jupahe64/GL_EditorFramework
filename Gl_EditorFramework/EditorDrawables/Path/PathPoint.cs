@@ -27,17 +27,11 @@ namespace GL_EditorFramework.EditorDrawables
 
         public virtual Vector3 GlobalPosition { get => Position; set => Position = value; }
 
-        /// <summary>
-        /// The position of the first ControlPoint (in) relative to the PathPoint
-        /// </summary>
         [PropertyCapture.Undoable]
         public Vector3 ControlPoint1 { get; set; }
 
         public virtual Vector3 GlobalCP1 { get => ControlPoint1; set => ControlPoint1 = value; }
 
-        /// <summary>
-        /// The position of the second ControlPoint (out) relative to the PathPoint
-        /// </summary>
         [PropertyCapture.Undoable]
         public Vector3 ControlPoint2 { get; set; }
 
@@ -100,12 +94,12 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             boundingBox.Include(new BoundingBox(
-                Position.X - 0.5f,
-                Position.X + 0.5f,
-                Position.Y - 0.5f,
-                Position.Y + 0.5f,
-                Position.Z - 0.5f,
-                Position.Z + 0.5f
+                Position.X - Path.CubeScale,
+                Position.X + Path.CubeScale,
+                Position.Y - Path.CubeScale,
+                Position.Y + Path.CubeScale,
+                Position.Z - Path.CubeScale,
+                Position.Z + Path.CubeScale
             ));
         }
 
