@@ -324,6 +324,8 @@ namespace GL_EditorFramework.EditorDrawables
             GL.Uniform4(colorLoc_Line, color);
             GL.Uniform1(gapIndexLoc_Line, Closed ? -1 : pathPoints.Count - 1);
             GL.Uniform1(isPickingModeLoc_Line, (pass == Pass.PICKING) ? 1 : 0);
+            lineShaderProgram.SetFloat("cubeScale", CubeScale);
+            lineShaderProgram.SetFloat("controlCubeScale", ControlCubeScale);
 
             GL.DrawArrays(PrimitiveType.LineLoop, 0, pathPoints.Count);
         }
