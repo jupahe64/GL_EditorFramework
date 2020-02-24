@@ -27,11 +27,17 @@ namespace GL_EditorFramework.EditorDrawables
 
         public virtual Vector3 GlobalPosition { get => Position; set => Position = value; }
 
+        /// <summary>
+        /// The position of the first ControlPoint (in) relative to the PathPoint
+        /// </summary>
         [PropertyCapture.Undoable]
         public Vector3 ControlPoint1 { get; set; }
 
         public virtual Vector3 GlobalCP1 { get => ControlPoint1; set => ControlPoint1 = value; }
 
+        /// <summary>
+        /// The position of the second ControlPoint (out) relative to the PathPoint
+        /// </summary>
         [PropertyCapture.Undoable]
         public Vector3 ControlPoint2 { get; set; }
 

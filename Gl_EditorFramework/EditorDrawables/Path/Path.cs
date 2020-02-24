@@ -19,8 +19,8 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public partial class Path : EditableObject
     {
-        public float CubeScale = 0.5f;
-        public float ControlCubeScale = 0.25f;
+        protected static float CubeScale => 0.5f;
+        protected static float ControlCubeScale => 0.25f;
 
         private static bool Initialized = false;
         private static bool InitializedLegacy = false;
