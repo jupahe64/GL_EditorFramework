@@ -88,9 +88,11 @@ namespace SpotLight
             if (index < 0 || index > tabs.Count)
                 throw new ArgumentOutOfRangeException(nameof(index), index, "Index must be within the bounds of " + nameof(Tabs));
 
-            selectedIndex = index;
-
-            SelectedTabChanged?.Invoke(this, new EventArgs());
+            if(selectedIndex!=index)
+            {
+                selectedIndex = index;
+                SelectedTabChanged?.Invoke(this, new EventArgs());
+            }
 
             Invalidate();
         }
@@ -253,9 +255,7 @@ namespace SpotLight
                 }
                 else
                 {
-                    selectedIndex = hoveredIndex;
-
-                    SelectedTabChanged?.Invoke(this, new EventArgs());
+                    Select(hoveredIndex);
                 }
 
                 Invalidate();
