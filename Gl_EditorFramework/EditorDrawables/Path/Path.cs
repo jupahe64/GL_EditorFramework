@@ -10,6 +10,7 @@ using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 using static GL_EditorFramework.Renderers;
 using System.IO;
@@ -1240,17 +1241,17 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (point != null)
                 {
-                    if (Keyboard.IsKeyDown(Keyboard.Key.LeftShift))
+                    if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                         point.Position = control.Vector3Input(point.Position, "Position", 1, 16);
                     else
                         point.Position = control.Vector3Input(point.Position, "Position", 0.125f, 2);
 
-                    if (Keyboard.IsKeyDown(Keyboard.Key.LeftShift))
+                    if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                         point.ControlPoint1 = control.Vector3Input(point.ControlPoint1, "Control Point 1", 1, 16);
                     else
                         point.ControlPoint1 = control.Vector3Input(point.ControlPoint1, "Control Point 1", 0.125f, 2);
 
-                    if (Keyboard.IsKeyDown(Keyboard.Key.LeftShift))
+                    if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                         point.ControlPoint2 = control.Vector3Input(point.ControlPoint2, "Control Point 2", 1, 16);
                     else
                         point.ControlPoint2 = control.Vector3Input(point.ControlPoint2, "Control Point 2", 0.125f, 2);
