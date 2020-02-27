@@ -25,7 +25,7 @@ namespace GL_EditorFramework.EditorDrawables
         [PropertyCapture.Undoable]
         public Vector3 Position { get; set; }
 
-        public virtual Vector3 GlobalPosition { get => Position; set => Position = value; }
+        public virtual Vector3 GlobalPos { get => Position; set => Position = value; }
 
         /// <summary>
         /// The position of the first ControlPoint (in) relative to the PathPoint
@@ -42,14 +42,13 @@ namespace GL_EditorFramework.EditorDrawables
         public Vector3 ControlPoint2 { get; set; }
 
         public virtual Vector3 GlobalCP2 { get => ControlPoint2; set => ControlPoint2 = value; }
-        
-        public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
+
+        public override void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)
         {
             if (hoveredPart == 0)
             {
-                localOrientation = new LocalOrientation(Position);
-                dragExclusively = false;
-                return Selected;
+                if (Selected)
+                    scene.StartTransformAction(new LocalOrientation(GlobalPos), actionType);
             }
 
             if (ControlPoint1 != Vector3.Zero)
@@ -58,15 +57,14 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (actionType == DragActionType.TRANSLATE)
                     {
-                        localOrientation = new LocalOrientation(Position + ControlPoint1);
-                        dragExclusively = true; //controlPoints can be moved exclusively
-                        return true;
+                        //controlPoints can be moved exclusively
+                        scene.StartTransformAction(new LocalOrientation(GlobalPos + GlobalCP1), actionType, scene.HoveredPart);
+                        Console.WriteLine("hovered: " + scene.HoveredPart);
                     }
                     else
                     {
-                        localOrientation = new LocalOrientation(Position);
-                        dragExclusively = false;
-                        return Selected;
+                        if (Selected)
+                            scene.StartTransformAction(new LocalOrientation(GlobalPos), actionType);
                     }
                 }
             }
@@ -77,19 +75,17 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (actionType == DragActionType.TRANSLATE)
                     {
-                        localOrientation = new LocalOrientation(Position + ControlPoint2);
-                        dragExclusively = true; //controlPoints can be moved exclusively
-                        return true;
+                        //controlPoints can be moved exclusively
+                        scene.StartTransformAction(new LocalOrientation(GlobalPos + GlobalCP2), actionType, scene.HoveredPart);
+                        Console.WriteLine("hovered: " + scene.HoveredPart);
                     }
                     else
                     {
-                        localOrientation = new LocalOrientation(Position);
-                        dragExclusively = false;
-                        return Selected;
+                        if (Selected)
+                            scene.StartTransformAction(new LocalOrientation(GlobalPos), actionType);
                     }
                 }
             }
-            throw new Exception("Invalid partIndex");
         }
 
         public override bool IsSelected(int partIndex) => Selected;
@@ -100,18 +96,13 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
 
             boundingBox.Include(new BoundingBox(
-                Position.X - Path.CubeScale,
-                Position.X + Path.CubeScale,
-                Position.Y - Path.CubeScale,
-                Position.Y + Path.CubeScale,
-                Position.Z - Path.CubeScale,
-                Position.Z + Path.CubeScale
+                GlobalPos.X - Path.CubeScale,
+                GlobalPos.X + Path.CubeScale,
+                GlobalPos.Y - Path.CubeScale,
+                GlobalPos.Y + Path.CubeScale,
+                GlobalPos.Z - Path.CubeScale,
+                GlobalPos.Z + Path.CubeScale
             ));
-        }
-
-        public override LocalOrientation GetLocalOrientation(int partIndex)
-        {
-            return new LocalOrientation(Position);
         }
 
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos) => true; //probably never gets called
@@ -244,11 +235,11 @@ namespace GL_EditorFramework.EditorDrawables
                 Vector3 pp = Position;
 
                 {
-                    var newPos = transformAction.NewPos(GlobalPosition, out bool posHasChanged);
+                    var newPos = transformAction.NewPos(GlobalPos, out bool posHasChanged);
 
                     if (posHasChanged)
                     {
-                        GlobalPosition = newPos;
+                        GlobalPos = newPos;
                         transformChangeInfos.Add(this, 0, pp, null, null);
                     }
                 }
@@ -261,9 +252,11 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (_part == 1)
                 {
+                    Console.WriteLine("hovered: " + _part);
+
                     Vector3 pc = ControlPoint1;
 
-                    var newPos = transformAction.NewPos(GlobalPosition + GlobalCP1, out bool posHasChanged) - GlobalPosition;
+                    var newPos = transformAction.NewPos(GlobalPos + GlobalCP1, out bool posHasChanged) - GlobalPos;
 
                     if (posHasChanged)
                     {
@@ -279,13 +272,15 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 if (_part == 2)
                 {
+                    Console.WriteLine("hovered: " + _part);
+
                     Vector3 pc = ControlPoint2;
 
-                    var newPos = transformAction.NewPos(GlobalPosition + GlobalCP2, out bool posHasChanged) - GlobalPosition;
+                    var newPos = transformAction.NewPos(GlobalPos + GlobalCP2, out bool posHasChanged) - GlobalPos;
 
                     if (posHasChanged)
                     {
-                        GlobalCP1 = newPos;
+                        GlobalCP2 = newPos;
                         transformChangeInfos.Add(this, 2, pc, null, null);
                     }
 
@@ -314,7 +309,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override Vector3 GetFocusPoint()
         {
-            return GlobalPosition;
+            return GlobalPos;
         }
     }
 }

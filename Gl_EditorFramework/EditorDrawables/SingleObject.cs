@@ -157,12 +157,11 @@ namespace GL_EditorFramework.EditorDrawables
         {
             
         }
-        
-        public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
+
+        public override void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)
         {
-            localOrientation = new LocalOrientation(Position);
-            dragExclusively = false;
-            return Selected;
+            if(Selected)
+                scene.StartTransformAction(new LocalOrientation(GlobalPosition, Matrix3.Identity), actionType);
         }
 
         public override void GetSelectionBox(ref BoundingBox boundingBox)
@@ -178,11 +177,6 @@ namespace GL_EditorFramework.EditorDrawables
                 GlobalPosition.Z - BoxScale,
                 GlobalPosition.Z + BoxScale
             ));
-        }
-
-        public override LocalOrientation GetLocalOrientation(int partIndex)
-        {
-            return new LocalOrientation(Position);
         }
 
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos)

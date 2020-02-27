@@ -101,9 +101,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #region Point
                     //determine position
                     if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
                     else
-                        pos = point.GlobalPosition;
+                        pos = point.GlobalPos;
 
                     //determine color
                     bool _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
@@ -135,12 +135,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction!=NoAction && 
                         hovered && editorScene.HoveredPart==part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP1;
+                        pos = point.GlobalPos + point.GlobalCP1;
 
                     //determine color
                     _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
@@ -172,12 +172,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         hovered && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP2;
+                        pos = point.GlobalPos + point.GlobalCP2;
 
                     //determine color
                     _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
@@ -223,9 +223,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #region Point
                     //determine position
                     if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
                     else
-                        pos = point.GlobalPosition;
+                        pos = point.GlobalPos;
 
                     //determine color
                     col = control.NextPickingColor();
@@ -248,12 +248,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         hovered && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP1;
+                        pos = point.GlobalPos + point.GlobalCP1;
 
                     //determine color
                     col = control.NextPickingColor();
@@ -276,12 +276,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         hovered && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP2;
+                        pos = point.GlobalPos + point.GlobalCP2;
 
                     //determine color
                     col = control.NextPickingColor();
@@ -372,9 +372,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #region Point
                     //determine position
                     if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
                     else
-                        pos = point.GlobalPosition;
+                        pos = point.GlobalPos;
 
                     //determine color
                     bool _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
@@ -407,12 +407,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         hovered && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP1;
+                        pos = point.GlobalPos + point.GlobalCP1;
 
                     //determine color
                     _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
@@ -444,12 +444,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         hovered && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP2;
+                        pos = point.GlobalPos + point.GlobalCP2;
 
                     //determine color
                     _hovered = hovered && (editorScene.HoveredPart == part || editorScene.HoveredPart == 0);
@@ -494,9 +494,9 @@ namespace GL_EditorFramework.EditorDrawables
                     #region Point
                     //determine position
                     if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
                     else
-                        pos = point.GlobalPosition;
+                        pos = point.GlobalPos;
 
                     //determine color
                     col = control.NextPickingColor();
@@ -518,12 +518,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         hovered && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP1);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP1);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP1;
+                        pos = point.GlobalPos + point.GlobalCP1;
 
                     //determine color
                     col = control.NextPickingColor();
@@ -544,12 +544,12 @@ namespace GL_EditorFramework.EditorDrawables
                     if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
                         hovered && editorScene.HoveredPart == part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPosition + point.GlobalCP2);
+                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos + point.GlobalCP2);
 
                     else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPosition) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos) + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
                     else
-                        pos = point.GlobalPosition + point.GlobalCP2;
+                        pos = point.GlobalPos + point.GlobalCP2;
 
                     //determine color
                     col = control.NextPickingColor();
@@ -859,7 +859,7 @@ namespace GL_EditorFramework.EditorDrawables
             return i;
         }
 
-        public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
+        public override void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)
         {
             if(hoveredPart == 0)
             {
@@ -869,20 +869,18 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (point.Selected)
                         box.Include(new BoundingBox(
-                            point.Position.X - CubeScale,
-                            point.Position.X + CubeScale,
-                            point.Position.Y - CubeScale,
-                            point.Position.Y + CubeScale,
-                            point.Position.Z - CubeScale,
-                            point.Position.Z + CubeScale
+                            point.GlobalPos.X - CubeScale,
+                            point.GlobalPos.X + CubeScale,
+                            point.GlobalPos.Y - CubeScale,
+                            point.GlobalPos.Y + CubeScale,
+                            point.GlobalPos.Z - CubeScale,
+                            point.GlobalPos.Z + CubeScale
                         ));
                     allPointsSelected &= point.Selected;
                 }
 
-                localOrientation = new LocalOrientation(box.GetCenter());
-                dragExclusively = false;
-
-                return allPointsSelected;
+                if(allPointsSelected)
+                    scene.StartTransformAction(new LocalOrientation(), actionType);
             }
             else
             {
@@ -892,12 +890,11 @@ namespace GL_EditorFramework.EditorDrawables
                     int span = point.GetPickableSpan();
                     if (hoveredPart >= 0 && hoveredPart < span)
                     {
-                        return point.TryStartDragging(actionType, hoveredPart, out localOrientation, out dragExclusively);
+                        point.StartDragging(actionType, hoveredPart, scene);
                     }
                     hoveredPart -= span;
                 }
             }
-            throw new Exception("Invalid partIndex");
         }
 
         public override uint SelectAll(GL_ControlBase control)
@@ -1061,31 +1058,6 @@ namespace GL_EditorFramework.EditorDrawables
                 point.GetSelectionBox(ref boundingBox);
         }
 
-        public override LocalOrientation GetLocalOrientation(int partIndex)
-        {
-            if (partIndex == 0)
-            {
-                BoundingBox box = BoundingBox.Default;
-                foreach (PathPoint point in pathPoints)
-                {
-                    box.Include(point.Position);
-                }
-                return new LocalOrientation(box.GetCenter());
-            }
-            else
-            {
-                partIndex--;
-                foreach (PathPoint point in pathPoints)
-                {
-                    int span = point.GetPickableSpan();
-                    if (partIndex >= 0 && partIndex < span)
-                        return point.GetLocalOrientation(partIndex);
-                    partIndex -= span;
-                }
-                throw new Exception("Invalid partIndex");
-            }
-        }
-
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
         {
             if (pathPoints.Count == 1)
@@ -1095,10 +1067,10 @@ namespace GL_EditorFramework.EditorDrawables
             for (int i = 1; i<pathPoints.Count; i++)
             {
                 box = BoundingBox.Default;
-                box.Include(pathPoints[i - 1].Position);
-                box.Include(pathPoints[i - 1].Position + pathPoints[i - 1].ControlPoint2);
-                box.Include(pathPoints[i].Position + pathPoints[i].ControlPoint1);
-                box.Include(pathPoints[i].Position);
+                box.Include(pathPoints[i - 1].GlobalPos);
+                box.Include(pathPoints[i - 1].GlobalPos + pathPoints[i - 1].GlobalCP2);
+                box.Include(pathPoints[i].GlobalPos + pathPoints[i].GlobalCP1);
+                box.Include(pathPoints[i].GlobalPos);
 
                 if (pos.X < box.maxX + range && pos.X > box.minX - range &&
                     pos.Y < box.maxY + range && pos.Y > box.minY - range &&
@@ -1175,7 +1147,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override Vector3 GetFocusPoint()
         {
-            return pathPoints[0].GlobalPosition;
+            return pathPoints[0].GlobalPos;
         }
 
         public class PathUIContainer : IObjectUIContainer

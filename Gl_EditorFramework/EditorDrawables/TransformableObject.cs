@@ -125,16 +125,10 @@ namespace GL_EditorFramework.EditorDrawables
             Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
         }
 
-        public override LocalOrientation GetLocalOrientation(int partIndex)
+        public override void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)
         {
-            return new LocalOrientation(Position, GlobalRotation);
-        }
-
-        public override bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively)
-        {
-            localOrientation = new LocalOrientation(Position, GlobalRotation);
-            dragExclusively = false;
-            return Selected;
+            if (Selected)
+                scene.StartTransformAction(new LocalOrientation(GlobalPosition, GlobalRotation), actionType);
         }
 
         public override void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)

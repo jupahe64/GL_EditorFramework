@@ -271,15 +271,16 @@ namespace GL_EditorFramework.EditorDrawables
 
         public enum DragActionType
         {
+            NONE,
             TRANSLATE,
             ROTATE,
             SCALE,
-            SCALE_EXCLUSIVE
+            SCALE_INDIVIDUAL
         }
 
-        public AbstractTransformAction CurrentAction = NoAction;
+        public AbstractTransformAction CurrentAction { get; protected set; } = NoAction;
 
-        public AbstractTransformAction ExclusiveAction = NoAction;
+        public AbstractTransformAction ExclusiveAction { get; protected set; } = NoAction;
 
         public static NoTransformAction NoAction {get;} = new NoTransformAction();
 

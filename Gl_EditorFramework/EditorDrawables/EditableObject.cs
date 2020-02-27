@@ -28,7 +28,10 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public abstract bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively);
+        public virtual void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)
+        {
+
+        }
 
         public abstract bool IsSelected(int partIndex);
 
@@ -37,8 +40,6 @@ namespace GL_EditorFramework.EditorDrawables
         public abstract bool IsSelected();
 
         public abstract void GetSelectionBox(ref BoundingBox boundingBox);
-
-        public abstract LocalOrientation GetLocalOrientation(int partIndex);
 
         public abstract bool IsInRange(float range, float rangeSquared, Vector3 pos);
 
@@ -205,13 +206,11 @@ namespace GL_EditorFramework.EditorDrawables
     {
         bool Visible { get; set; }
 
-        bool TryStartDragging(DragActionType actionType, int hoveredPart, out LocalOrientation localOrientation, out bool dragExclusively);
+        void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene);
 
         bool IsSelected(int partIndex);
 
         void GetSelectionBox(ref BoundingBox boundingBox);
-
-        LocalOrientation GetLocalOrientation(int partIndex);
 
         bool IsInRange(float range, float rangeSquared, Vector3 pos);
 

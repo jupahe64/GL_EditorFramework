@@ -280,6 +280,8 @@ namespace GL_EditorFramework.GL_Core
 
         public Vector3 GetPointUnderMouse() => CoordFor(lastMouseLoc.X, lastMouseLoc.Y, PickingDepth);
 
+        public Point GetMousePos() => lastMouseLoc;
+
         public static Vector3 IntersectPoint(Vector3 rayVector, Vector3 rayPoint, Vector3 planeNormal, Vector3 planePoint)
         {
             //code from: https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane

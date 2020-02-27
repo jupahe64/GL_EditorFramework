@@ -9,94 +9,101 @@ using System.Windows.Forms;
 using WinInput = System.Windows.Input;
 using static GL_EditorFramework.EditorDrawables.EditableObject;
 using System.Drawing;
+using OpenTK;
 
 namespace GL_EditorFramework.EditorDrawables
 {
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
+        public void StartTransformAction(LocalOrientation localOrientation, DragActionType dragActionType, int part = -1)
+        {
+            AbstractTransformAction transformAction;
+
+            Vector3 pivot;
+
+            draggingDepth = control.PickingDepth;
+            if (part!=-1)
+                pivot = localOrientation.Origin;
+            else
+            {
+                BoundingBox box = BoundingBox.Default;
+
+                foreach (IEditableObject obj in GetObjects())
+                    obj.GetSelectionBox(ref box);
+
+                pivot = box.GetCenter();
+
+                if (box == BoundingBox.Default)
+                    return;
+            }
+
+            switch (dragActionType)
+            {
+                case DragActionType.TRANSLATE:
+                    transformAction = new TranslateAction(control, control.GetMousePos(), pivot, draggingDepth);
+                    break;
+                case DragActionType.ROTATE:
+                    transformAction = new RotateAction(control, control.GetMousePos(), pivot, draggingDepth);
+                    break;
+                case DragActionType.SCALE:
+                    transformAction = new ScaleAction(control, control.GetMousePos(), pivot);
+                    break;
+                case DragActionType.SCALE_INDIVIDUAL:
+                    transformAction = new ScaleActionIndividual(control, control.GetMousePos(), localOrientation);
+                    break;
+
+                default:
+                    return;
+            }
+
+            if (part!=-1)
+            {
+                HoveredPart = part;
+                ExclusiveAction = transformAction;
+            }
+            else
+                CurrentAction = transformAction;
+        }
+
         public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
         {
-            uint var = 0;
-            if (CurrentAction == NoAction && ExclusiveAction == NoAction && Hovered != null)
+            bool TryGetActionType(MouseButtons button, out DragActionType dragActionType)
             {
-                LocalOrientation rLocalOrientation;
-                bool rDragExclusively;
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (Hovered.TryStartDragging(DragActionType.TRANSLATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
-                    {
-                        draggingDepth = control.PickingDepth;
-                        if (rDragExclusively)
-                            ExclusiveAction = new TranslateAction(control, e.Location, rLocalOrientation.Origin, draggingDepth);
-                        else
-                        {
-                            BoundingBox box = BoundingBox.Default;
-
-                            foreach (IEditableObject obj in GetObjects())
-                                obj.GetSelectionBox(ref box);
-
-                            if(box!=BoundingBox.Default)
-                                CurrentAction = new TranslateAction(control, e.Location, box.GetCenter(), draggingDepth);
-                        }
-                    }
+                    dragActionType = DragActionType.TRANSLATE;
+                    return true;
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
-                    if (Hovered.TryStartDragging(DragActionType.ROTATE, HoveredPart, out rLocalOrientation, out rDragExclusively))
-                    {
-                        draggingDepth = control.PickingDepth;
-                        if (rDragExclusively)
-                            ExclusiveAction = new RotateAction(control, e.Location, rLocalOrientation.Origin, draggingDepth);
-                        else
-                        {
-                            BoundingBox box = BoundingBox.Default;
-
-                            foreach (IEditableObject obj in GetObjects())
-                                obj.GetSelectionBox(ref box);
-
-                            if (box != BoundingBox.Default)
-                                CurrentAction = new RotateAction(control, e.Location, box.GetCenter(), draggingDepth);
-                        }
-                    }
+                    dragActionType = DragActionType.ROTATE;
+                    return true;
                 }
                 else if (e.Button == MouseButtons.Middle)
                 {
                     bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
-                    if (Hovered.TryStartDragging(shift ? DragActionType.SCALE : DragActionType.SCALE_EXCLUSIVE, HoveredPart, out rLocalOrientation, out rDragExclusively))
-                    {
-                        draggingDepth = control.PickingDepth;
-                        if (rDragExclusively)
-                        {
-                            if (shift)
-                                ExclusiveAction = new ScaleAction(control, e.Location, rLocalOrientation.Origin);
-                            else
-                                ExclusiveAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
-                        }
-                        else
-                        {
-                            BoundingBox box = BoundingBox.Default;
 
-                            foreach (IEditableObject obj in GetObjects())
-                                obj.GetSelectionBox(ref box);
-
-                            if (box != BoundingBox.Default)
-                            {
-                                if (shift)
-                                    CurrentAction = new ScaleAction(control, e.Location, box.GetCenter());
-                                else
-                                    CurrentAction = new ScaleActionIndividual(control, e.Location, rLocalOrientation);
-                            }
-                        }
-                    }
+                    dragActionType = shift ? DragActionType.SCALE_INDIVIDUAL : DragActionType.SCALE;
+                    return true;
                 }
+                dragActionType = DragActionType.NONE;
+                return false;
             }
-            else
-            {
-                var |= REDRAW_PICKING;
-                var |= FORCE_REENTER;
 
-                CurrentAction = NoAction; //abort current action
-                ExclusiveAction = NoAction;
+            uint var = 0;
+            {
+                if (CurrentAction == NoAction && ExclusiveAction == NoAction && Hovered != null && TryGetActionType(e.Button, out DragActionType dragActionType))
+                {
+                    Hovered.StartDragging(dragActionType, HoveredPart, this);
+                }
+                else
+                {
+                    var |= REDRAW_PICKING;
+                    var |= FORCE_REENTER;
+
+                    CurrentAction = NoAction; //abort current action
+                    ExclusiveAction = NoAction;
+                }
             }
 
             foreach (AbstractGlDrawable obj in StaticObjects)
