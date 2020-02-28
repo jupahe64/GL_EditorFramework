@@ -278,9 +278,9 @@ namespace GL_EditorFramework.EditorDrawables
             SCALE_INDIVIDUAL
         }
 
-        public AbstractTransformAction CurrentAction { get; protected set; } = NoAction;
+        public AbstractTransformAction CurrentAction { get; set; } = NoAction;
 
-        public AbstractTransformAction ExclusiveAction { get; protected set; } = NoAction;
+        public AbstractTransformAction ExclusiveAction { get; set; } = NoAction;
 
         public static NoTransformAction NoAction {get;} = new NoTransformAction();
 
