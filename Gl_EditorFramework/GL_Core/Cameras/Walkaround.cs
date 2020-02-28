@@ -40,19 +40,9 @@ namespace GL_EditorFramework.StandardCameras
 
             if (e.Button == MouseButtons.Right)
             {
-                if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.Y))
-                    control.RotateCameraX(deltaX * 0.002f);
-                if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.X))
-                    control.CamRotY += deltaY * 0.002f;
-                return UPDATE_CAMERA;
-            }
-            else if (e.Button == MouseButtons.Left)
-            {
-                base.MouseMove(e, lastMouseLoc, control);
-
                 if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
                 {
-                    float delta = ((float)deltaY*-5 * Math.Min(0.01f, depth / 500f));
+                    float delta = ((float)deltaY * -5 * Math.Min(0.01f, depth / 500f));
                     Vector3 vec;
                     vec.X = 0;
                     vec.Y = 0;
@@ -62,22 +52,32 @@ namespace GL_EditorFramework.StandardCameras
                 }
                 else
                 {
-
-                    //code from Whitehole
-
-                    Vector3 vec;
                     if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.Y))
-                        vec.X = deltaX * Math.Min(maxCamMoveSpeed, depth * control.FactorX);
-                    else
-                        vec.X = 0;
+                        control.RotateCameraX(deltaX * 0.002f);
                     if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.X))
-                        vec.Y = -deltaY * Math.Min(maxCamMoveSpeed, depth * control.FactorY);
-                    else
-                        vec.Y = 0;
-
-                    vec.Z = 0;
-                    control.CameraTarget -= Vector3.Transform(control.InvertedRotationMatrix, vec);
+                        control.CamRotY += deltaY * 0.002f;
                 }
+
+                return UPDATE_CAMERA;
+            }
+            else if (e.Button == MouseButtons.Left)
+            {
+                base.MouseMove(e, lastMouseLoc, control);
+
+                //code from Whitehole
+
+                Vector3 vec;
+                if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.Y))
+                    vec.X = deltaX * Math.Min(maxCamMoveSpeed, depth * control.FactorX);
+                else
+                    vec.X = 0;
+                if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.X))
+                    vec.Y = -deltaY * Math.Min(maxCamMoveSpeed, depth * control.FactorY);
+                else
+                    vec.Y = 0;
+
+                vec.Z = 0;
+                control.CameraTarget -= Vector3.Transform(control.InvertedRotationMatrix, vec);
 
                 return UPDATE_CAMERA;
             }

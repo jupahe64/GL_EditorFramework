@@ -83,7 +83,7 @@ namespace GL_EditorFramework.EditorDrawables
             IEnumerable<IRevertable> GetRevertables();
         }
 
-        public struct DoubleRevertable : IRevertableCollection
+        public class DoubleRevertable : IRevertableCollection
         {
             IRevertable first;
             IRevertable second;
@@ -121,7 +121,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public struct MultiRevertable : IRevertableCollection
+        public class MultiRevertable : IRevertableCollection
         {
             IRevertable[] revertables;
 
@@ -210,9 +210,14 @@ namespace GL_EditorFramework.EditorDrawables
             redoStack.Clear();
         }
 
-        public struct RevertablePosChange : IRevertable
+        public class RevertablePosChange : IRevertable
         {
             private PosInfo[] posInfos;
+
+            private RevertablePosChange(PosInfo[] posInfos)
+            {
+                this.posInfos = posInfos;
+            }
 
             public RevertablePosChange(TransformChangeInfos transformChangeInfos)
             {
@@ -227,10 +232,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public IRevertable Revert(EditorSceneBase scene)
             {
-                RevertablePosChange revertable = new RevertablePosChange
-                {
-                    posInfos = new PosInfo[posInfos.Length]
-                };
+                RevertablePosChange revertable = new RevertablePosChange(new PosInfo[posInfos.Length]);
 
                 for (int i = 0; i < posInfos.Length; i++)
                 {
@@ -261,9 +263,14 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableRotChange : IRevertable
+        public class RevertableRotChange : IRevertable
         {
             private RotInfo[] rotInfos;
+
+            private RevertableRotChange(RotInfo[] posInfos)
+            {
+                this.rotInfos = posInfos;
+            }
 
             public RevertableRotChange(TransformChangeInfos transformChangeInfos)
             {
@@ -278,10 +285,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public IRevertable Revert(EditorSceneBase scene)
             {
-                RevertableRotChange revertable = new RevertableRotChange
-                {
-                    rotInfos = new RotInfo[rotInfos.Length]
-                };
+                RevertableRotChange revertable = new RevertableRotChange(new RotInfo[rotInfos.Length]);
 
                 for (int i = 0; i < rotInfos.Length; i++)
                 {
@@ -314,9 +318,14 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableScaleChange : IRevertable
+        public class RevertableScaleChange : IRevertable
         {
             private ScaleInfo[] scaleInfos;
+
+            private RevertableScaleChange(ScaleInfo[] scaleInfos)
+            {
+                this.scaleInfos = scaleInfos;
+            }
 
             public RevertableScaleChange(TransformChangeInfos transformChangeInfos)
             {
@@ -331,10 +340,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             public IRevertable Revert(EditorSceneBase scene)
             {
-                RevertableScaleChange revertable = new RevertableScaleChange
-                {
-                    scaleInfos = new ScaleInfo[scaleInfos.Length]
-                };
+                RevertableScaleChange revertable = new RevertableScaleChange(new ScaleInfo[scaleInfos.Length]);
 
                 for (int i = 0; i < scaleInfos.Length; i++)
                 {
@@ -418,7 +424,46 @@ namespace GL_EditorFramework.EditorDrawables
         }
 
         #region List Operations
-        public struct RevertableAddition : IRevertable
+        public class RevertableSingleAddition : IRevertable
+        {
+            object obj;
+            IList list;
+
+            public RevertableSingleAddition(object obj, IList list)
+            {
+                this.obj = obj;
+                this.list = list;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                int index = list.IndexOf(obj);
+                list.RemoveAt(index);
+                return new RevertableSingleDeletion(obj, index, list);
+            }
+        }
+
+        public class RevertableSingleDeletion : IRevertable
+        {
+            object obj;
+            int index;
+            IList list;
+
+            public RevertableSingleDeletion(object obj, int index, IList list)
+            {
+                this.obj = obj;
+                this.index = index;
+                this.list = list;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                list.Insert(index,obj);
+                return new RevertableSingleAddition(obj, list);
+            }
+        }
+
+        public class RevertableAddition : IRevertable
         {
             AddInListInfo[] infos;
             SingleAddInListInfo[] singleInfos;
@@ -498,7 +543,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableReordering : IRevertable
+        public class RevertableReordering : IRevertable
         {
             readonly int originalIndex;
             readonly int count;
@@ -536,7 +581,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableDeletion : IRevertable
+        public class RevertableDeletion : IRevertable
         {
             DeleteInListInfo[] infos;
             SingleDeleteInListInfo[] singleInfos;
@@ -626,7 +671,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableEntryChange : IRevertable
+        public class RevertableEntryChange : IRevertable
         {
             readonly int index;
             readonly IList list;
@@ -648,7 +693,7 @@ namespace GL_EditorFramework.EditorDrawables
         #endregion
 
         #region Dictionary Operations
-        public struct RevertableDictAddition : IRevertable
+        public class RevertableDictAddition : IRevertable
         {
             AddInDictInfo[] infos;
             SingleAddInDictInfo[] singleInfos;
@@ -741,7 +786,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableDictDeletion : IRevertable
+        public class RevertableDictDeletion : IRevertable
         {
             DeleteInDictInfo[] infos;
             SingleDeleteInDictInfo[] singleInfos;
@@ -831,7 +876,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertableDictEntryChange : IRevertable
+        public class RevertableDictEntryChange : IRevertable
         {
             readonly string key;
             readonly IDictionary dict;
@@ -889,7 +934,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public struct RevertablePropertyChange : IRevertable
+        public class RevertablePropertyChange : IRevertable
         {
             readonly PropertyInfo property;
             readonly object obj;

@@ -248,6 +248,21 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
         {
+            if (_part == 0)
+            {
+                Vector3 pp = Position;
+
+                var newPos = transformAction.NewPos(GlobalPos, out bool posHasChanged);
+
+                if (posHasChanged)
+                {
+                    GlobalPos = newPos;
+                    transformChangeInfos.Add(this, 0, pp, null, null);
+                }
+
+                return;
+            }
+
             if (ControlPoint1 != Vector3.Zero)
             {
                 if (_part == 1)

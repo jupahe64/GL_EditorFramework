@@ -15,7 +15,7 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
-        public void StartTransformAction(LocalOrientation localOrientation, DragActionType dragActionType, int part = -1)
+        public void StartTransformAction(LocalOrientation localOrientation, DragActionType dragActionType, int part = -1, IRevertable revertable = null)
         {
             AbstractTransformAction transformAction;
 
@@ -56,7 +56,18 @@ namespace GL_EditorFramework.EditorDrawables
                     return;
             }
 
-            if (part!=-1)
+            StartTransformAction(transformAction, part, revertable);
+        }
+
+        public void StartTransformAction(AbstractTransformAction transformAction, int part = -1, IRevertable revertable = null)
+        {
+            if (revertable != null)
+            {
+                BeginUndoCollection();
+                AddToUndo(revertable);
+            }
+
+            if (part != -1)
             {
                 HoveredPart = part;
                 ExclusiveAction = transformAction;
@@ -81,9 +92,9 @@ namespace GL_EditorFramework.EditorDrawables
                 }
                 else if (e.Button == MouseButtons.Middle)
                 {
-                    bool shift = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift);
+                    bool ctrl = WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl);
 
-                    dragActionType = shift ? DragActionType.SCALE_INDIVIDUAL : DragActionType.SCALE;
+                    dragActionType = ctrl ? DragActionType.SCALE_INDIVIDUAL : DragActionType.SCALE;
                     return true;
                 }
                 dragActionType = DragActionType.NONE;
@@ -162,7 +173,7 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseWheel(e, control);
             }
 
-            if (CurrentAction != NoAction)
+            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
             {
                 CurrentAction.ApplyScrolling(e.Location, e.Delta);
                 ExclusiveAction.ApplyScrolling(e.Location, e.Delta);
@@ -189,6 +200,9 @@ namespace GL_EditorFramework.EditorDrawables
 
                 var |= REDRAW_PICKING | FORCE_REENTER;
 
+                AddTransformToUndo(transformChangeInfos);
+                EndUndoCollection();
+
                 CurrentAction = NoAction;
             }
 
@@ -198,6 +212,9 @@ namespace GL_EditorFramework.EditorDrawables
 
                 var |= REDRAW_PICKING;
 
+                AddTransformToUndo(transformChangeInfos);
+                EndUndoCollection();
+
                 ExclusiveAction = NoAction;
             }
 
@@ -205,8 +222,6 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 var |= obj.MouseUp(e, control);
             }
-
-            AddTransformToUndo(transformChangeInfos);
 
             foreach (IEditableObject obj in GetObjects())
             {

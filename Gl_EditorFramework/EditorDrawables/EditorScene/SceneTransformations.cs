@@ -270,13 +270,8 @@ namespace GL_EditorFramework.EditorDrawables
                     vec = origin + translation;
                 else
                     vec = translation;
-                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
-                {
-                    vec.X = (float)Math.Round(vec.X);
-                    vec.Y = (float)Math.Round(vec.Y);
-                    vec.Z = (float)Math.Round(vec.Z);
-                }
-                else if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
                 {
                     vec.X = (float)Math.Round(vec.X * 2) * 0.5f;
                     vec.Y = (float)Math.Round(vec.Y * 2) * 0.5f;
@@ -738,13 +733,15 @@ namespace GL_EditorFramework.EditorDrawables
 
             public override void UpdateMousePos(Point mousePos)
             {
-                int a1 = mousePos.X - centerPoint.X;
-                int b1 = mousePos.Y - centerPoint.Y;
-                int a2 = startMousePos.X - centerPoint.X;
-                int b2 = startMousePos.Y - centerPoint.Y;
-                float scaling = (float)(Math.Sqrt(a1 * a1 + b1 * b1) / Math.Sqrt(a2 * a2 + b2 * b2));
-                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
-                    scaling = (float)Math.Round(scaling);
+                int x1 = mousePos.X - centerPoint.X;
+                int y1 = mousePos.Y - centerPoint.Y;
+                int x2 = startMousePos.X - centerPoint.X;
+                int y2 = startMousePos.Y - centerPoint.Y;
+                float scaling = (float)(Math.Sqrt(x1 * x1 + y1 * y1) / Math.Sqrt(x2 * x2 + y2 * y2));
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                {
+                    scaling = (float)Math.Round(scaling * 2) * 0.5f;
+                }
 
                 switch (axisRestriction)
                 {
@@ -883,15 +880,15 @@ namespace GL_EditorFramework.EditorDrawables
             Point centerPoint;
 
             public override Vector3 NewScale(Vector3 _scale, Matrix3 rotation) => new Vector3(
-                WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.X * _scale.X) : scale.X * _scale.X,
-                WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Y * _scale.Y) : scale.Y * _scale.Y,
-                WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Z * _scale.Z) : scale.Z * _scale.Z
+                WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.X * _scale.X * 2) * 0.5f : scale.X * _scale.X,
+                WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.Y * _scale.Y * 2) * 0.5f : scale.Y * _scale.Y,
+                WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.Z * _scale.Z * 2) * 0.5f : scale.Z * _scale.Z
                 );
 
             public override Vector3 NewIndividualPos(Vector3 pos) => new Vector3(
-                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.X) : scale.X) * pos.X,
-                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Y) : scale.Y) * pos.Y,
-                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl) ? (float)Math.Round(scale.Z) : scale.Z) * pos.Z
+                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.X * 2) * 0.5f : scale.X) * pos.X,
+                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.Y * 2) * 0.5f : scale.Y) * pos.Y,
+                (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.Z * 2) * 0.5f : scale.Z) * pos.Z
                 );
 
             Vector3 scale = Vector3.One;

@@ -40,7 +40,7 @@ namespace GL_EditorFramework.EditorDrawables
         [PropertyCapture.Undoable]
         public Vector3 Scale { get; set; } = new Vector3(1, 1, 1);
 
-        public virtual Vector3 GlobalScale { get => Scale; set => value = Scale; }
+        public virtual Vector3 GlobalScale { get => Scale; set => Scale = value; }
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
