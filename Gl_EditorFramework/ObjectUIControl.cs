@@ -67,50 +67,46 @@ namespace GL_EditorFramework
             base.OnPaint(e);
 
             if (!TryInitDrawing(e))
+            {
+                AutoScrollMinSize = new Size();
                 return;
+            }
 
             currentY = margin + AutoScrollPosition.Y;
 
-            try
+            foreach (ContainerInfo containerInfo in containerInfos)
             {
-                foreach (ContainerInfo containerInfo in containerInfos)
+                int lastY = currentY - margin / 2;
+                bool hovered = new Rectangle(Width - margin - 20 - SystemInformation.VerticalScrollBarWidth, currentY, 20 + SystemInformation.VerticalScrollBarWidth, 20).Contains(mousePos);
+
+                if (hovered && eventType == EventType.CLICK)
+                    containerInfo.isExpanded = !containerInfo.isExpanded;
+
+                g.TranslateTransform(usableWidth - margin - 20, currentY);
+                g.FillPolygon(hovered ? SystemBrushes.ControlDark : backBrush, containerInfo.isExpanded ? arrowDown : arrowLeft);
+                g.ResetTransform();
+                Heading(containerInfo.name);
+                Spacing(margin / 2);
+
+                if (containerInfo.isExpanded)
+                    containerInfo.objectUIContainer.DoUI(this);
+
+                g.DrawRectangle(SystemPens.ControlDark, margin / 2, lastY, usableWidth - margin, currentY - lastY);
+
+                Spacing(margin);
+
+                if (eventType != EventType.DRAW)
                 {
-                    int lastY = currentY - margin / 2;
-                    bool hovered = new Rectangle(Width - margin - 20 - SystemInformation.VerticalScrollBarWidth, currentY, 20 + SystemInformation.VerticalScrollBarWidth, 20).Contains(mousePos);
-
-                    if (hovered && eventType == EventType.CLICK)
-                        containerInfo.isExpanded = !containerInfo.isExpanded;
-
-                    g.TranslateTransform(usableWidth - margin - 20, currentY);
-                    g.FillPolygon(hovered ? SystemBrushes.ControlDark : backBrush, containerInfo.isExpanded ? arrowDown : arrowLeft);
-                    g.ResetTransform();
-                    Heading(containerInfo.name);
-                    Spacing(margin / 2);
-
-                    if (containerInfo.isExpanded)
-                        containerInfo.objectUIContainer.DoUI(this);
-
-                    g.DrawRectangle(SystemPens.ControlDark, margin / 2, lastY, usableWidth - margin, currentY - lastY);
-
-                    Spacing(margin);
-
-                    if (eventType != EventType.DRAW)
-                    {
-                        if ((changeTypes & VALUE_CHANGE_START) > 0)
-                            containerInfo.objectUIContainer.OnValueChangeStart();
-                        if ((changeTypes & VALUE_CHANGED) > 0)
-                            containerInfo.objectUIContainer.OnValueChanged();
-                        if ((changeTypes & VALUE_SET) > 0)
-                            containerInfo.objectUIContainer.OnValueSet();
-                    }
+                    if ((changeTypes & VALUE_CHANGE_START) > 0)
+                        containerInfo.objectUIContainer.OnValueChangeStart();
+                    if ((changeTypes & VALUE_CHANGED) > 0)
+                        containerInfo.objectUIContainer.OnValueChanged();
+                    if ((changeTypes & VALUE_SET) > 0)
+                        containerInfo.objectUIContainer.OnValueSet();
                 }
+            }
 
-                AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y + margin);
-            }
-            catch (ControlInvalidatedException) //this Control has been invalidated
-            {
-                AutoScrollMinSize = new Size();
-            }
+            AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y + margin);
         }
 
         #region IObjectControl
@@ -327,7 +323,7 @@ namespace GL_EditorFramework
             return value;
         }
 
-        public string AdvancedTextInput(string name, string text, object[] recommendations)
+        public string DropDownTextInput(string name, string text, string[] dropDownItems)
         {
             DrawText(margin, currentY, name);
             currentY += rowHeight;
@@ -335,12 +331,12 @@ namespace GL_EditorFramework
             switch (eventType)
             {
                 case EventType.CLICK:
-                    if (new Rectangle(margin + 1, currentY + 1, usableWidth - margin * 2 - 2, textBoxHeight - 2).Contains(mousePos))
+                    if (new Rectangle(margin + 1, currentY + 1, usableWidth - margin * 2 - 2, comboBoxHeight - 2).Contains(mousePos))
                     {
-                        ShowComboBox(name, text, recommendations);
+                        PrepareComboBox(margin, currentY, usableWidth - margin * 2, text, dropDownItems, true);
                     }
                     else
-                        DrawField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
 
@@ -352,17 +348,17 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
                     else
-                        DrawField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
 
                 default:
                     if (focusedIndex == index)
-                        DrawField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
                     else
-                        DrawField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
             }
@@ -411,7 +407,7 @@ namespace GL_EditorFramework
         string TextInput(string text, string name);
         string FullWidthTextInput(string text, string name);
         object ChoicePicker(string name, object value, IList values);
-        string AdvancedTextInput(string name, string text, object[] recommendations);
+        string DropDownTextInput(string name, string text, string[] dropDownItems);
         void Spacing(int amount);
         void VerticalSeperator();
     }

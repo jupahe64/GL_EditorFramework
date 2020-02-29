@@ -264,7 +264,7 @@ namespace Example
             EnemyType enemyType2 = EnemyType.Fire;
             string objectType = "AnimatedObject";
 
-            static readonly object[] objectTypes = new object[]
+            static readonly string[] objectTypes = new string[]
             {
                 "SingleObject",
                 "Transformable",
@@ -300,7 +300,7 @@ namespace Example
                 enemyType =  (EnemyType)control.ChoicePicker("Enemy1 Type", enemyType,  Enum.GetValues(typeof(EnemyType)));
                 enemyType2 = (EnemyType)control.ChoicePicker("Enemy2 Type", enemyType2, Enum.GetValues(typeof(EnemyType)));
                 control.VerticalSeperator();
-                objectType = control.AdvancedTextInput("Object Type", objectType, objectTypes);
+                objectType = control.DropDownTextInput("Object Type", objectType, objectTypes);
 
                 control.Spacing(30);
                 control.PlainText("Some Text");

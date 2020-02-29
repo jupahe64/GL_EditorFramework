@@ -78,7 +78,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
         {
-            bool TryGetActionType(MouseButtons button, out DragActionType dragActionType)
+            bool TryGetActionType(out DragActionType dragActionType)
             {
                 if (e.Button == MouseButtons.Left)
                 {
@@ -103,7 +103,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             uint var = 0;
             {
-                if (CurrentAction == NoAction && ExclusiveAction == NoAction && Hovered != null && TryGetActionType(e.Button, out DragActionType dragActionType))
+                if (CurrentAction == NoAction && ExclusiveAction == NoAction && Hovered != null && TryGetActionType(out DragActionType dragActionType))
                 {
                     Hovered.StartDragging(dragActionType, HoveredPart, this);
                 }
