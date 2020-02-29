@@ -256,9 +256,6 @@ namespace GL_EditorFramework
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (comboBox1.Visible)
-                return;
-
             if (e.Button == MouseButtons.Left)
             {
                 mouseDown = true;
