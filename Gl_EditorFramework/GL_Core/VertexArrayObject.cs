@@ -32,7 +32,6 @@ namespace GL_EditorFramework.GL_Core
             int vao = GL.GenVertexArray();
             GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, buffer);
-            
 
             foreach (KeyValuePair<int, VertexAttribute> a in attributes)
             {
@@ -40,6 +39,11 @@ namespace GL_EditorFramework.GL_Core
                 GL.VertexAttribPointer(a.Key, a.Value.size, a.Value.type, a.Value.normalized, a.Value.stride, a.Value.offset);
             }
             vaos[control] = vao;
+        }
+
+        public void Bind()
+        {
+            GL.BindBuffer(BufferTarget.ArrayBuffer, buffer);
         }
 
         public void Use(GLControl control)
