@@ -35,7 +35,7 @@ namespace GL_EditorFramework.EditorDrawables
                     obj.DeleteSelected(this, manager, objects);
             }
 
-            _ExecuteDeletion(manager);
+            ExecuteDeletion(manager);
         }
     }
 }

@@ -524,6 +524,108 @@ namespace GL_EditorFramework.EditorDrawables
             UpdateSelection(var);
         }
 
+        public void DeleteSelected(IList list)
+        {
+            DeletionManager manager = new DeletionManager();
+
+            foreach (IEditableObject obj in list)
+                obj.DeleteSelected(this, manager, list);
+
+            ExecuteDeletion(manager);
+        }
+
+        public class AdditionManager
+        {
+            public Dictionary<IList, ListInfo> Dictionary { get; private set; } = new Dictionary<IList, ListInfo>();
+
+            public void Add(IList list, params AddInfo[] infos)
+            {
+                if (!Dictionary.ContainsKey(list))
+                    Dictionary[list] = new ListInfo(new List<AddInfo>(), list.Count);
+
+                Dictionary[list].infos.AddRange(infos);
+                Dictionary[list].estimatedLength += infos.Length;
+            }
+
+            public void Add(IList list, params IEditableObject[] objs)
+            {
+                if (!Dictionary.ContainsKey(list))
+                    Dictionary[list] = new ListInfo(new List<AddInfo>(), list.Count);
+
+                AddInfo[] infos = new AddInfo[objs.Length];
+
+                for (int i = 0; i < objs.Length; i++)
+                {
+                    infos[i] = new AddInfo(objs[i], Dictionary[list].estimatedLength + i);
+                }
+
+                Dictionary[list].infos.AddRange(infos);
+                Dictionary[list].estimatedLength += infos.Length;
+            }
+
+            public struct AddInfo
+            {
+                public IEditableObject obj;
+                public int index;
+
+                public AddInfo(IEditableObject obj, int index)
+                {
+                    this.obj = obj;
+                    this.index = index;
+                }
+            }
+
+            public class ListInfo
+            {
+                public List<AddInfo> infos;
+                public int estimatedLength;
+
+                public ListInfo(List<AddInfo> infos, int estimatedLength)
+                {
+                    this.infos = infos;
+                    this.estimatedLength = estimatedLength;
+                }
+            }
+        }
+
+        public void ExecuteAddition(AdditionManager manager)
+        {
+            if (manager.Dictionary.Count == 0)
+                return;
+
+            List<RevertableAddition.AddInListInfo> infos = new List<RevertableAddition.AddInListInfo>();
+            List<RevertableAddition.SingleAddInListInfo> singleInfos = new List<RevertableAddition.SingleAddInListInfo>();
+
+            uint var = 0;
+
+            foreach (KeyValuePair<IList, AdditionManager.ListInfo> entry in manager.Dictionary)
+            {
+                if (entry.Value.infos.Count == 0)
+                    throw new Exception("entry has no objects");
+
+                if (entry.Value.infos.Count == 1)
+                {
+                    singleInfos.Add(new RevertableAddition.SingleAddInListInfo(entry.Value.infos[0].obj, entry.Key));
+                    entry.Key.Add(entry.Value.infos[0].obj);
+                }
+                else
+                {
+                    object[] objs = new object[entry.Value.infos.Count];
+                    int i = 0;
+                    foreach (AdditionManager.AddInfo info in entry.Value.infos)
+                    {
+                        objs[i++] = info.obj;
+                        entry.Key.Add(info.obj);
+                    }
+                    infos.Add(new RevertableAddition.AddInListInfo(objs, entry.Key));
+                }
+            }
+
+            UpdateSelection(var);
+
+            AddToUndo(new RevertableAddition(infos.ToArray(), singleInfos.ToArray()));
+        }
+
         public class DeletionManager
         {
             public Dictionary<IList, List<IEditableObject>> Dictionary { get; private set; } = new Dictionary<IList, List<IEditableObject>>();
@@ -537,17 +639,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public void DeleteSelected(IList list)
-        {
-            DeletionManager manager = new DeletionManager();
-
-            foreach (IEditableObject obj in list)
-                obj.DeleteSelected(this, manager, list);
-
-            _ExecuteDeletion(manager);
-        }
-
-        protected void _ExecuteDeletion(DeletionManager manager)
+        public void ExecuteDeletion(DeletionManager manager)
         {
             if (manager.Dictionary.Count == 0)
                 return;
