@@ -135,10 +135,16 @@ namespace GL_EditorFramework.GL_Core
         {
             GL.UseProgram(programs[control]);
         }
-        
+
         public int this[string name]
         {
-            get => uniforms[name];
+            get
+            {
+                if (uniforms.ContainsKey(name))
+                    return uniforms[name];
+                else
+                    return -1;
+            }
         }
 
         private void LoadUniorms(int program)
@@ -197,6 +203,9 @@ namespace GL_EditorFramework.GL_Core
 
         public void SetBoolToInt(string name, bool value)
         {
+            if (!uniforms.ContainsKey(name))
+                return;
+
             if (value)
                 GL.Uniform1(uniforms[name], 1);
             else
@@ -205,32 +214,38 @@ namespace GL_EditorFramework.GL_Core
 
         public void SetMatrix4x4(string name, ref Matrix4 value, bool Transpose = false)
         {
-            GL.UniformMatrix4(uniforms[name], Transpose, ref value);
+            if (uniforms.ContainsKey(name))
+                GL.UniformMatrix4(uniforms[name], Transpose, ref value);
         }
 
         public void SetVector4(string name, Vector4 value)
         {
-            GL.Uniform4(uniforms[name], value);
+            if (uniforms.ContainsKey(name))
+                GL.Uniform4(uniforms[name], value);
         }
 
         public void SetVector3(string name, Vector3 value)
         {
-            GL.Uniform3(uniforms[name], value);
+            if (uniforms.ContainsKey(name))
+                GL.Uniform3(uniforms[name], value);
         }
 
         public void SetVector2(string name, Vector2 value)
         {
-            GL.Uniform2(uniforms[name], value);
+            if (uniforms.ContainsKey(name))
+                GL.Uniform2(uniforms[name], value);
         }
 
         public void SetFloat(string name, float value)
         {
-            GL.Uniform1(uniforms[name], value);
+            if (uniforms.ContainsKey(name))
+                GL.Uniform1(uniforms[name], value);
         }
 
         public void SetInt(string name, int value)
         {
-            GL.Uniform1(uniforms[name], value);
+            if (uniforms.ContainsKey(name))
+                GL.Uniform1(uniforms[name], value);
         }
     }
 
