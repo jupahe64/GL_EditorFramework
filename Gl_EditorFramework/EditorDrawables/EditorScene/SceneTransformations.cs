@@ -496,7 +496,7 @@ namespace GL_EditorFramework.EditorDrawables
                             lastIntersection = -control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitX, planeOrigin);
                             Vector3 vec2 = -control.ScreenCoordPlaneIntersection(startMousePos, Vector3.UnitX, planeOrigin);
 
-                            angle = (Math.Atan2(lastIntersection.Z - center.Y, lastIntersection.Y - center.Y) -
+                            angle = (Math.Atan2(lastIntersection.Z - center.Z, lastIntersection.Y - center.Y) -
                                      Math.Atan2(vec2.Z - center.Z, vec2.Y - center.Y));
 
                             showRotationInicator = true;
