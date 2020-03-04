@@ -148,6 +148,34 @@ namespace GL_EditorFramework.EditorDrawables
                 (minY + maxY) * 0.5f,
                 (minZ + maxZ) * 0.5f);
 
+            public override bool Equals(object obj)
+            {
+                if (!(obj is BoundingBox))
+                {
+                    return false;
+                }
+
+                var box = (BoundingBox)obj;
+                return minX == box.minX &&
+                       maxX == box.maxX &&
+                       minY == box.minY &&
+                       maxY == box.maxY &&
+                       minZ == box.minZ &&
+                       maxZ == box.maxZ;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1525210374;
+                hashCode = hashCode * -1521134295 + minX.GetHashCode();
+                hashCode = hashCode * -1521134295 + maxX.GetHashCode();
+                hashCode = hashCode * -1521134295 + minY.GetHashCode();
+                hashCode = hashCode * -1521134295 + maxY.GetHashCode();
+                hashCode = hashCode * -1521134295 + minZ.GetHashCode();
+                hashCode = hashCode * -1521134295 + maxZ.GetHashCode();
+                return hashCode;
+            }
+
             public static bool operator ==(BoundingBox box1, BoundingBox box2)
             {
                 return box1.minX == box2.minX &&

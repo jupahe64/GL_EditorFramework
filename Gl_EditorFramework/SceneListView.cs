@@ -43,8 +43,8 @@ namespace GL_EditorFramework
 
         public void UpdateComboBoxItems()
         {
-            rootListComboBox.Items.Clear();
-            rootListComboBox.Items.AddRange(rootLists.Keys.ToArray());
+            RootListComboBox.Items.Clear();
+            RootListComboBox.Items.AddRange(rootLists.Keys.ToArray());
         }
 
         private Stack<IList> listStack = new Stack<IList>();
@@ -63,10 +63,10 @@ namespace GL_EditorFramework
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISet<object> SelectedItems
         {
-            get => listView.SelectedItems;
+            get => ItemsListView.SelectedItems;
             set
             {
-                listView.SelectedItems = value;
+                ItemsListView.SelectedItems = value;
             }
         }
 
@@ -80,7 +80,7 @@ namespace GL_EditorFramework
             private set
             {
                 currentRootListName = value;
-                rootListComboBox.SelectedItem = value;
+                RootListComboBox.SelectedItem = value;
             }
         }
 
@@ -95,10 +95,10 @@ namespace GL_EditorFramework
                 CurrentRootListName = listName;
                 listStack.Clear();
 
-                rootListComboBox.Visible = true;
+                RootListComboBox.Visible = true;
                 btnBack.Visible = false;
 
-                listView.CurrentList = RootLists[listName];
+                ItemsListView.CurrentList = RootLists[listName];
             }
         }
 
@@ -108,7 +108,7 @@ namespace GL_EditorFramework
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList CurrentList
         {
-            get => listView.CurrentList;
+            get => ItemsListView.CurrentList;
         }
 
         /// <summary>
@@ -120,21 +120,21 @@ namespace GL_EditorFramework
             if (listStack == null)
                 return;
 
-            if (listView.CurrentList != null)
-                listStack.Push(listView.CurrentList);
-            listView.CurrentList = list;
+            if (ItemsListView.CurrentList != null)
+                listStack.Push(ItemsListView.CurrentList);
+            ItemsListView.CurrentList = list;
 
-            rootListComboBox.Visible = false;
+            RootListComboBox.Visible = false;
             btnBack.Visible = true;
         }
 
         public void UnselectCurrentList()
         {
-            listView.CurrentList = null;
+            ItemsListView.CurrentList = null;
 
             listStack.Clear();
 
-            rootListComboBox.Visible = true;
+            RootListComboBox.Visible = true;
             btnBack.Visible = false;
 
         }
@@ -146,18 +146,18 @@ namespace GL_EditorFramework
         {
 
             if (listStack.Count != 0)
-                listView.CurrentList = listStack.Pop();
+                ItemsListView.CurrentList = listStack.Pop();
 
             if (listStack.Count == 0)
             {
-                rootListComboBox.Visible = true;
+                RootListComboBox.Visible = true;
                 btnBack.Visible = false;
             } 
         }
 
         public void InvalidateCurrentList()
         {
-            listView.CurrentList = null;
+            ItemsListView.CurrentList = null;
         }
 
         /// <summary>
@@ -165,38 +165,47 @@ namespace GL_EditorFramework
         /// </summary>
         public void UpdateAutoScrollHeight()
         {
-            listView.UpdateAutoscrollHeight();
+            ItemsListView.UpdateAutoscrollHeight();
         }
 
         public SceneListView()
         {
             InitializeComponent();
 
-            listView.SelectionChanged += (x, y) => SelectionChanged?.Invoke(x, y);
-            listView.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
+            ItemsListView.SelectionChanged += (x, y) => SelectionChanged?.Invoke(x, y);
+            ItemsListView.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
 
             Graphics g = CreateGraphics();
 
             fontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
         }
 
-        private void BtnBack_Click(object sender, EventArgs e)
+        private void BackButton_Click(object sender, EventArgs e)
         {
             ExitList();
-            ListEventArgs args = new ListEventArgs(listView.CurrentList);
+            ListEventArgs args = new ListEventArgs(ItemsListView.CurrentList);
             ListExited?.Invoke(this, args);
         }
 
         private void RootListComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            listView.CurrentList = rootLists[(string)rootListComboBox.SelectedItem];
+            ItemsListView.CurrentList = rootLists[(string)RootListComboBox.SelectedItem];
         }
         
-        private void listView_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void ItemsListView_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            object item = listView.GetItemAt(e.Location);
+            object item = ItemsListView.GetItemAt(e.Location);
             if (item != null)
                 ItemDoubleClicked?.Invoke(this, new ItemDoubleClickedEventArgs(item));
+        }
+
+        public override void Refresh()
+        {
+            RootListComboBox.Refresh();
+            ItemsListView.Refresh();
+            if (rootLists.Count > 0)
+                ItemsListView.CurrentList = rootLists[(string)RootListComboBox.SelectedItem];
+            base.Refresh();
         }
     }
 }
