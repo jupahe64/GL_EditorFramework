@@ -11,8 +11,8 @@
         private void InitializeComponent()
         {
             this.btnBack = new System.Windows.Forms.Button();
-            this.rootListComboBox = new System.Windows.Forms.ComboBox();
-            this.listView = new GL_EditorFramework.FastListView();
+            this.RootListComboBox = new System.Windows.Forms.ComboBox();
+            this.ItemsListView = new GL_EditorFramework.FastListView();
             this.SuspendLayout();
             // 
             // btnBack
@@ -28,40 +28,40 @@
             this.btnBack.Text = "Back";
             this.btnBack.UseVisualStyleBackColor = true;
             this.btnBack.Visible = false;
-            this.btnBack.Click += new System.EventHandler(this.BtnBack_Click);
+            this.btnBack.Click += new System.EventHandler(this.BackButton_Click);
             // 
-            // rootListComboBox
+            // RootListComboBox
             // 
-            this.rootListComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.RootListComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.rootListComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.rootListComboBox.FormattingEnabled = true;
-            this.rootListComboBox.Location = new System.Drawing.Point(0, 2);
-            this.rootListComboBox.Name = "rootListComboBox";
-            this.rootListComboBox.Size = new System.Drawing.Size(300, 21);
-            this.rootListComboBox.TabIndex = 3;
-            this.rootListComboBox.SelectedIndexChanged += new System.EventHandler(this.RootListComboBox_SelectedIndexChanged);
+            this.RootListComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.RootListComboBox.FormattingEnabled = true;
+            this.RootListComboBox.Location = new System.Drawing.Point(0, 2);
+            this.RootListComboBox.Name = "RootListComboBox";
+            this.RootListComboBox.Size = new System.Drawing.Size(300, 21);
+            this.RootListComboBox.TabIndex = 3;
+            this.RootListComboBox.SelectedIndexChanged += new System.EventHandler(this.RootListComboBox_SelectedIndexChanged);
             // 
-            // listView
+            // ItemsListView
             // 
-            this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.ItemsListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.listView.AutoScroll = true;
-            this.listView.BackColor = System.Drawing.SystemColors.Window;
-            this.listView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.listView.Location = new System.Drawing.Point(1, 29);
-            this.listView.Margin = new System.Windows.Forms.Padding(1, 3, 1, 1);
-            this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(298, 270);
-            this.listView.TabIndex = 0;
-            this.listView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView_MouseDoubleClick);
+            this.ItemsListView.AutoScroll = true;
+            this.ItemsListView.BackColor = System.Drawing.SystemColors.Window;
+            this.ItemsListView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ItemsListView.Location = new System.Drawing.Point(1, 29);
+            this.ItemsListView.Margin = new System.Windows.Forms.Padding(1, 3, 1, 1);
+            this.ItemsListView.Name = "ItemsListView";
+            this.ItemsListView.Size = new System.Drawing.Size(298, 270);
+            this.ItemsListView.TabIndex = 0;
+            this.ItemsListView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.ItemsListView_MouseDoubleClick);
             // 
             // SceneListView
             // 
-            this.Controls.Add(this.rootListComboBox);
+            this.Controls.Add(this.RootListComboBox);
             this.Controls.Add(this.btnBack);
-            this.Controls.Add(this.listView);
+            this.Controls.Add(this.ItemsListView);
             this.Name = "SceneListView";
             this.Size = new System.Drawing.Size(300, 300);
             this.ResumeLayout(false);
@@ -70,8 +70,8 @@
 
         #endregion
 
-        private FastListView listView;
+        private FastListView ItemsListView;
         private System.Windows.Forms.Button btnBack;
-        private System.Windows.Forms.ComboBox rootListComboBox;
+        private System.Windows.Forms.ComboBox RootListComboBox;
     }
 }
