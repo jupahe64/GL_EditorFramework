@@ -17,20 +17,20 @@ namespace GL_EditorFramework.GL_Core
         private int activeAttributeCount;
         private Dictionary<string, int> uniforms = new Dictionary<string, int>();
         public Dictionary<GLControl, int> programs = new Dictionary<GLControl, int>();
-        private Dictionary<ShaderType, Shader> shaders = new Dictionary<ShaderType, Shader>();
+        private HashSet<Shader> shaders = new HashSet<Shader>();
 
         public ShaderProgram(Shader frag, Shader vert, GLControl control)
         {
-            shaders[ShaderType.FragmentShader] = frag;
-            shaders[ShaderType.VertexShader] = vert;
+            shaders.Add(frag);
+            shaders.Add(vert);
             Link(control);
         }
 
         public ShaderProgram(Shader frag, Shader vert, Shader geom, GLControl control)
         {
-            shaders[ShaderType.FragmentShader] = frag;
-            shaders[ShaderType.VertexShader] = vert;
-            shaders[ShaderType.GeometryShader] = geom;
+            shaders.Add(frag);
+            shaders.Add(vert);
+            shaders.Add(geom);
             Link(control);
         }
 
@@ -38,8 +38,8 @@ namespace GL_EditorFramework.GL_Core
         {
             foreach (Shader shader in shaders)
             {
-                if (!this.shaders.ContainsKey(shader.type))
-                    this.shaders[shader.type] = shader;
+                if (!this.shaders.Contains(shader))
+                    this.shaders.Add(shader);
             }
             Link(control);
         }
@@ -51,17 +51,17 @@ namespace GL_EditorFramework.GL_Core
             
             int program = GL.CreateProgram();
             
-            foreach (Shader shader in shaders.Values)
+            foreach (Shader shader in shaders)
             {
                 GL.AttachShader(program, shader.id);
             }
 
             GL.LinkProgram(program);
-            foreach (KeyValuePair<ShaderType, Shader> shader in shaders)
+            foreach (var shader in shaders)
             {
-                Console.WriteLine($"{shader.Key.ToString("g")}:");
+                Console.WriteLine($"{shader.type.ToString("g")}:");
 
-                string log = GL.GetShaderInfoLog(shader.Value.id);
+                string log = GL.GetShaderInfoLog(shader.id);
                 Console.WriteLine(log);
                 if (Framework.ShowShaderErrors && log != "")
                     MessageBox.Show(log);
@@ -73,7 +73,7 @@ namespace GL_EditorFramework.GL_Core
 
         public void AttachShader(Shader shader, bool linkImediatly)
         {
-            shaders[shader.type] = shader;
+            shaders.Add(shader);
             foreach (int program in programs.Values)
             {
                 GL.AttachShader(program, shader.id);
@@ -89,16 +89,14 @@ namespace GL_EditorFramework.GL_Core
             }
         }
 
-        public void DetachShader(ShaderType type, bool linkImediatly)
+        public void DetachShader(Shader shader, bool linkImediatly)
         {
-            if (type == ShaderType.FragmentShader || type == ShaderType.VertexShader)
-                throw new Exception("You can't remove the FragmentShader or the VertexShader from this Program");
-            if (!shaders.ContainsKey(type))
+            if (!shaders.Contains(shader))
                 return;
 
             foreach (int program in programs.Values)
             {
-                GL.DetachShader(program, shaders[type].id);
+                GL.DetachShader(program, shader.id);
 
                 if (linkImediatly)
                     GL.LinkProgram(program);
