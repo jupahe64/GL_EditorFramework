@@ -932,6 +932,29 @@ namespace GL_EditorFramework.EditorDrawables
                         scene.AddToUndo(new RevertablePropertyChange(cp.info, obj, cp.value));
                 }
             }
+
+            public bool TryGetRevertable(out IRevertable revertable)
+            {
+                var infos = new List<RevertablePropertyInfo>();
+                foreach (CapturedProperty cp in capturedProperties)
+                {
+                    if (!cp.info.GetValue(obj).Equals(cp.value))
+                        infos.Add(new RevertablePropertyInfo(cp.info, obj, cp.value));
+                }
+
+                if (infos.Count == 0)
+                {
+                    revertable = null;
+                    return false;
+                }
+
+                if (infos.Count == 1)
+                    revertable = new RevertablePropertyChange(infos[0]);
+                else
+                    revertable = new RevertableMulityPropertyChange(infos.ToArray());
+
+                return true;
+            }
         }
 
         public class RevertablePropertyChange : IRevertable
@@ -946,11 +969,56 @@ namespace GL_EditorFramework.EditorDrawables
                 this.prevValue = prevValue;
             }
 
+            public RevertablePropertyChange(RevertablePropertyInfo info)
+            {
+                property = info.property;
+                obj = info.obj;
+                prevValue = info.prevValue;
+            }
+
             public IRevertable Revert(EditorSceneBase scene)
             {
                 object currentValue = property.GetValue(obj);
                 property.SetValue(obj, prevValue);
                 return new RevertablePropertyChange(property, obj, currentValue);
+            }
+        }
+
+        public struct RevertablePropertyInfo
+        {
+            public readonly PropertyInfo property;
+            public readonly object obj;
+            public readonly object prevValue;
+
+            public RevertablePropertyInfo(PropertyInfo properties, object obj, object prevValue)
+            {
+                this.property = properties;
+                this.obj = obj;
+                this.prevValue = prevValue;
+            }
+        }
+
+        public class RevertableMulityPropertyChange : IRevertable
+        {
+            readonly RevertablePropertyInfo[] infos;
+
+            public RevertableMulityPropertyChange(RevertablePropertyInfo[] infos)
+            {
+                this.infos = infos;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                RevertablePropertyInfo[] newInfos = new RevertablePropertyInfo[infos.Length];
+
+                for (int i = 0; i < infos.Length; i++)
+                {
+                    object currentValue = infos[i].property.GetValue(infos[i].obj);
+
+                    newInfos[i] = new RevertablePropertyInfo(infos[i].property, infos[i].obj, currentValue);
+                }
+
+                return new RevertableMulityPropertyChange(newInfos);
             }
         }
     }

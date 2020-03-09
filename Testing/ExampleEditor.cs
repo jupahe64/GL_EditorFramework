@@ -25,7 +25,7 @@ namespace Example
 
         private EditorScene scene;
 
-        private EditorSceneBase.PropertyChanges propertyChangesAction = new EditorSceneBase.PropertyChanges();
+        private PropertyChanges propertyChangesAction = new PropertyChanges();
 
         protected override void OnLoad(EventArgs e)
         {

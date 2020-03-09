@@ -44,8 +44,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (pass == Pass.OPAQUE)
             {
-                CurrentAction.Draw(control);
-                ExclusiveAction.Draw(control);
+                SelectionTransformAction.Draw(control);
+                CurrentAction?.Draw(control);
             }
         }
 
@@ -64,8 +64,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (pass == Pass.OPAQUE)
             {
-                CurrentAction.Draw(control);
-                ExclusiveAction.Draw(control);
+                SelectionTransformAction.Draw(control);
+                CurrentAction?.Draw(control);
             }
         }
 

@@ -49,6 +49,25 @@ namespace GL_EditorFramework.EditorDrawables
         }
     }
 
+    public abstract class AbstractAction
+    {
+        public virtual void UpdateMousePos(Point mousePos) { }
+
+        public virtual void ApplyScrolling(Point mousePos, float deltaScroll) { }
+
+        public virtual void KeyDown(KeyEventArgs e) { }
+
+        public virtual void KeyUp(KeyEventArgs e) { }
+
+        public virtual void Apply() { }
+
+        public virtual void Cancel() { }
+
+        public virtual void Draw(GL_ControlLegacy control) { }
+
+        public virtual void Draw(GL_ControlModern control) { }
+    }
+
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
         protected abstract IEnumerable<IEditableObject> GetObjects();
@@ -278,9 +297,9 @@ namespace GL_EditorFramework.EditorDrawables
             SCALE_INDIVIDUAL
         }
 
-        public AbstractTransformAction CurrentAction { get; set; } = NoAction;
+        public AbstractTransformAction SelectionTransformAction { get; set; } = NoAction;
 
-        public AbstractTransformAction ExclusiveAction { get; set; } = NoAction;
+        public AbstractAction CurrentAction { get; set; }
 
         public static NoTransformAction NoAction {get;} = new NoTransformAction();
 
@@ -704,9 +723,9 @@ namespace GL_EditorFramework.EditorDrawables
             TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
 
             foreach (IEditableObject obj in GetObjects())
-                obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
+                obj.ApplyTransformActionToSelection(SelectionTransformAction, ref transformChangeInfos);
 
-            CurrentAction = NoAction;
+            SelectionTransformAction = NoAction;
 
             AddTransformToUndo(transformChangeInfos);
         }

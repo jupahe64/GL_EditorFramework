@@ -15,28 +15,27 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public abstract partial class EditorSceneBase : AbstractGlDrawable
     {
-        public void StartTransformAction(LocalOrientation localOrientation, DragActionType dragActionType, int part = -1, IRevertable revertable = null)
+        public void StartTransformAction(LocalOrientation localOrientation, DragActionType dragActionType, IRevertable revertable = null)
         {
+            if (CurrentAction != null || SelectionTransformAction != NoAction)
+                return;
+
             AbstractTransformAction transformAction;
 
             Vector3 pivot;
 
             draggingDepth = control.PickingDepth;
-            if (part!=-1)
-                pivot = localOrientation.Origin;
-            else
-            {
-                BoundingBox box = BoundingBox.Default;
+            
+            BoundingBox box = BoundingBox.Default;
 
-                foreach (IEditableObject obj in GetObjects())
-                    obj.GetSelectionBox(ref box);
+            foreach (IEditableObject obj in GetObjects())
+                obj.GetSelectionBox(ref box);
 
-                pivot = box.GetCenter();
+            pivot = box.GetCenter();
 
-                if (box == BoundingBox.Default)
-                    return;
-            }
-
+            if (box == BoundingBox.Default)
+                return;
+            
             switch (dragActionType)
             {
                 case DragActionType.TRANSLATE:
@@ -56,24 +55,30 @@ namespace GL_EditorFramework.EditorDrawables
                     return;
             }
 
-            StartTransformAction(transformAction, part, revertable);
+            StartTransformAction(transformAction, revertable);
         }
 
-        public void StartTransformAction(AbstractTransformAction transformAction, int part = -1, IRevertable revertable = null)
+        public void StartTransformAction(AbstractTransformAction transformAction, IRevertable revertable = null)
         {
+            if (CurrentAction != null || SelectionTransformAction != NoAction)
+                return;
+
             if (revertable != null)
             {
                 BeginUndoCollection();
                 AddToUndo(revertable);
             }
 
-            if (part != -1)
-            {
-                HoveredPart = part;
-                ExclusiveAction = transformAction;
-            }
-            else
-                CurrentAction = transformAction;
+            
+            SelectionTransformAction = transformAction;
+        }
+
+        public void StartAction(AbstractAction action)
+        {
+            if (CurrentAction != null || SelectionTransformAction != NoAction)
+                return;
+
+            CurrentAction = action;
         }
 
         public override uint MouseDown(MouseEventArgs e, GL_ControlBase control)
@@ -103,7 +108,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             uint var = 0;
             {
-                if (CurrentAction == NoAction && ExclusiveAction == NoAction && Hovered != null && TryGetActionType(out DragActionType dragActionType))
+                if (SelectionTransformAction == NoAction && CurrentAction == null && Hovered != null && TryGetActionType(out DragActionType dragActionType))
                 {
                     Hovered.StartDragging(dragActionType, HoveredPart, this);
                 }
@@ -112,8 +117,12 @@ namespace GL_EditorFramework.EditorDrawables
                     var |= REDRAW_PICKING;
                     var |= FORCE_REENTER;
 
-                    CurrentAction = NoAction; //abort current action
-                    ExclusiveAction = NoAction;
+                    if(SelectionTransformAction!=NoAction)
+                        EndUndoCollection();
+
+                    SelectionTransformAction = NoAction; //abort current action
+                    CurrentAction?.Cancel();
+                    CurrentAction = null;
                 }
             }
 
@@ -144,10 +153,10 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseMove(e, lastMousePos, control);
             }
 
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+            if (SelectionTransformAction != NoAction || CurrentAction != null)
             {
-                CurrentAction.UpdateMousePos(e.Location);
-                ExclusiveAction.UpdateMousePos(e.Location);
+                SelectionTransformAction.UpdateMousePos(e.Location);
+                CurrentAction?.UpdateMousePos(e.Location);
 
                 var |= REDRAW | NO_CAMERA_ACTION;
 
@@ -173,10 +182,10 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseWheel(e, control);
             }
 
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+            if (SelectionTransformAction != NoAction || CurrentAction != null)
             {
-                CurrentAction.ApplyScrolling(e.Location, e.Delta);
-                ExclusiveAction.ApplyScrolling(e.Location, e.Delta);
+                SelectionTransformAction.ApplyScrolling(e.Location, e.Delta);
+                CurrentAction?.ApplyScrolling(e.Location, e.Delta);
 
                 var |= REDRAW | NO_CAMERA_ACTION;
 
@@ -191,11 +200,11 @@ namespace GL_EditorFramework.EditorDrawables
             TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
             uint var = 0;
 
-            if (CurrentAction != NoAction && CurrentAction.IsApplyOnRelease())
+            if (SelectionTransformAction != NoAction && SelectionTransformAction.IsApplyOnRelease())
             {
                 foreach (IEditableObject obj in GetObjects())
                 {
-                    obj.ApplyTransformActionToSelection(CurrentAction, ref transformChangeInfos);
+                    obj.ApplyTransformActionToSelection(SelectionTransformAction, ref transformChangeInfos);
                 }
 
                 var |= REDRAW_PICKING | FORCE_REENTER;
@@ -203,19 +212,16 @@ namespace GL_EditorFramework.EditorDrawables
                 AddTransformToUndo(transformChangeInfos);
                 EndUndoCollection();
 
-                CurrentAction = NoAction;
+                SelectionTransformAction = NoAction;
             }
-
-            if (ExclusiveAction != NoAction)
+            else if (CurrentAction != null)
             {
-                Hovered.ApplyTransformActionToPart(ExclusiveAction, HoveredPart, ref transformChangeInfos);
+                CurrentAction?.Apply();
+                CurrentAction = null;
 
                 var |= REDRAW_PICKING;
 
                 AddTransformToUndo(transformChangeInfos);
-                EndUndoCollection();
-
-                ExclusiveAction = NoAction;
             }
 
             foreach (AbstractGlDrawable obj in StaticObjects)
@@ -344,7 +350,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint MouseEnter(int inObjectIndex, GL_ControlBase control)
         {
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+            if (SelectionTransformAction != NoAction || CurrentAction != null)
                 return 0;
 
             ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
@@ -380,7 +386,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
         {
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+            if (SelectionTransformAction != NoAction || CurrentAction != null)
                 return 0;
 
             ObjectRenderState.ShouldBeDrawn = ShouldBeDrawn;
@@ -412,7 +418,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override uint MouseLeaveEntirely(GL_ControlBase control)
         {
-            if (CurrentAction != NoAction || ExclusiveAction != NoAction)
+            if (SelectionTransformAction != NoAction || CurrentAction != null)
                 return 0;
 
             Hovered = null;
@@ -426,10 +432,10 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool selectionHasChanged = false;
 
-            if ((CurrentAction != NoAction || ExclusiveAction != NoAction) && e.KeyCode != Keys.V)
+            if ((SelectionTransformAction != NoAction || CurrentAction != null) && e.KeyCode != Keys.V)
             {
-                CurrentAction.KeyDown(e);
-                ExclusiveAction.KeyDown(e);
+                SelectionTransformAction.KeyDown(e);
+                CurrentAction?.KeyDown(e);
                 var = NO_CAMERA_ACTION | REDRAW;
             }
             else if (e.KeyCode == Keys.Z) //focus camera on the selection

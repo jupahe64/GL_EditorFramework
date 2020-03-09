@@ -100,13 +100,8 @@ namespace GL_EditorFramework.EditorDrawables
                     PathPoint point = pathPoints[i];
                     #region Point
                     //determine position
-                    if (editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos);
-
-                    else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
+                    if (point.Selected)
+                        pos = editorScene.SelectionTransformAction.NewPos(point.GlobalPos);
                     else
                         pos = point.GlobalPos;
 
@@ -139,13 +134,13 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint1
                     //determine position
-                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction!=NoAction && 
+                    if (point.GlobalCP1 != Vector3.Zero && editorScene.SelectionTransformAction!=NoAction && 
                         hovered && editorScene.HoveredPart==part)
 
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP1);
+                        pos = pointPos + point.GlobalCP1;
 
                     else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP1);
                     else
                         pos = pointPos + point.GlobalCP1;
 
@@ -176,13 +171,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint2
                     //determine position
-                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP2);
-
-                    else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                    if (point.Selected)
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP2);
                     else
                         pos = pointPos + point.GlobalCP2;
 
@@ -229,13 +219,8 @@ namespace GL_EditorFramework.EditorDrawables
                     PathPoint point = pathPoints[i];
                     #region Point
                     //determine position
-                    if (editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos);
-
-                    else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
+                    if (point.Selected)
+                        pos = editorScene.SelectionTransformAction.NewPos(point.GlobalPos);
                     else
                         pos = point.GlobalPos;
 
@@ -259,13 +244,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint1
                     //determine position
-                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP1);
-
-                    else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                    if (point.Selected)
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP1);
                     else
                         pos = pointPos + point.GlobalCP1;
 
@@ -287,13 +267,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint2
                     //determine position
-                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP2);
-
-                    else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                    if (point.Selected)
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP2);
                     else
                         pos = pointPos + point.GlobalCP2;
 
@@ -385,13 +360,8 @@ namespace GL_EditorFramework.EditorDrawables
                     PathPoint point = pathPoints[i];
                     #region Point
                     //determine position
-                    if (editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos);
-
-                    else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
+                    if (point.Selected)
+                        pos = editorScene.SelectionTransformAction.NewPos(point.GlobalPos);
                     else
                         pos = point.GlobalPos;
 
@@ -425,13 +395,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint1
                     //determine position
-                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP1);
-
-                    else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                    if (point.Selected)
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP1);
                     else
                         pos = pointPos + point.GlobalCP1;
 
@@ -462,13 +427,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint2
                     //determine position
-                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP2);
-
-                    else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                    if (point.Selected)
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP2);
                     else
                         pos = pointPos + point.GlobalCP2;
 
@@ -514,13 +474,8 @@ namespace GL_EditorFramework.EditorDrawables
                     PathPoint point = pathPoints[i];
                     #region Point
                     //determine position
-                    if (editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(point.GlobalPos);
-
-                    else if (point.Selected)
-                        pos = editorScene.CurrentAction.NewPos(point.GlobalPos);
+                    if (point.Selected)
+                        pos = editorScene.SelectionTransformAction.NewPos(point.GlobalPos);
                     else
                         pos = point.GlobalPos;
 
@@ -543,13 +498,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint1
                     //determine position
-                    if (point.GlobalCP1 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP1);
-
-                    else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP1);
+                    if (point.Selected)
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP1);
                     else
                         pos = pointPos + point.GlobalCP1;
 
@@ -569,13 +519,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     #region ControlPoint2
                     //determine position
-                    if (point.GlobalCP2 != Vector3.Zero && editorScene.ExclusiveAction != NoAction &&
-                        hovered && editorScene.HoveredPart == part)
-
-                        pos = editorScene.ExclusiveAction.NewPos(pointPos + point.GlobalCP2);
-
-                    else if (point.Selected)
-                        pos = pointPos + editorScene.CurrentAction.NewIndividualPos(point.GlobalCP2);
+                    if (point.Selected)
+                        pos = pointPos + editorScene.SelectionTransformAction.NewIndividualPos(point.GlobalCP2);
                     else
                         pos = pointPos + point.GlobalCP2;
 
@@ -970,13 +915,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     pathPoints.Insert(closest_i, pathPoint);
 
-                    scene.StartTransformAction(new TranslateAction(
-                        scene.GL_Control,
-                        scene.GL_Control.GetMousePos(),
-                        closest_pos,
-                        scene.GL_Control.PickingDepth
-                        ),
-                        1 + 3 * closest_i, new RevertableSingleAddition(pathPoint, pathPoints));
+                    scene.StartAction(new PointInsertAction(this, pathPoint, scene));
 
 
 
@@ -1027,13 +966,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                     pathPoints.Insert(i, pathPoint);
 
-                    scene.StartTransformAction(new TranslateAction(
-                        scene.GL_Control,
-                        scene.GL_Control.GetMousePos(),
-                        pos,
-                        scene.GL_Control.PickingDepth
-                        ),
-                        1 + 3 * i, new RevertableSingleAddition(pathPoint, pathPoints));
+                    scene.StartAction(new PointInsertAction(this, pathPoint, scene));
 
                     return;
                 }
@@ -1047,6 +980,51 @@ namespace GL_EditorFramework.EditorDrawables
                     }
                     hoveredPart -= span;
                 }
+            }
+        }
+
+        class PointInsertAction : TransformingAction<TranslateAction>
+        {
+            PathPoint point;
+            EditorSceneBase scene;
+
+            PropertyCapture propertyCapture;
+
+            Vector3 startPosGlobal;
+
+            public PointInsertAction(Path path, PathPoint point, EditorSceneBase scene)
+            {
+                scene.BeginUndoCollection();
+                scene.AddToUndo(new RevertableSingleAddition(point, path.pathPoints));
+                this.point = point;
+                this.scene = scene;
+
+                startPosGlobal = point.GlobalPos;
+
+                transformAction = new TranslateAction(scene.GL_Control, scene.GL_Control.GetMousePos(), point.GlobalPos, scene.GL_Control.PickingDepth);
+
+                propertyCapture = new PropertyCapture(point);
+            }
+
+            protected override void Update()
+            {
+                point.GlobalPos = transformAction.NewPos(startPosGlobal);
+            }
+
+            public override void Apply()
+            {
+                if(propertyCapture.TryGetRevertable(out IRevertable revertable))
+                    scene.AddToUndo(revertable);
+
+                scene.EndUndoCollection();
+            }
+
+            public override void Cancel()
+            {
+                if (propertyCapture.TryGetRevertable(out IRevertable revertable))
+                    revertable.Revert(scene);
+
+                scene.EndUndoCollection();
             }
         }
 

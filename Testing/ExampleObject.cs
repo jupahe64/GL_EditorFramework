@@ -39,7 +39,7 @@ namespace Example
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
             mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -Framework.HALF_PI);
-            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position);
+            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position);
 
             Vector4 pickingColor = control.NextPickingColor();
             
@@ -112,7 +112,7 @@ namespace Example
 
             Matrix4 mtx = Matrix4.CreateScale(1f, 0.25f, 1f);
             mtx *= Matrix4.CreateFromAxisAngle(Vector3.UnitY, -Framework.HALF_PI);
-            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position);
+            mtx *= Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position);
 
             Vector4 pickingColor = control.NextPickingColor();
 

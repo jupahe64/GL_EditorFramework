@@ -50,7 +50,7 @@ namespace GL_EditorFramework.EditorDrawables
             bool hovered = editorScene.Hovered == this;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
-                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
+                Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
             Vector4 lineColor;
@@ -100,7 +100,7 @@ namespace GL_EditorFramework.EditorDrawables
             bool hovered = editorScene.Hovered == this;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
-                Matrix4.CreateTranslation(Selected ? editorScene.CurrentAction.NewPos(Position) : Position));
+                Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
             Vector4 lineColor;

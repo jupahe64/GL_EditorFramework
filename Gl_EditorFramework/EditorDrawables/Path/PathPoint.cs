@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Reflection;
 using GL_EditorFramework.GL_Core;
 using GL_EditorFramework.Interfaces;
 using OpenTK;
@@ -58,7 +59,7 @@ namespace GL_EditorFramework.EditorDrawables
                     if (actionType == DragActionType.TRANSLATE)
                     {
                         //controlPoints can be moved exclusively
-                        scene.StartTransformAction(new LocalOrientation(GlobalPos + GlobalCP1), actionType, scene.HoveredPart);
+                        scene.StartAction(new CP1MoveAction(this, scene));
                         Console.WriteLine("hovered: " + scene.HoveredPart);
                     }
                     else
@@ -76,7 +77,7 @@ namespace GL_EditorFramework.EditorDrawables
                     if (actionType == DragActionType.TRANSLATE)
                     {
                         //controlPoints can be moved exclusively
-                        scene.StartTransformAction(new LocalOrientation(GlobalPos + GlobalCP2), actionType, scene.HoveredPart);
+                        scene.StartAction(new CP2MoveAction(this, scene));
                         Console.WriteLine("hovered: " + scene.HoveredPart);
                     }
                     else
@@ -85,6 +86,84 @@ namespace GL_EditorFramework.EditorDrawables
                             scene.StartTransformAction(new LocalOrientation(GlobalPos), actionType);
                     }
                 }
+            }
+        }
+
+        class CP1MoveAction : TransformingAction<TranslateAction>
+        {
+            PathPoint point;
+            EditorSceneBase scene;
+
+            PropertyCapture propertyCapture;
+
+            Vector3 startPosGlobal;
+
+            public CP1MoveAction(PathPoint point, EditorSceneBase scene)
+            {
+                this.point = point;
+                this.scene = scene;
+
+                startPosGlobal = point.GlobalCP1;
+
+                transformAction = new TranslateAction(scene.GL_Control, scene.GL_Control.GetMousePos(), point.GlobalCP1, scene.GL_Control.PickingDepth);
+
+                propertyCapture = new PropertyCapture(point);
+            }
+
+            protected override void Update()
+            {
+                point.GlobalCP1 = transformAction.NewPos(startPosGlobal);
+            }
+
+            public override void Apply()
+            {
+                if (propertyCapture.TryGetRevertable(out IRevertable revertable))
+                    scene.AddToUndo(revertable);
+            }
+
+            public override void Cancel()
+            {
+                if (propertyCapture.TryGetRevertable(out IRevertable revertable))
+                    revertable.Revert(scene);
+            }
+        }
+
+        class CP2MoveAction : TransformingAction<TranslateAction>
+        {
+            PathPoint point;
+            EditorSceneBase scene;
+
+            PropertyCapture propertyCapture;
+
+            Vector3 startPosGlobal;
+
+            public CP2MoveAction(PathPoint point, EditorSceneBase scene)
+            {
+                this.point = point;
+                this.scene = scene;
+
+                startPosGlobal = point.GlobalCP2;
+
+                transformAction = new TranslateAction(scene.GL_Control, scene.GL_Control.GetMousePos(), point.GlobalCP2, scene.GL_Control.PickingDepth);
+
+                propertyCapture = new PropertyCapture(point);
+            }
+
+            protected override void Update()
+            {
+                point.GlobalCP2 = transformAction.NewPos(startPosGlobal);
+            }
+
+            public override void Apply()
+            {
+                if (propertyCapture.TryGetRevertable(out IRevertable revertable))
+                    scene.AddToUndo(revertable);
+            }
+
+            public override void Cancel()
+            {
+                if (propertyCapture.TryGetRevertable(out IRevertable revertable))
+                    revertable.Revert(scene);
             }
         }
 
