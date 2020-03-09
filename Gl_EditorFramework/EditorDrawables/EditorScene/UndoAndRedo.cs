@@ -926,11 +926,8 @@ namespace GL_EditorFramework.EditorDrawables
 
             public void HandleUndo(EditorSceneBase scene)
             {
-                foreach (CapturedProperty cp in capturedProperties)
-                {
-                    if (!cp.info.GetValue(obj).Equals(cp.value))
-                        scene.AddToUndo(new RevertablePropertyChange(cp.info, obj, cp.value));
-                }
+                if (TryGetRevertable(out IRevertable revertable))
+                    scene.AddToUndo(revertable);
             }
 
             public bool TryGetRevertable(out IRevertable revertable)
