@@ -17,7 +17,7 @@ namespace GL_EditorFramework.Interfaces
         public virtual uint MouseWheel(MouseEventArgs e, GL_ControlBase control) { return 0; }
         public virtual uint MouseClick(MouseEventArgs e, GL_ControlBase control) { return 0; }
         
-        public virtual uint KeyDown(KeyEventArgs e, GL_ControlBase control) { return 0; }
+        public virtual uint KeyDown(KeyEventArgs e, GL_ControlBase control, bool isRepeat) { return 0; }
         public virtual uint KeyUp(KeyEventArgs e, GL_ControlBase control) { return 0; }
     }
 }

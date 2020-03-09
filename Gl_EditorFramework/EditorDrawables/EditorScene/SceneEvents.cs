@@ -425,111 +425,113 @@ namespace GL_EditorFramework.EditorDrawables
             return REDRAW;
         }
 
-        public override uint KeyDown(KeyEventArgs e, GL_ControlBase control)
+        public override uint KeyDown(KeyEventArgs e, GL_ControlBase control, bool isRepeat)
         {
             TransformChangeInfos transformChangeInfos = new TransformChangeInfos(new List<TransformChangeInfo>());
             uint var = 0;
 
             bool selectionHasChanged = false;
 
-            if ((SelectionTransformAction != NoAction || CurrentAction != null) && e.KeyCode != Keys.V)
+            if(!isRepeat)
             {
-                SelectionTransformAction.KeyDown(e);
-                CurrentAction?.KeyDown(e);
-                var = NO_CAMERA_ACTION | REDRAW;
-            }
-            else if (e.KeyCode == Keys.Z) //focus camera on the selection
-            {
-                if (e.Control)
+                if ((SelectionTransformAction != NoAction || CurrentAction != null))
                 {
-                    Undo();
+                    SelectionTransformAction.KeyDown(e);
+                    CurrentAction?.KeyDown(e);
+                    var = NO_CAMERA_ACTION | REDRAW;
                 }
-                else
+                else if (e.KeyCode == Keys.Z) //focus camera on the selection
                 {
-                    BoundingBox box = BoundingBox.Default;
-
-                    foreach (IEditableObject obj in GetObjects())
+                    if (e.Control)
                     {
-                        obj.GetSelectionBox(ref box);
+                        Undo();
+                    }
+                    else
+                    {
+                        BoundingBox box = BoundingBox.Default;
+
+                        foreach (IEditableObject obj in GetObjects())
+                        {
+                            obj.GetSelectionBox(ref box);
+                        }
+
+                        if (box != BoundingBox.Default)
+                            control.CameraTarget = box.GetCenter();
                     }
 
-                    if(box!=BoundingBox.Default)
-                        control.CameraTarget = box.GetCenter();
+                    var = REDRAW_PICKING;
                 }
+                else if (e.KeyCode == Keys.Y && e.Control)
+                {
+                    Redo();
 
-                var = REDRAW_PICKING;
-            }
-            else if (e.KeyCode == Keys.Y && e.Control)
-            {
-                Redo();
-
-                var = REDRAW_PICKING;
-            }
-            else if (e.KeyCode == Keys.H) //hide/show selected objects
-            {
-                foreach (IEditableObject obj in GetObjects())
-                {
-                    if(obj.IsSelected())
-                        obj.Visible = e.Shift;
+                    var = REDRAW_PICKING;
                 }
-                var = REDRAW_PICKING;
-            }
-            else if (e.KeyCode == Keys.S && e.Shift) //auto snap selected objects
-            {
-                SnapAction action = new SnapAction();
-                foreach (IEditableObject obj in GetObjects())
-                {
-                    obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
-                }
-                var = REDRAW_PICKING;
-            }
-            else if (e.KeyCode == Keys.R && e.Shift && e.Control) //reset scale for selected objects
-            {
-                ResetScale action = new ResetScale();
-                foreach (IEditableObject obj in GetObjects())
-                {
-                    obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
-                }
-                var = REDRAW_PICKING;
-            }
-            else if (e.KeyCode == Keys.R && e.Shift) //reset rotation for selected objects
-            {
-                ResetRot action = new ResetRot();
-                foreach (IEditableObject obj in GetObjects())
-                {
-                    obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
-                }
-                var = REDRAW_PICKING;
-            }
-            else if (e.Control && e.KeyCode == Keys.A) //select/deselect all objects
-            {
-                if (e.Shift)
+                else if (e.KeyCode == Keys.H) //hide/show selected objects
                 {
                     foreach (IEditableObject obj in GetObjects())
                     {
-                        obj.DeselectAll(control);
+                        if (obj.IsSelected())
+                            obj.Visible = e.Shift;
                     }
-                    selectionHasChanged = true;
+                    var = REDRAW_PICKING;
                 }
-
-                if (!e.Shift && multiSelect)
+                else if (e.KeyCode == Keys.S && e.Shift) //auto snap selected objects
                 {
+                    SnapAction action = new SnapAction();
                     foreach (IEditableObject obj in GetObjects())
                     {
-                        obj.SelectAll(control);
+                        obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
                     }
-                    selectionHasChanged = true;
+                    var = REDRAW_PICKING;
                 }
-                var = REDRAW;
-            }
+                else if (e.KeyCode == Keys.R && e.Shift && e.Control) //reset scale for selected objects
+                {
+                    ResetScale action = new ResetScale();
+                    foreach (IEditableObject obj in GetObjects())
+                    {
+                        obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
+                    }
+                    var = REDRAW_PICKING;
+                }
+                else if (e.KeyCode == Keys.R && e.Shift) //reset rotation for selected objects
+                {
+                    ResetRot action = new ResetRot();
+                    foreach (IEditableObject obj in GetObjects())
+                    {
+                        obj.ApplyTransformActionToSelection(action, ref transformChangeInfos);
+                    }
+                    var = REDRAW_PICKING;
+                }
+                else if (e.Control && e.KeyCode == Keys.A) //select/deselect all objects
+                {
+                    if (e.Shift)
+                    {
+                        foreach (IEditableObject obj in GetObjects())
+                        {
+                            obj.DeselectAll(control);
+                        }
+                        selectionHasChanged = true;
+                    }
 
+                    if (!e.Shift && multiSelect)
+                    {
+                        foreach (IEditableObject obj in GetObjects())
+                        {
+                            obj.SelectAll(control);
+                        }
+                        selectionHasChanged = true;
+                    }
+                    var = REDRAW;
+                }
+            }
             foreach (IEditableObject obj in GetObjects())
             {
-                var |= obj.KeyDown(e, control);
+                var |= obj.KeyDown(e, control, isRepeat);
             }
             foreach (AbstractGlDrawable obj in StaticObjects)
             {
-                var |= obj.KeyDown(e, control);
+                var |= obj.KeyDown(e, control, isRepeat);
             }
             if (selectionHasChanged)
                 UpdateSelection(var);

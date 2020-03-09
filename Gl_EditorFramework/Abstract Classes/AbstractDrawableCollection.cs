@@ -101,12 +101,12 @@ namespace GL_EditorFramework.EditorDrawables
             return var;
         }
 
-        public override uint KeyDown(KeyEventArgs e, GL_ControlBase control)
+        public override uint KeyDown(KeyEventArgs e, GL_ControlBase control, bool isRepeat)
         {
             uint var = 0;
             foreach (AbstractGlDrawable obj in GetDrawables())
             {
-                var |= obj.KeyDown(e, control);
+                var |= obj.KeyDown(e, control, isRepeat);
             }
             return var;
         }

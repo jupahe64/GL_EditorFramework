@@ -282,7 +282,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         uint MouseClick(MouseEventArgs e, GL_ControlBase control);
 
-        uint KeyDown(KeyEventArgs e, GL_ControlBase control);
+        uint KeyDown(KeyEventArgs e, GL_ControlBase control, bool isRepeat);
 
         uint KeyUp(KeyEventArgs e, GL_ControlBase control);
 

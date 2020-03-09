@@ -304,6 +304,8 @@ namespace GL_EditorFramework.GL_Core
             Refresh();
         }
 
+        HashSet<Keys> pressedKeyCodes = new HashSet<Keys>();
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -314,10 +316,12 @@ namespace GL_EditorFramework.GL_Core
             skipCameraAction = false;
             forceReEnter = false;
 
-            HandleDrawableEvtResult(mainDrawable.KeyDown(e, this));
+            HandleDrawableEvtResult(mainDrawable.KeyDown(e, this, pressedKeyCodes.Contains(e.KeyCode)));
 
             if (!skipCameraAction)
-                HandleCameraEvtResult(activeCamera.KeyDown(e, this));
+                HandleCameraEvtResult(activeCamera.KeyDown(e, this, pressedKeyCodes.Contains(e.KeyCode)));
+
+            pressedKeyCodes.Add(e.KeyCode);
 
             if (shouldRepick)
                 Repick();
@@ -340,6 +344,8 @@ namespace GL_EditorFramework.GL_Core
 
             if (skipCameraAction)
                 HandleCameraEvtResult(activeCamera.KeyUp(e, this));
+
+            pressedKeyCodes.Remove(e.KeyCode);
 
             if (shouldRepick)
                 Repick();
