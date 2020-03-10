@@ -117,7 +117,7 @@ namespace GL_EditorFramework
         /// <param name="list">the list to be entered</param>
         public void EnterList(IList list)
         {
-            if (listStack == null)
+            if (listStack == null || list == CurrentList)
                 return;
 
             if (ItemsListView.CurrentList != null)
