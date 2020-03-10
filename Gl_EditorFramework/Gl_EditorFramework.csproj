@@ -132,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="GL_Core\Resources\TextureSheet.png" />
+    <None Include="Resources\BackButtonIcon.png" />
     <Content Include="Resources\CloseTabIcon.png" />
     <Content Include="Resources\CloseTabIconHover.png" />
   </ItemGroup>

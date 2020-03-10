@@ -10,25 +10,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnBack = new System.Windows.Forms.Button();
             this.RootListComboBox = new System.Windows.Forms.ComboBox();
             this.ItemsListView = new GL_EditorFramework.FastListView();
+            this.btnBack = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // btnBack
-            // 
-            this.btnBack.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBack.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnBack.Location = new System.Drawing.Point(0, 0);
-            this.btnBack.Margin = new System.Windows.Forms.Padding(1);
-            this.btnBack.Name = "btnBack";
-            this.btnBack.Size = new System.Drawing.Size(300, 24);
-            this.btnBack.TabIndex = 2;
-            this.btnBack.Text = "Back";
-            this.btnBack.UseVisualStyleBackColor = true;
-            this.btnBack.Visible = false;
-            this.btnBack.Click += new System.EventHandler(this.BackButton_Click);
             // 
             // RootListComboBox
             // 
@@ -57,10 +42,25 @@
             this.ItemsListView.TabIndex = 0;
             this.ItemsListView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.ItemsListView_MouseDoubleClick);
             // 
+            // btnBack
+            // 
+            this.btnBack.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBack.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBack.Image = global::GL_EditorFramework.Properties.Resources.BackButtonIcon;
+            this.btnBack.Location = new System.Drawing.Point(0, 2);
+            this.btnBack.Margin = new System.Windows.Forms.Padding(1);
+            this.btnBack.Name = "btnBack";
+            this.btnBack.Size = new System.Drawing.Size(29, 21);
+            this.btnBack.TabIndex = 2;
+            this.btnBack.UseVisualStyleBackColor = true;
+            this.btnBack.Visible = false;
+            this.btnBack.Click += new System.EventHandler(this.BackButton_Click);
+            // 
             // SceneListView
             // 
-            this.Controls.Add(this.RootListComboBox);
             this.Controls.Add(this.btnBack);
+            this.Controls.Add(this.RootListComboBox);
             this.Controls.Add(this.ItemsListView);
             this.Name = "SceneListView";
             this.Size = new System.Drawing.Size(300, 300);

@@ -81,8 +81,9 @@ namespace GL_EditorFramework.GL_Core
 
             if (mainDrawable == null || DesignMode)
             {
-                e.Graphics.Clear(this.BackColor);
-                e.Graphics.DrawString("Legacy Gl" + (stereoscopy ? " stereoscopy" : ""), SystemFonts.DefaultFont, SystemBrushes.ControlLight, 10f, 10f);
+                e.Graphics.Clear(BackgroundColor1);
+                if(DesignMode)
+                    e.Graphics.DrawString("Legacy Gl" + (stereoscopy ? " stereoscopy" : ""), SystemFonts.DefaultFont, SystemBrushes.ControlLight, 10f, 10f);
                 return;
             }
 

@@ -128,8 +128,9 @@ namespace GL_EditorFramework.GL_Core
             if (mainDrawable == null || DesignMode)
             {
                 base.OnPaint(e);
-                e.Graphics.Clear(Color.Black);
-                e.Graphics.DrawString("Modern Gl" + (stereoscopy ? " stereoscopy" : ""), SystemFonts.DefaultFont, SystemBrushes.ControlLight, 10f, 10f);
+                e.Graphics.Clear(BackgroundColor1);
+                if(DesignMode)
+                    e.Graphics.DrawString("Modern Gl" + (stereoscopy ? " stereoscopy" : ""), SystemFonts.DefaultFont, SystemBrushes.ControlLight, 10f, 10f);
                 return;
             }
             MakeCurrent();

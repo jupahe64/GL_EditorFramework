@@ -457,7 +457,6 @@ namespace GL_EditorFramework
             if (CurrentList == null)
             {
                 g.FillRectangle(SystemBrushes.ControlLight, 0, 0, Width, Height);
-                g.DrawString("No List Selected", Font, textBrush, 5, 5);
 
                 return;
             }
