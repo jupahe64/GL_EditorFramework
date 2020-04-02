@@ -45,11 +45,13 @@ namespace GL_EditorFramework
             containerInfos.Add(new ContainerInfo(objectUIContainer, name));
         }
 
-        public void RemoveObjectUIContainers(IObjectUIContainer objectUIContainer)
+        public void RemoveObjectUIContainer(IObjectUIContainer objectUIContainer)
         {
+            UnFocusInput();
+
             foreach (ContainerInfo containerInfo in containerInfos)
             {
-                if (containerInfo.objectUIContainer == containerInfos)
+                if (containerInfo.objectUIContainer == objectUIContainer)
                 {
                     containerInfos.Remove(containerInfo);
                     break;
@@ -59,6 +61,8 @@ namespace GL_EditorFramework
 
         public void ClearObjectUIContainers()
         {
+            UnFocusInput();
+
             containerInfos.Clear();
         }
 

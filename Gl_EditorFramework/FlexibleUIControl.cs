@@ -166,6 +166,12 @@ namespace GL_EditorFramework
             doubleClickTimer.Stop();
         }
 
+        public void UnFocusInput()
+        {
+            if (textBox1.Focused || comboBox1.Focused)
+                Focus();
+        }
+
         private void TextBox1_LostFocus(object sender, EventArgs e)
         {
             if (focusedIndex == -1)
