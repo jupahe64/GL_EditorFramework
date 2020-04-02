@@ -102,7 +102,7 @@ namespace GL_EditorFramework
             set
             {
                 list = value;
-                AutoScrollMinSize = new Size(0, FontHeight * list?.Count??0);
+                UpdateAutoscrollHeight();
                 Refresh();
             }
         }
@@ -123,7 +123,7 @@ namespace GL_EditorFramework
             if (list == null)
                 return;
 
-            AutoScrollMinSize = new Size(0, FontHeight * list.Count);
+            AutoScrollMinSize = new Size(0, FontHeight * list?.Count ?? 0);
         }
 
         public FastListView()

@@ -203,8 +203,7 @@ namespace GL_EditorFramework
         {
             RootListComboBox.Refresh();
             ItemsListView.Refresh();
-            if (rootLists.Count > 0)
-                ItemsListView.CurrentList = rootLists[(string)RootListComboBox.SelectedItem];
+            ItemsListView.UpdateAutoscrollHeight();
             base.Refresh();
         }
     }
