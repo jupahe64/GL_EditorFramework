@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using GL_EditorFramework.GL_Core;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -32,6 +33,48 @@ namespace GL_EditorFramework
             Extensions.CreateRotationX(Math.PI * eulerAngles.X / 180.0) *
             Extensions.CreateRotationY(Math.PI * eulerAngles.Y / 180.0) *
             Extensions.CreateRotationZ(Math.PI * eulerAngles.Z / 180.0);
+
+
+        public static Keys KeyStroke(string keyStrokeString)
+        {
+            bool hasValidKeyCode = false;
+            Keys result = Keys.None;
+            foreach (string val in keyStrokeString
+                .Replace(" ", "")
+                .Split('+'))
+            {
+                string keyName = val;
+
+                if (keyName == "Ctrl")
+                    keyName = "Control";
+
+                else if (keyName == "Del")
+                    keyName = "Delete";
+
+
+                if (Enum.TryParse(keyName, out Keys key))
+                {
+                    Keys keyCode = key & Keys.KeyCode;
+                    if (keyCode == Keys.None)
+                        result |= key;
+                    else
+                    {
+                        if (hasValidKeyCode)
+                            throw new Exception("A keystroke can't have more than one none modifier key");
+                        else
+                        {
+                            result |= key;
+                            hasValidKeyCode = true;
+                        }
+                    }
+                }
+            }
+
+            if (!hasValidKeyCode)
+                throw new Exception("A keystroke must have one none modifier key");
+
+            return result;
+        }
 
         public static void Initialize()
         {
@@ -87,12 +130,10 @@ namespace GL_EditorFramework
             
             initialized = true;
         }
+
         private static bool initialized = false;
         public static int TextureSheet;
     }
-
-
-
 
 
     public static class Extensions

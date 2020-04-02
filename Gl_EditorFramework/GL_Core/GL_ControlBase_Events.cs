@@ -12,6 +12,8 @@ namespace GL_EditorFramework.GL_Core
 {
     public partial class GL_ControlBase
     {
+        public bool IsHovered { get; private set; } = false;
+
         private bool shouldRedraw;
         private bool shouldRepick;
         private bool skipCameraAction;
@@ -273,7 +275,6 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnMouseEnter(EventArgs e)
         {
-            base.OnMouseEnter(e);
             if (DesignMode)
             {
                 base.OnMouseEnter(e);
@@ -284,12 +285,12 @@ namespace GL_EditorFramework.GL_Core
                 showFakeCursor = true;
                 Cursor.Hide();
             }
+            IsHovered = true;
             base.OnMouseEnter(e);
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            base.OnMouseLeave(e);
             if (DesignMode)
             {
                 base.OnMouseLeave(e);
@@ -300,9 +301,13 @@ namespace GL_EditorFramework.GL_Core
                 showFakeCursor = false;
                 Cursor.Show();
             }
+            IsHovered = false;
             base.OnMouseLeave(e);
             Refresh();
         }
+
+        public void PerformKeyDown(KeyEventArgs e) => OnKeyDown(e);
+        public void PerformKeyUp(KeyEventArgs e) => OnKeyUp(e);
 
         HashSet<Keys> pressedKeyCodes = new HashSet<Keys>();
 
