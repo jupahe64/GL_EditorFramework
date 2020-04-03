@@ -16,9 +16,17 @@ namespace GL_EditorFramework.StandardCameras
     {
         private readonly float maxCamMoveSpeed;
 
-        public WalkaroundCamera(float maxCamMoveSpeed = 0.1f)
+        private readonly float rotFactorX = 0.002f;
+        private readonly float rotFactorY = 0.002f;
+
+        public WalkaroundCamera(float maxCamMoveSpeed = 0.1f, bool invertX = false, bool invertY = false)
         {
             this.maxCamMoveSpeed = maxCamMoveSpeed;
+
+            if (invertX)
+                rotFactorX *= -1;
+            if (invertY)
+                rotFactorY *= -1;
         }
 
         public override uint MouseClick(MouseEventArgs e, GL_ControlBase control)
@@ -53,9 +61,9 @@ namespace GL_EditorFramework.StandardCameras
                 else
                 {
                     if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.Y))
-                        control.RotateCameraX(deltaX * 0.002f);
+                        control.RotateCameraX(deltaX * rotFactorX);
                     if (!WinInput.Keyboard.IsKeyDown(WinInput.Key.X))
-                        control.CamRotY += deltaY * 0.002f;
+                        control.CamRotY += deltaY * rotFactorY;
                 }
 
                 return UPDATE_CAMERA;

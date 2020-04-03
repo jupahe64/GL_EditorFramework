@@ -318,7 +318,7 @@ namespace GL_EditorFramework.GL_Core
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual AbstractGlDrawable MainDrawable { get; set; }
 
-        protected AbstractCamera activeCamera;
+        protected AbstractCamera activeCamera = new WalkaroundCamera();
         public int PickingIndexOffset { get; private set; } = 1 + orientationCubePickingColors;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -329,7 +329,6 @@ namespace GL_EditorFramework.GL_Core
             {
                 if (value == null) return;
                 activeCamera = value;
-                MakeCurrent();
                 Refresh();
             }
         }
@@ -501,8 +500,6 @@ namespace GL_EditorFramework.GL_Core
         {
 
             if (DesignMode) return;
-
-            activeCamera = new WalkaroundCamera();
 
 
             GL.Enable(EnableCap.DepthTest);
