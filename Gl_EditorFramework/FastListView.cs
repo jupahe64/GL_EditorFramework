@@ -436,8 +436,11 @@ namespace GL_EditorFramework
             EnsureVisisble(index);
         }
 
-        protected void EnsureVisisble(int index)
+        public void EnsureVisisble(int index)
         {
+            if (index < 0 || index >= list.Count)
+                return;
+
             int y = index * FontHeight + AutoScrollPosition.Y;
 
             if (y < 0)

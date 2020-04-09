@@ -160,6 +160,35 @@ namespace GL_EditorFramework
             ItemsListView.CurrentList = null;
         }
 
+        public bool TryEnsureVisible(object item)
+        {
+            if (listStack.Count == 0)
+            {
+                foreach (var keyValuePair in rootLists)
+                {
+                    int index = keyValuePair.Value.IndexOf(item);
+
+                    if (index != -1)
+                    {
+                        SetRootList(keyValuePair.Key);
+
+                        ItemsListView.EnsureVisisble(index);
+                    }
+                }
+            }
+            else
+            {
+                int index = CurrentList.IndexOf(item);
+
+                if (index != -1)
+                {
+                    ItemsListView.EnsureVisisble(index);
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Recalculate the height of the Autoscroll for the <see cref="FastListView"/>
         /// </summary>
