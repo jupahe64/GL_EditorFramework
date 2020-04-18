@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 
-namespace SpotLight
+namespace GL_EditorFramework
 {
     public class DocumentTabClosingEventArgs : CancelEventArgs
     {
