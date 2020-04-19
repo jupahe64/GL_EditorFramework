@@ -17,10 +17,24 @@ using System.IO;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    public partial class Path : EditableObject
+    public interface IPath
     {
-        public static float CubeScale => 0.5f;
-        public static float ControlCubeScale => 0.25f;
+        float CubeScale { get; }
+    }
+
+    public class Path : Path<PathPoint>
+    {
+        public Path(List<PathPoint> pathPoints)
+            : base(pathPoints)
+        {
+
+        }
+    }
+
+    public partial class Path<T> : EditableObject, IPath where T : PathPoint, new()
+    {
+        public float CubeScale => 0.5f;
+        public float ControlCubeScale => 0.25f;
 
         private static bool Initialized = false;
         private static bool InitializedLegacy = false;
@@ -33,17 +47,17 @@ namespace GL_EditorFramework.EditorDrawables
 
         private int pathPointVao;
         private int pathPointBuffer;
-        readonly protected List<PathPoint> pathPoints;
+        readonly protected List<T> pathPoints;
 
-        public IReadOnlyList<PathPoint> PathPoints => pathPoints;
+        public IReadOnlyList<T> PathPoints => pathPoints;
 
         [PropertyCapture.Undoable]
         public bool Closed { get; set; } = false;
 
-        public Path(List<PathPoint> pathPoints)
+        public Path(List<T> pathPoints)
         {
             this.pathPoints = pathPoints;
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 point.Path = this;
         }
 
@@ -51,7 +65,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (list == pathPoints)
             {
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                     point.Path = this;
             }
         }
@@ -97,7 +111,7 @@ namespace GL_EditorFramework.EditorDrawables
                 int part = 1;
                 for (int i = 0; i < pathPoints.Count; i++)
                 {
-                    PathPoint point = pathPoints[i];
+                    T point = pathPoints[i];
                     #region Point
                     //determine position
                     if (point.Selected)
@@ -216,7 +230,7 @@ namespace GL_EditorFramework.EditorDrawables
                 int part = 1;
                 for (int i = 0; i < pathPoints.Count; i++)
                 {
-                    PathPoint point = pathPoints[i];
+                    T point = pathPoints[i];
                     #region Point
                     //determine position
                     if (point.Selected)
@@ -357,7 +371,7 @@ namespace GL_EditorFramework.EditorDrawables
                 int part = 1;
                 for (int i = 0; i < pathPoints.Count; i++)
                 {
-                    PathPoint point = pathPoints[i];
+                    T point = pathPoints[i];
                     #region Point
                     //determine position
                     if (point.Selected)
@@ -471,7 +485,7 @@ namespace GL_EditorFramework.EditorDrawables
                 int part = 1;
                 for (int i = 0; i < pathPoints.Count; i++)
                 {
-                    PathPoint point = pathPoints[i];
+                    T point = pathPoints[i];
                     #region Point
                     //determine position
                     if (point.Selected)
@@ -826,7 +840,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (!ObjectRenderState.ShouldBeDrawn(this))
                 return 0;
             int i = 1;
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 i += point.GetPickableSpan();
 
             return i;
@@ -911,11 +925,11 @@ namespace GL_EditorFramework.EditorDrawables
                         }
                     }
 
-                    PathPoint pathPoint = new PathPoint(closest_pos, Vector3.Zero, Vector3.Zero);
+                    T pathPoint = new T() {GlobalPos = closest_pos };
 
                     pathPoints.Insert(closest_i, pathPoint);
 
-                    scene.StartAction(new PointInsertAction(this, pathPoint, scene));
+                    scene.StartAction(new PointInsertAction<T>(this, pathPoint, scene));
 
 
 
@@ -924,7 +938,7 @@ namespace GL_EditorFramework.EditorDrawables
 
                 BoundingBox box = BoundingBox.Default;
                 bool allPointsSelected = true;
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                 {
                     if (point.Selected)
                         box.Include(new BoundingBox(
@@ -962,11 +976,11 @@ namespace GL_EditorFramework.EditorDrawables
                     else
                         return;
 
-                    PathPoint pathPoint = new PathPoint(pos, Vector3.Zero, Vector3.Zero);
+                    T pathPoint = new T() { GlobalPos = pos };
 
                     pathPoints.Insert(i, pathPoint);
 
-                    scene.StartAction(new PointInsertAction(this, pathPoint, scene));
+                    scene.StartAction(new PointInsertAction<T>(this, pathPoint, scene));
 
                     return;
                 }
@@ -983,16 +997,16 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        class PointInsertAction : TransformingAction<TranslateAction>
+        private class PointInsertAction<T2> : TransformingAction<TranslateAction> where T2 : PathPoint, new()
         {
-            PathPoint point;
+            T2 point;
             EditorSceneBase scene;
 
             PropertyCapture propertyCapture;
 
             Vector3 startPosGlobal;
 
-            public PointInsertAction(Path path, PathPoint point, EditorSceneBase scene)
+            public PointInsertAction(Path<T2> path, T2 point, EditorSceneBase scene)
             {
                 scene.BeginUndoCollection();
                 scene.AddToUndo(new RevertableSingleAddition(point, path.pathPoints));
@@ -1031,7 +1045,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint SelectAll(GL_ControlBase control)
         {
             
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 point.SelectAll(control);
 
             return REDRAW;
@@ -1040,7 +1054,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint SelectDefault(GL_ControlBase control)
         {
             
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 point.SelectDefault(control);
 
             return REDRAW;
@@ -1051,7 +1065,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (partIndex == 0)
             {
                 bool allPointsSelected = true;
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                 {
                    allPointsSelected &= point.Selected;
                 }
@@ -1060,7 +1074,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
             {
                 partIndex--;
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
@@ -1079,13 +1093,13 @@ namespace GL_EditorFramework.EditorDrawables
             
             if (partIndex == 0)
             {
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                     point.SelectDefault(control);
             }
             else
             {
                 partIndex--;
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
@@ -1104,14 +1118,14 @@ namespace GL_EditorFramework.EditorDrawables
             
             if (partIndex == 0)
             {
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                     point.DeselectAll(control);
             }
             else
             {
                 bool noPointsSelected = true;
                 partIndex--;
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                 {
                     int span = point.GetPickableSpan();
                     if (partIndex >= 0 && partIndex < span)
@@ -1129,7 +1143,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int _part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
         {
             _part--;
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
             {
                 int span = point.GetPickableSpan();
                 if (_part >= 0 && _part < span)
@@ -1144,14 +1158,14 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos)
         {
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 point.ApplyTransformActionToSelection(transformAction, ref transformChangeInfos);
         }
 
         public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
         {
             _part--;
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
             {
                 int span = point.GetPickableSpan();
                 if (_part >= 0 && _part < span)
@@ -1167,7 +1181,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint DeselectAll(GL_ControlBase control)
         {
             
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 point.DeselectAll(control);
 
             return REDRAW;
@@ -1185,7 +1199,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override void GetSelectionBox(ref BoundingBox boundingBox)
         {
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 point.GetSelectionBox(ref boundingBox);
         }
 
@@ -1214,7 +1228,7 @@ namespace GL_EditorFramework.EditorDrawables
         public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
         {
             bool allPointsSelected = true;
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 allPointsSelected &= point.Selected;
 
             if (allPointsSelected)
@@ -1224,7 +1238,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
             else
             {
-                foreach (PathPoint point in pathPoints)
+                foreach (T point in pathPoints)
                     point.DeleteSelected(scene, manager, pathPoints);
             }
         }
@@ -1240,11 +1254,11 @@ namespace GL_EditorFramework.EditorDrawables
             if (!any)
                 return false;
 
-            objectUIControl.AddObjectUIContainer(new PathUIContainer(this, scene), "Path");
+            objectUIControl.AddObjectUIContainer(new PathUIContainer<T>(this, scene), "Path");
             
-            List<PathPoint> points = new List<PathPoint>();
+            List<T> points = new List<T>();
 
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
             {
                 if (point.Selected)
                     points.Add(point);
@@ -1260,7 +1274,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             bool all = false;
 
-            foreach(PathPoint point in pathPoints)
+            foreach(T point in pathPoints)
                 all &= point.Selected;
 
             return all;
@@ -1270,7 +1284,7 @@ namespace GL_EditorFramework.EditorDrawables
         {
             bool any = false;
 
-            foreach (PathPoint point in pathPoints)
+            foreach (T point in pathPoints)
                 any |= point.Selected;
 
             return any;
@@ -1281,17 +1295,16 @@ namespace GL_EditorFramework.EditorDrawables
             return pathPoints[0].GlobalPos;
         }
 
-        public class PathUIContainer : IObjectUIContainer
+        public class PathUIContainer<T2> : IObjectUIContainer where T2 : PathPoint, new()
         {
             PropertyCapture? pathCapture = null;
 
-            Path path;
+            readonly Path<T2> path;
             readonly EditorSceneBase scene;
-            public PathUIContainer(Path path, EditorSceneBase scene)
+
+            public PathUIContainer(Path<T2> path, EditorSceneBase scene)
             {
                 this.path = path;
-
-                List<PathPoint> points = new List<PathPoint>();
                 
                 this.scene = scene;
             }

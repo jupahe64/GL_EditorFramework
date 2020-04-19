@@ -14,6 +14,13 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override string ToString() => "PathPoint";
 
+        public PathPoint()
+        {
+            Position = Vector3.Zero;
+            ControlPoint1 = Vector3.Zero;
+            ControlPoint2 = Vector3.Zero;
+        }
+
         public PathPoint(Vector3 position, Vector3 controlPoint1, Vector3 controlPoint2)
         {
             Position = position;
@@ -21,7 +28,7 @@ namespace GL_EditorFramework.EditorDrawables
             ControlPoint2 = controlPoint2;
         }
 
-        public Path Path { get; internal set; }
+        public IPath Path { get; internal set; }
 
         [PropertyCapture.Undoable]
         public Vector3 Position { get; set; }
