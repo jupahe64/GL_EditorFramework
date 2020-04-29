@@ -17,11 +17,6 @@ using System.IO;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    public interface IPath
-    {
-        float CubeScale { get; }
-    }
-
     public class Path : Path<PathPoint>
     {
         public Path(List<PathPoint> pathPoints)
@@ -31,7 +26,7 @@ namespace GL_EditorFramework.EditorDrawables
         }
     }
 
-    public partial class Path<T> : EditableObject, IPath where T : PathPoint, new()
+    public partial class Path<T> : EditableObject where T : PathPoint, new()
     {
         public float CubeScale => 0.5f;
         public float ControlCubeScale => 0.25f;
@@ -47,27 +42,37 @@ namespace GL_EditorFramework.EditorDrawables
 
         private int pathPointVao;
         private int pathPointBuffer;
-        readonly protected List<T> pathPoints;
+        protected List<T> pathPoints;
 
         public IReadOnlyList<T> PathPoints => pathPoints;
 
         [PropertyCapture.Undoable]
         public bool Closed { get; set; } = false;
 
+        protected Path()
+        {
+
+        }
+
         public Path(List<T> pathPoints)
         {
             this.pathPoints = pathPoints;
             foreach (T point in pathPoints)
-                point.Path = this;
+                SetupPoint(point);
         }
 
-        public override void ListChanged(IList list)
+        public void Insert(int index, T pathPoint, EditorSceneBase scene)
         {
-            if (list == pathPoints)
-            {
-                foreach (T point in pathPoints)
-                    point.Path = this;
-            }
+            SetupPoint(pathPoint);
+
+            pathPoints.Insert(index, pathPoint);
+
+            scene.AddToUndo(new RevertableSingleAddition(pathPoint, pathPoints));
+        }
+
+        protected virtual void SetupPoint(T point)
+        {
+
         }
 
         public override string ToString() => "path";
@@ -927,6 +932,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                     T pathPoint = new T() {GlobalPos = closest_pos };
 
+                    SetupPoint(pathPoint);
+
                     pathPoints.Insert(closest_i, pathPoint);
 
                     scene.StartAction(new PointInsertAction<T>(this, pathPoint, scene));
@@ -979,6 +986,8 @@ namespace GL_EditorFramework.EditorDrawables
                     T pathPoint = new T() { GlobalPos = pos };
 
                     pathPoints.Insert(i, pathPoint);
+
+                    SetupPoint(pathPoint);
 
                     scene.StartAction(new PointInsertAction<T>(this, pathPoint, scene));
 

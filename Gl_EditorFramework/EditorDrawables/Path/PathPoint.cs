@@ -28,8 +28,6 @@ namespace GL_EditorFramework.EditorDrawables
             ControlPoint2 = controlPoint2;
         }
 
-        public IPath Path { get; internal set; }
-
         [PropertyCapture.Undoable]
         public Vector3 Position { get; set; }
 
@@ -181,14 +179,7 @@ namespace GL_EditorFramework.EditorDrawables
             if (!Selected)
                 return;
 
-            boundingBox.Include(new BoundingBox(
-                GlobalPos.X - Path.CubeScale,
-                GlobalPos.X + Path.CubeScale,
-                GlobalPos.Y - Path.CubeScale,
-                GlobalPos.Y + Path.CubeScale,
-                GlobalPos.Z - Path.CubeScale,
-                GlobalPos.Z + Path.CubeScale
-            ));
+            boundingBox.Include(GlobalPos);
         }
 
         public override bool IsInRange(float range, float rangeSquared, Vector3 pos) => true; //probably never gets called
@@ -196,16 +187,16 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint SelectAll(GL_ControlBase control)
         {
             Selected = true;
-                
-                
+
+
             return REDRAW;
         }
 
         public override uint SelectDefault(GL_ControlBase control)
         {
             Selected = true;
-                
-                
+
+
             return REDRAW;
         }
 
@@ -214,8 +205,8 @@ namespace GL_EditorFramework.EditorDrawables
             if (partIndex == 0)
             {
                 Selected = true;
-                    
-                    
+
+
             }
             return REDRAW;
         }
@@ -225,8 +216,8 @@ namespace GL_EditorFramework.EditorDrawables
             if (partIndex == 0)
             {
                 Selected = false;
-                    
-                    
+
+
             }
             return REDRAW;
         }
@@ -234,8 +225,8 @@ namespace GL_EditorFramework.EditorDrawables
         public override uint DeselectAll(GL_ControlBase control)
         {
             Selected = false;
-                
-                
+
+
             return REDRAW;
         }
 
@@ -261,7 +252,7 @@ namespace GL_EditorFramework.EditorDrawables
                 ControlPoint1 = pos.Value;
                 return;
             }
-                
+
             if (_part == 2)
             {
                 prevPos = ControlPoint2;
@@ -269,7 +260,7 @@ namespace GL_EditorFramework.EditorDrawables
                 return;
             }
         }
-            
+
         public override void Prepare(GL_ControlModern control)
         {
             //probably never gets called
