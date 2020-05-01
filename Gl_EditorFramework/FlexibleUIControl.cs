@@ -534,6 +534,8 @@ namespace GL_EditorFramework
                     {
                         DrawField(x, y, width, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, number.ToString(), isCentered);
+
+                        eventType = EventType.DRAW; //Click Handled
                     }
                     else
                         DrawField(x, y, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
@@ -635,6 +637,8 @@ namespace GL_EditorFramework
                     {
                         DrawField(x, y, width, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, text, false, isCentered);
+
+                        eventType = EventType.DRAW; //Click Handled
                     }
                     else
                         DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
@@ -731,6 +735,9 @@ namespace GL_EditorFramework
                 }
 
                 clicked = eventType == EventType.CLICK;
+
+                if(clicked)
+                    eventType = EventType.DRAW; //Click Handled
             }
             else
             {
@@ -765,6 +772,8 @@ namespace GL_EditorFramework
                     {
                         value = values[index - 1];
                         changeTypes |= VALUE_SET;
+
+                        eventType = EventType.DRAW; //Click Handled
                     }
                 }
             }
@@ -781,6 +790,8 @@ namespace GL_EditorFramework
                     {
                         value = values[index + 1];
                         changeTypes |= VALUE_SET;
+
+                        eventType = EventType.DRAW; //Click Handled
                     }
                 }
             }

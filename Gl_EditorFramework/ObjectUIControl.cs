@@ -84,7 +84,11 @@ namespace GL_EditorFramework
                 bool hovered = new Rectangle(Width - margin - 20 - SystemInformation.VerticalScrollBarWidth, currentY, 20 + SystemInformation.VerticalScrollBarWidth, 20).Contains(mousePos);
 
                 if (hovered && eventType == EventType.CLICK)
+                {
                     containerInfo.isExpanded = !containerInfo.isExpanded;
+
+                    eventType = EventType.DRAW; //Click Handled
+                }
 
                 g.TranslateTransform(usableWidth - margin - 20, currentY);
                 g.FillPolygon(hovered ? SystemBrushes.ControlDark : backBrush, containerInfo.isExpanded ? arrowDown : arrowLeft);
@@ -242,6 +246,9 @@ namespace GL_EditorFramework
                     g.DrawString(name, LinkFont, Brushes.Blue, margin, currentY);
 
                 clicked = eventType == EventType.CLICK;
+
+                if(clicked)
+                    eventType = EventType.DRAW; //Click Handled
             }
             else
             {
@@ -279,6 +286,8 @@ namespace GL_EditorFramework
                 {
                     isChecked = !isChecked;
                     changeTypes |= VALUE_SET;
+
+                    eventType = EventType.DRAW; //Click Handled
                 }
 
                 DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "",
@@ -338,6 +347,8 @@ namespace GL_EditorFramework
                     if (new Rectangle(margin + 1, currentY + 1, usableWidth - margin * 2 - 2, comboBoxHeight - 2).Contains(mousePos))
                     {
                         PrepareComboBox(margin, currentY, usableWidth - margin * 2, text, dropDownItems, true);
+
+                        eventType = EventType.DRAW; //Click Handled
                     }
                     else
                         DrawComboBoxField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
