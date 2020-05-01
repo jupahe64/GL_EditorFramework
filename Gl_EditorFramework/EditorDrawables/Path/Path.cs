@@ -863,8 +863,6 @@ namespace GL_EditorFramework.EditorDrawables
 
                     float closest_dist = float.MaxValue;
 
-                    Vector3 closest_pos = new Vector3();
-
                     int closest_i = -1;
 
                     for (int i = 1; i < pathPoints.Count; i++)
@@ -893,7 +891,6 @@ namespace GL_EditorFramework.EditorDrawables
                             if (dist < closest_dist)
                             {
                                 closest_dist = dist;
-                                closest_pos = pos;
                                 closest_i = i;
                             }
                         }
@@ -924,13 +921,12 @@ namespace GL_EditorFramework.EditorDrawables
                             if (dist < closest_dist)
                             {
                                 closest_dist = dist;
-                                closest_pos = pos;
                                 closest_i = pathPoints.Count;
                             }
                         }
                     }
 
-                    T pathPoint = new T() {GlobalPos = closest_pos };
+                    T pathPoint = new T() {GlobalPos = placePos };
 
                     SetupPoint(pathPoint);
 
