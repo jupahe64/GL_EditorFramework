@@ -11,7 +11,7 @@ namespace GL_EditorFramework
 {
     public class ObjectUIControl : FlexibleUIControl, IObjectUIControl
     {
-        const int fieldWidth = 50;
+        int fieldWidth;
         const int fieldSpace = 2;
         const int beforeTwoLineSpacing = 5;
         const int fullWidthSpace = 5;
@@ -65,6 +65,60 @@ namespace GL_EditorFramework
 
             containerInfos.Clear();
         }
+        int horizontalSperatorStartY;
+
+        bool acceptSeperatorCalls = false;
+
+        private void BeginHorizontalSeperator()
+        {
+            if (!acceptSeperatorCalls)
+                return;
+
+            horizontalSperatorStartY = currentY;
+        }
+
+        bool draggingHSeperator = false;
+
+        private void EndHorizontalSeperator()
+        {
+            if (!acceptSeperatorCalls)
+                return;
+
+            int t = horizontalSperatorStartY + 1;
+
+            int b = currentY - 6;
+
+            int x = usableWidth - fieldWidth * 3 - fieldSpace * 2 - margin - 5;
+
+            if (t >= b || (Math.Abs(x- mousePos.X - 15)>20 && !draggingHSeperator)) //seperator has length of 0, don't draw it
+                return;
+
+
+            g.DrawLine(
+                draggingHSeperator ? Pens.Black : SystemPens.ControlDark, 
+                x, t, x, b);
+
+            if (eventType == EventType.DRAG_START && new Rectangle(x - 4, t, x + 4, b - t).Contains(mousePos))
+            {
+                draggingHSeperator = true;
+
+                seperatorPositionBeforeDrag = seperatorPosition;
+            }
+        }
+
+
+        double seperatorPosition = 0.6;
+
+        double seperatorPositionBeforeDrag;
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+
+
+        }
+
+        Rectangle nameClipping;
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -75,6 +129,24 @@ namespace GL_EditorFramework
                 AutoScrollMinSize = new Size();
                 return;
             }
+
+            if (eventType == EventType.DRAG_END || eventType == EventType.CLICK)
+                draggingHSeperator = false;
+
+            if (eventType == EventType.DRAG_ABORT)
+            {
+                draggingHSeperator = false;
+                seperatorPosition = seperatorPositionBeforeDrag;
+            }
+
+            if (draggingHSeperator)
+            {
+                seperatorPosition = Math.Min(Math.Max(0.25, (mousePos.X - margin) / (double)(usableWidth - 2 * margin)), 0.75);
+            }
+
+            fieldWidth = (int)(((usableWidth - 2 * margin) * (1-seperatorPosition) - fieldSpace * 2) / 3.0);
+
+            nameClipping = new Rectangle(0, 0, usableWidth - margin - fieldWidth * 3 - fieldSpace * 2 - 10, Height);
 
             currentY = margin + AutoScrollPosition.Y;
 
@@ -97,13 +169,22 @@ namespace GL_EditorFramework
                 Spacing(margin / 2);
 
                 if (containerInfo.isExpanded)
+                {
+                    acceptSeperatorCalls = true;
+
+                    BeginHorizontalSeperator();
                     containerInfo.objectUIContainer.DoUI(this);
+
+                    EndHorizontalSeperator();
+
+                    acceptSeperatorCalls = false;
+                }
 
                 g.DrawRectangle(SystemPens.ControlDark, margin / 2, lastY, usableWidth - margin, currentY - lastY);
 
                 Spacing(margin);
 
-                if (eventType != EventType.DRAW)
+                if (changeTypes != 0)
                 {
                     if ((changeTypes & VALUE_CHANGE_START) > 0)
                         containerInfo.objectUIContainer.OnValueChangeStart();
@@ -121,7 +202,11 @@ namespace GL_EditorFramework
         public float NumberInput(float number, string name,
             float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
+            g.SetClip(nameClipping);
+
             DrawText(margin, currentY, name);
+
+            g.ResetClip();
 
             number = NumericInputField(usableWidth - fieldWidth - margin, currentY, fieldWidth, number,
                 new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround), true);
@@ -134,7 +219,11 @@ namespace GL_EditorFramework
         {
             NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
 
+            g.SetClip(nameClipping);
+
             DrawText(margin, currentY, name);
+
+            g.ResetClip();
 
             vec.X = NumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.X, input, true);
             vec.Y = NumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Y, input, true);
@@ -148,6 +237,8 @@ namespace GL_EditorFramework
         public OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
             float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             currentY += beforeTwoLineSpacing;
 
             NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
@@ -169,19 +260,28 @@ namespace GL_EditorFramework
 
 
             currentY += rowHeight;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
+
             return vec;
         }
 
         public bool Button(string name)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             bool clicked = Button(margin, currentY, usableWidth - margin * 2, name);
             currentY += 24;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
 
             return clicked;
         }
 
         public int DoubleButton(string name, string name2)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             int width = (usableWidth - margin * 2 - fullWidthSpace) / 2;
 
             int clickedIndex = 0;
@@ -193,11 +293,15 @@ namespace GL_EditorFramework
 
             currentY += 24;
 
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
+
             return clickedIndex;
         }
 
         public int TripleButton(string name, string name2, string name3)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             int width = (usableWidth - margin * 2 - fullWidthSpace * 2) / 3;
 
             int clickedIndex = 0;
@@ -211,11 +315,15 @@ namespace GL_EditorFramework
 
             currentY += 24;
 
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
+
             return clickedIndex;
         }
 
         public int QuadripleButton(string name, string name2, string name3, string name4)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             int width = (usableWidth - margin * 2 - fullWidthSpace * 3) / 4;
 
             int clickedIndex = 0;
@@ -236,6 +344,8 @@ namespace GL_EditorFramework
 
         public bool Link(string name)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             bool clicked = false;
 
             if (new Rectangle(margin, currentY, (int)g.MeasureString(name, Font).Width, textBoxHeight).Contains(mousePos))
@@ -258,23 +368,35 @@ namespace GL_EditorFramework
             currentY += rowHeight;
             index++;
 
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
+
             return clicked;
         }
 
         public void PlainText(string text)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             DrawText(margin, currentY, text);
             currentY += rowHeight;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
         }
 
         public void Heading(string text)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             g.DrawString(text, HeadingFont, SystemBrushes.ControlText, margin, currentY);
             currentY += rowHeight;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
         }
 
         public bool CheckBox(string name, bool isChecked)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             DrawText(margin, currentY, name);
 
             if (new Rectangle(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, textBoxHeight + 2).Contains(mousePos))
@@ -302,12 +424,18 @@ namespace GL_EditorFramework
             currentY += rowHeight;
             index++;
 
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
+
             return isChecked;
         }
 
         public string TextInput(string text, string name)
         {
+            g.SetClip(nameClipping);
+
             DrawText(margin, currentY, name);
+
+            g.ResetClip();
 
             text = TextInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth * 3 + fieldSpace * 2, text, false);
 
@@ -317,10 +445,15 @@ namespace GL_EditorFramework
 
         public string FullWidthTextInput(string text, string name)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             DrawText(margin, currentY, name);
             currentY += rowHeight;
             text = TextInputField(margin, currentY, usableWidth - margin * 2, text, false);
             currentY += rowHeight;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
+
             return text;
         }
 
@@ -328,7 +461,11 @@ namespace GL_EditorFramework
         {
             int width = fieldWidth * 3 + fieldSpace * 2;
 
+            g.SetClip(nameClipping);
+
             DrawText(margin, currentY, name);
+
+            g.ResetClip();
 
             value = ChoicePickerField(usableWidth - width - margin, currentY, width, value, values);
 
@@ -338,48 +475,22 @@ namespace GL_EditorFramework
 
         public string DropDownTextInput(string name, string text, string[] dropDownItems)
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
+            g.SetClip(nameClipping);
+
             DrawText(margin, currentY, name);
+
+            g.ResetClip();
+
             currentY += rowHeight;
 
-            switch (eventType)
-            {
-                case EventType.CLICK:
-                    if (new Rectangle(margin + 1, currentY + 1, usableWidth - margin * 2 - 2, comboBoxHeight - 2).Contains(mousePos))
-                    {
-                        PrepareComboBox(margin, currentY, usableWidth - margin * 2, text, dropDownItems, true);
+            text = DropDownTextInputField(margin, currentY, usableWidth - margin * 2, text, dropDownItems);
 
-                        eventType = EventType.DRAW; //Click Handled
-                    }
-                    else
-                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
-
-                    break;
-
-                case EventType.LOST_FOCUS:
-                    if (focusedIndex == index)
-                    {
-                        changeTypes |= VALUE_SET;
-                        text = comboBox1.Text;
-                    }
-
-                    if (focusedIndex == index)
-                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
-                    else
-                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
-
-                    break;
-
-                default:
-                    if (focusedIndex == index)
-                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
-                    else
-                        DrawComboBoxField(margin, currentY, usableWidth - margin * 2, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
-
-                    break;
-            }
-
-            index++;
             currentY += rowHeight;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
+
             return text;
         }
 
@@ -390,9 +501,13 @@ namespace GL_EditorFramework
 
         public void VerticalSeperator()
         {
+            EndHorizontalSeperator(); //this control doesn't get aligned to it
+
             g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY - 2, usableWidth - margin * 2, 2);
             g.FillRectangle(SystemBrushes.ControlDark, margin, currentY - 2, usableWidth - margin * 2 - 1, 1);
             currentY += 2;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
         }
         #endregion
     }

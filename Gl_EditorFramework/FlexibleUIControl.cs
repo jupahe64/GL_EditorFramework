@@ -147,7 +147,15 @@ namespace GL_EditorFramework
                 usableWidth = Width - SystemInformation.VerticalScrollBarWidth - 2;
             else
                 usableWidth = Width - 2;
+
             Refresh();
+
+            if (comboBoxUpdateRequest.HasValue)
+            {
+                comboBox1.SetBounds(comboBoxUpdateRequest.Value.X, comboBoxUpdateRequest.Value.Y, comboBoxUpdateRequest.Value.Width, -1, BoundsSpecified.Location | BoundsSpecified.Width);
+
+                comboBoxUpdateRequest = null;
+            }
         }
 
         private void TextBox1_MouseClick(object sender, MouseEventArgs e)
@@ -490,6 +498,8 @@ namespace GL_EditorFramework
 
         ComboBoxSetup? comboBoxRequest;
 
+        Rectangle? comboBoxUpdateRequest;
+
         private void PrepareFieldForInput(int x, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
         {
             textBoxRequest = new TextBoxSetup(x + 1, y + 1, width - 2, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput);
@@ -527,6 +537,9 @@ namespace GL_EditorFramework
         float valueBeforeDrag;
         protected float NumericInputField(int x, int y, int width, float number, NumberInputInfo info, bool isCentered)
         {
+            if (focusedIndex == index)
+                UpdateTextbox(x, y, width);
+
             switch (eventType)
             {
                 case EventType.CLICK:
@@ -630,6 +643,9 @@ namespace GL_EditorFramework
 
         protected string TextInputField(int x, int y, int width, string text, bool isCentered)
         {
+            if (focusedIndex == index)
+                UpdateTextbox(x, y, width);
+
             switch (eventType)
             {
                 case EventType.CLICK:
@@ -664,6 +680,60 @@ namespace GL_EditorFramework
                         DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
+
+                    break;
+            }
+
+            index++;
+            return text;
+        }
+
+        private void UpdateTextbox(int x, int y, int width)
+        {
+            textBox1.SetBounds(x + 1, y + 1, width - 2, -1, BoundsSpecified.Location | BoundsSpecified.Width);
+        }
+
+        protected string DropDownTextInputField(int x, int y, int width, string text, string[] dropDownItems)
+        {
+            if (focusedIndex == index)
+            {
+                //UpdateCombobox
+                comboBoxUpdateRequest = new Rectangle(x, y, width, 0);
+            }
+
+            switch (eventType)
+            {
+                case EventType.CLICK:
+                    if (new Rectangle(x + 1, y + 1, width - 2, comboBoxHeight - 2).Contains(mousePos))
+                    {
+                        PrepareComboBox(x, y, width, text, dropDownItems, true);
+
+                        eventType = EventType.DRAW; //Click Handled
+                    }
+                    else
+                        DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    break;
+
+                case EventType.LOST_FOCUS:
+                    if (focusedIndex == index)
+                    {
+                        changeTypes |= VALUE_SET;
+                        text = comboBox1.Text;
+                    }
+
+                    if (focusedIndex == index)
+                        DrawComboBoxField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                    else
+                        DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+
+                    break;
+
+                default:
+                    if (focusedIndex == index)
+                        DrawComboBoxField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                    else
+                        DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
             }
