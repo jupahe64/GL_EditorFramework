@@ -132,6 +132,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="GL_Core\Resources\TextureSheet.png" />
+    <None Include="Resources\PasteIconClick.png" />
+    <None Include="Resources\CopyIconClick.png" />
+    <None Include="Resources\PasteIconHover.png" />
+    <None Include="Resources\CopyIconHover.png" />
+    <None Include="Resources\PasteIcon.png" />
+    <None Include="Resources\CopyIcon.png" />
     <None Include="Resources\BackButtonIcon.png" />
     <Content Include="Resources\CloseTabIcon.png" />
     <Content Include="Resources\CloseTabIconHover.png" />

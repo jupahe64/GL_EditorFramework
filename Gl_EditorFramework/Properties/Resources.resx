@@ -127,6 +127,24 @@
   <data name="CloseTabIconHover" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\closetabiconhover.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="CopyIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CopyIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CopyIconClick" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CopyIconClick.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CopyIconHover" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CopyIconHover.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PasteIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PasteIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PasteIconClick" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PasteIconClick.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PasteIconHover" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PasteIconHover.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="TextureSheet" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\GL_Core\Resources\TextureSheet.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

@@ -820,6 +820,36 @@ namespace GL_EditorFramework
             return clicked;
         }
 
+        protected bool ImageButton(int x, int y, Image image, Image imageClicked = null, Image imageHovered = null)
+        {
+            bool clicked = false;
+
+            if (new Rectangle(x, y, image.Width, image.Height + 6).Contains(mousePos))
+            {
+                if (mouseDown)
+                {
+                    g.DrawImage(imageClicked ?? image, x, y);
+                }
+                else
+                {
+                    g.DrawImage(imageHovered ?? image, x, y);
+                }
+
+                clicked = eventType == EventType.CLICK;
+
+                if (clicked)
+                    eventType = EventType.DRAW; //Click Handled
+            }
+            else
+            {
+                g.DrawImage(image, x, y);
+            }
+
+            index++;
+
+            return clicked;
+        }
+
         protected object ChoicePickerField(int x, int y, int width, object value, IList values)
         {
             int clickAreaWidth = width / 3;

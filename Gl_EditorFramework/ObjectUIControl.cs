@@ -88,7 +88,7 @@ namespace GL_EditorFramework
 
             int b = currentY - 6;
 
-            int x = usableWidth - fieldWidth * 3 - fieldSpace * 2 - margin - 5;
+            int x = usableWidth - fieldWidth * 4 - fieldSpace * 3 - margin - 5;
 
             if (t >= b || (Math.Abs(x- mousePos.X - 15)>20 && !draggingHSeperator)) //seperator has length of 0, don't draw it
                 return;
@@ -120,6 +120,8 @@ namespace GL_EditorFramework
 
         Rectangle nameClipping;
 
+        Rectangle contentClipping;
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -144,11 +146,29 @@ namespace GL_EditorFramework
                 seperatorPosition = Math.Min(Math.Max(0.25, (mousePos.X - margin) / (double)(usableWidth - 2 * margin)), 0.75);
             }
 
-            fieldWidth = (int)(((usableWidth - 2 * margin) * (1-seperatorPosition) - fieldSpace * 2) / 3.0);
+            fieldWidth = (int)(((usableWidth - 2 * margin) * (1-seperatorPosition) - fieldSpace * 3) / 4.0);
 
-            nameClipping = new Rectangle(0, 0, usableWidth - margin - fieldWidth * 3 - fieldSpace * 2 - 10, Height);
+            nameClipping = new Rectangle(0, 0, usableWidth - margin - fieldWidth * 4 - fieldSpace * 3 - 10, Height);
+
+            contentClipping = new Rectangle(0, 0, usableWidth - margin, Height);
 
             currentY = margin + AutoScrollPosition.Y;
+
+            #region Check Clipboard
+            var values = Clipboard.GetText().Split(',');
+
+            clipboardNumbers = new float[values.Length];
+
+            clipboardVectorSize = values.Length;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (float.TryParse(values[i].Trim(), out float value))
+                    clipboardNumbers[i] = value;
+                else
+                    clipboardVectorSize = 0;
+            }
+            #endregion
 
             foreach (ContainerInfo containerInfo in containerInfos)
             {
@@ -225,14 +245,43 @@ namespace GL_EditorFramework
 
             g.ResetClip();
 
-            vec.X = NumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.X, input, true);
-            vec.Y = NumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Y, input, true);
-            vec.Z = NumericInputField(usableWidth - margin - fieldWidth, currentY, fieldWidth, vec.Z, input, true);
+            vec.X = NumericInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth, vec.X, input, true);
+            vec.Y = NumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.Y, input, true);
+            vec.Z = NumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Z, input, true);
 
+            int copyBtnX = usableWidth - margin - fieldWidth;
+
+            g.SetClip(contentClipping);
+
+            if (ImageButton(copyBtnX, currentY, Properties.Resources.CopyIcon, Properties.Resources.CopyIconClick, Properties.Resources.CopyIconHover))
+                Clipboard.SetText($"{vec.X},{vec.Y},{vec.Z}");
+
+            if (clipboardVectorSize == 3)
+            {
+                if (eventType == EventType.DRAG_START && new Rectangle(copyBtnX + copyBtnImageWidth, currentY, copyBtnImageWidth, 15).Contains(mousePos))
+                    changeTypes |= VALUE_CHANGE_START;
+
+                if (ImageButton(copyBtnX + copyBtnImageWidth, currentY, Properties.Resources.PasteIcon, Properties.Resources.PasteIconClick, Properties.Resources.PasteIconHover))
+                {
+                    vec.X = clipboardNumbers[0];
+                    vec.Y = clipboardNumbers[1];
+                    vec.Z = clipboardNumbers[2];
+
+                    changeTypes |= VALUE_SET;
+                }
+            }
+
+            g.ResetClip();
 
             currentY += rowHeight;
             return vec;
         }
+
+        float[] clipboardNumbers;
+
+        int clipboardVectorSize;
+
+        static int copyBtnImageWidth = Properties.Resources.CopyIcon.Width;
 
         public OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
             float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
@@ -437,7 +486,7 @@ namespace GL_EditorFramework
 
             g.ResetClip();
 
-            text = TextInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth * 3 + fieldSpace * 2, text, false);
+            text = TextInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth * 4 + fieldSpace * 3, text, false);
 
             currentY += rowHeight;
             return text;
@@ -459,7 +508,7 @@ namespace GL_EditorFramework
 
         public object ChoicePicker(string name, object value, IList values)
         {
-            int width = fieldWidth * 3 + fieldSpace * 2;
+            int width = fieldWidth * 4 + fieldSpace * 3;
 
             g.SetClip(nameClipping);
 
