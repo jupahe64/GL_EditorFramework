@@ -177,6 +177,20 @@ namespace GL_EditorFramework
             return true;
         }
 
+        protected static Point[] arrowLeft = new Point[]
+        {
+            new Point(arrowWidth/2+4,  2),
+            new Point(arrowWidth/2+4, 18),
+            new Point(arrowWidth/2-4, 10)
+        };
+
+        protected static Point[] arrowRight = new Point[]
+        {
+            new Point(arrowWidth/2-4,  2),
+            new Point(arrowWidth/2-4, 18),
+            new Point(arrowWidth/2+4, 10)
+        };
+
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             base.OnPaintBackground(e);
@@ -190,9 +204,13 @@ namespace GL_EditorFramework
             g.FillRectangle(SystemBrushes.ControlLightLight, 1, 30, Width - 2, Height - 31);
             g.DrawRectangle(SystemPens.ControlDark, 1, 30, Width - 2, Height - 31);
 
-            int x = 5;
+            int x = arrowWidth + 5;
 
-            for (int i = 0; i < tabs.Count; i++)
+            Rectangle tabArea = new Rectangle(arrowWidth + 5, 10, Width - 10 - arrowWidth * 2, 21);
+
+            g.SetClip(tabArea);
+
+            for (int i = scrollIndexOffset; i < tabs.Count; i++)
             {
                 int width = (int)Math.Ceiling(g.MeasureString(tabs[i].Name, Font).Width);
 
@@ -205,7 +223,7 @@ namespace GL_EditorFramework
 
                 g.DrawString(tabs[i].Name, Font, SystemBrushes.ControlText, x + 5, 13);
 
-                if (mousePos.Y > 10 && mousePos.Y < 30)
+                if (tabArea.Contains(mousePos))
                 {
                     if (mousePos.X > x && mousePos.X < x + width + 20)
                     {
@@ -226,7 +244,51 @@ namespace GL_EditorFramework
                 ICON_HOVERED:
                 x += width + 22;
             }
+
+            canScrollRight = x > Width - 5 - arrowWidth;
+
+            g.ResetClip();
+
+            hoveredArrow = HoveredArrow.NONE;
+
+            if (scrollIndexOffset>0)
+            {
+                if (new Rectangle(5, 10, arrowWidth, 19).Contains(mousePos))
+                    hoveredArrow = HoveredArrow.LEFT;
+
+                g.TranslateTransform(5, 10);
+                g.FillPolygon(hoveredArrow == HoveredArrow.LEFT ? SystemBrushes.ControlDark : Framework.backBrush, arrowLeft);
+                g.ResetTransform();
+            }
+
+            if (canScrollRight)
+            {
+                g.FillRectangle(SystemBrushes.ControlDark, Width - arrowWidth - 5 - 2, 11, 2, 20);
+
+                if (new Rectangle(Width - arrowWidth - 5, 10, arrowWidth, 19).Contains(mousePos))
+                    hoveredArrow = HoveredArrow.RIGHT;
+
+                g.TranslateTransform(Width - arrowWidth - 5, 10);
+                g.FillPolygon(hoveredArrow == HoveredArrow.RIGHT ? SystemBrushes.ControlDark : Framework.backBrush, arrowRight);
+                g.ResetTransform();
+            }
+
         }
+
+        enum HoveredArrow
+        {
+            NONE,
+            LEFT,
+            RIGHT,
+        }
+
+        HoveredArrow hoveredArrow = HoveredArrow.NONE;
+
+        const int arrowWidth = 20;
+
+        int scrollIndexOffset = 0;
+
+        bool canScrollRight = false;
 
         Point mousePos = new Point(-1,-1);
 
@@ -238,6 +300,7 @@ namespace GL_EditorFramework
 
             Invalidate();
         }
+
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
@@ -259,6 +322,39 @@ namespace GL_EditorFramework
                 }
 
                 Invalidate();
+            }
+
+            if(hoveredArrow==HoveredArrow.LEFT)
+            {
+                scrollIndexOffset--;
+                Refresh();
+            }
+            else if (hoveredArrow == HoveredArrow.RIGHT)
+            {
+                scrollIndexOffset++;
+                Refresh();
+            }
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+
+            if (e.Delta > 0)
+            {
+                if (scrollIndexOffset>0)
+                {
+                    scrollIndexOffset--;
+                    Refresh();
+                }
+            }
+            else if (e.Delta<0)
+            {
+                if (canScrollRight)
+                {
+                    scrollIndexOffset++;
+                    Refresh();
+                }
             }
         }
     }

@@ -59,7 +59,7 @@ namespace GL_EditorFramework
         protected Point lastMousePos;
         protected Point dragStarPos;
 
-        protected Brush buttonHighlight = new SolidBrush(MixedColor(SystemColors.GradientInactiveCaption, SystemColors.ControlLightLight));
+        protected Brush buttonHighlight = new SolidBrush(Framework.MixedColor(SystemColors.GradientInactiveCaption, SystemColors.ControlLightLight));
 
         Timer doubleClickTimer = new Timer();
         bool acceptDoubleClick = false;
@@ -252,8 +252,6 @@ namespace GL_EditorFramework
             Refresh();
         }
 
-        protected static Brush backBrush = new SolidBrush(MixedColor(SystemColors.ControlDark, SystemColors.Control));
-
         protected static Point[] arrowDown = new Point[]
         {
             new Point( 2,  6),
@@ -285,7 +283,7 @@ namespace GL_EditorFramework
 
                 eventType = EventType.DRAW;
             }
-            else if (e.Button == MouseButtons.Right)
+            else if (e.Button == MouseButtons.Right && mouseDown)
             {
                 eventType = EventType.DRAG_ABORT;
                 Refresh();
@@ -886,26 +884,6 @@ namespace GL_EditorFramework
                 this.max = max;
                 this.wrapAround = wrapAround;
             }
-        }
-
-        static Color MixedColor(Color color1, Color color2)
-        {
-            byte a1 = color1.A;
-            byte r1 = color1.R;
-            byte g1 = color1.G;
-            byte b1 = color1.B;
-
-            byte a2 = color2.A;
-            byte r2 = color2.R;
-            byte g2 = color2.G;
-            byte b2 = color2.B;
-
-            int a3 = (a1 + a2) / 2;
-            int r3 = (r1 + r2) / 2;
-            int g3 = (g1 + g2) / 2;
-            int b3 = (b1 + b2) / 2;
-
-            return Color.FromArgb(a3, r3, g3, b3);
         }
     }
 }

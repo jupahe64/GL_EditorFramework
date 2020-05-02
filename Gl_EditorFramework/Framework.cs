@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +12,30 @@ using OpenTK.Graphics.OpenGL;
 
 namespace GL_EditorFramework
 {
-    public sealed class Framework {
+    public sealed class Framework 
+    {
+        public static Color MixedColor(Color color1, Color color2)
+        {
+            byte a1 = color1.A;
+            byte r1 = color1.R;
+            byte g1 = color1.G;
+            byte b1 = color1.B;
+
+            byte a2 = color2.A;
+            byte r2 = color2.R;
+            byte g2 = color2.G;
+            byte b2 = color2.B;
+
+            int a3 = (a1 + a2) / 2;
+            int r3 = (r1 + r2) / 2;
+            int g3 = (g1 + g2) / 2;
+            int b3 = (b1 + b2) / 2;
+
+            return Color.FromArgb(a3, r3, g3, b3);
+        }
+
+        public static readonly Brush backBrush = new SolidBrush(MixedColor(SystemColors.ControlDark, SystemColors.Control));
+
         public static float TWO_PI = (float)Math.PI*2;
         public static float PI = (float)Math.PI;
         public static float HALF_PI = (float)Math.PI/2;

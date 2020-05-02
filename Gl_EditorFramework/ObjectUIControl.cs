@@ -163,7 +163,7 @@ namespace GL_EditorFramework
                 }
 
                 g.TranslateTransform(usableWidth - margin - 20, currentY);
-                g.FillPolygon(hovered ? SystemBrushes.ControlDark : backBrush, containerInfo.isExpanded ? arrowDown : arrowLeft);
+                g.FillPolygon(hovered ? SystemBrushes.ControlDark : Framework.backBrush, containerInfo.isExpanded ? arrowDown : arrowLeft);
                 g.ResetTransform();
                 Heading(containerInfo.name);
                 Spacing(margin / 2);
