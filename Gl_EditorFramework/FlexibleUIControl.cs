@@ -40,7 +40,8 @@ namespace GL_EditorFramework
             DRAG,
             DRAG_END,
             DRAG_ABORT,
-            LOST_FOCUS
+            LOST_FOCUS,
+            RIGHT_CLICK
         }
 
         protected static uint VALUE_CHANGE_START = 1;
@@ -315,7 +316,7 @@ namespace GL_EditorFramework
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left || HasNoUIContent())
+            if ((e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) || HasNoUIContent())
                 return;
             mouseDown = false;
 
@@ -326,7 +327,7 @@ namespace GL_EditorFramework
             }
             else
             {
-                eventType = EventType.CLICK;
+                eventType = (e.Button == MouseButtons.Left) ? EventType.CLICK : EventType.RIGHT_CLICK;
                 Refresh();
             }
 
@@ -529,6 +530,19 @@ namespace GL_EditorFramework
 
             focusRequest = index;
             changeTypes |= VALUE_CHANGE_START;
+        }
+
+
+        new public ContextMenu ContextMenu { get; set; }
+
+        protected void ShowContextMenu(ContextMenu contextMenu)
+        {
+            contextMenu.Show(this, mousePos);
+        }
+
+        protected void ShowContextMenu()
+        {
+            ContextMenu.Show(this, mousePos);
         }
 
         #region UI Elements
