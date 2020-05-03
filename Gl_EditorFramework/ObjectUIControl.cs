@@ -155,18 +155,27 @@ namespace GL_EditorFramework
             currentY = margin + AutoScrollPosition.Y;
 
             #region Check Clipboard
-            var values = Clipboard.GetText().Split(',');
-
-            clipboardNumbers = new float[values.Length];
-
-            clipboardVectorSize = values.Length;
-
-            for (int i = 0; i < values.Length; i++)
+            if (Clipboard.ContainsText())
             {
-                if (float.TryParse(values[i].Trim(), out float value))
-                    clipboardNumbers[i] = value;
-                else
-                    clipboardVectorSize = 0;
+
+                var text = Clipboard.GetText();
+
+                if (text.Length < 100) //Larger strings will be ignored for performance sake
+                {
+                    var values = text.Split(',');
+
+                    clipboardNumbers = new float[values.Length];
+
+                    clipboardVectorSize = values.Length;
+
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        if (float.TryParse(values[i].Trim(), out float value))
+                            clipboardNumbers[i] = value;
+                        else
+                            clipboardVectorSize = 0;
+                    }
+                }
             }
             #endregion
 
