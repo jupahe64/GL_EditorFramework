@@ -173,12 +173,21 @@ namespace GL_EditorFramework.GL_Core
         public Matrix4 ProjectionMatrix => mtxProj;
         public Matrix3 InvertedRotationMatrix => mtxRotInv;
 
-        protected bool stereoscopy;
+        public enum StereoscopyType
+        {
+            DISABLED,
+            CROSS_EYE,
+            CROSS_EYE_SWITCHED
+        }
+
+        protected StereoscopyType stereoscopyType;
+
+        protected bool crossEye;
         protected bool showOrientationCube = true;
 
-        protected int ViewPortX(int x) => stereoscopy ? x % (Width / 2) : x;
-        protected int ViewPortDX(int dx) => stereoscopy ? dx * 2 : dx;
-        protected int ViewPortXOff(int x) => stereoscopy ? (x - Width / 4) * 2 : x - Width / 2;
+        protected int ViewPortX(int x) => crossEye ? x % (Width / 2) : x;
+        protected int ViewPortDX(int dx) => crossEye ? dx * 2 : dx;
+        protected int ViewPortXOff(int x) => crossEye ? (x - Width / 4) * 2 : x - Width / 2;
 
         public Color BackgroundColor1 = Color.FromArgb(20, 20, 20);
 
@@ -196,12 +205,13 @@ namespace GL_EditorFramework.GL_Core
             }
         }
 
-        public bool Stereoscopy
+        public StereoscopyType Stereoscopy
         {
-            get => stereoscopy;
+            get => stereoscopyType;
             set
             {
-                stereoscopy = value;
+                stereoscopyType = value;
+                crossEye = value == StereoscopyType.CROSS_EYE || value == StereoscopyType.CROSS_EYE_SWITCHED;
                 OnResize(null);
                 Refresh();
             }
@@ -333,7 +343,7 @@ namespace GL_EditorFramework.GL_Core
             }
         }
 
-        public int ViewWidth => stereoscopy ? Width / 2 : Width;
+        public int ViewWidth => crossEye ? Width / 2 : Width;
 
         public int ViewHeighth => Height;
 
@@ -351,7 +361,7 @@ namespace GL_EditorFramework.GL_Core
                 if (DesignMode) return;
 
                 float aspect_ratio;
-                if (stereoscopy)
+                if (crossEye)
                     aspect_ratio = Width / 2 / (float)Height;
                 else
                     aspect_ratio = Width / (float)Height;
@@ -369,7 +379,7 @@ namespace GL_EditorFramework.GL_Core
                 if (DesignMode) return;
 
                 float aspect_ratio;
-                if (stereoscopy)
+                if (crossEye)
                     aspect_ratio = Width / 2 / (float)Height;
                 else
                     aspect_ratio = Width / (float)Height;
@@ -387,7 +397,7 @@ namespace GL_EditorFramework.GL_Core
                 if (DesignMode) return;
 
                 float aspect_ratio;
-                if (stereoscopy)
+                if (crossEye)
                     aspect_ratio = Width / 2 / (float)Height;
                 else
                     aspect_ratio = Width / (float)Height;
@@ -524,7 +534,7 @@ namespace GL_EditorFramework.GL_Core
             if (DesignMode) return;
 
             float aspect_ratio;
-            if (stereoscopy)
+            if (crossEye)
                 aspect_ratio = Width / 2 / (float)Height;
             else
                 aspect_ratio = Width / (float)Height;
@@ -546,7 +556,7 @@ namespace GL_EditorFramework.GL_Core
 
         protected void _Repick()
         {
-            int pickingMouseX = stereoscopy ? lastMouseLoc.X / 2 : lastMouseLoc.X;
+            int pickingMouseX = crossEye ? lastMouseLoc.X / 2 : lastMouseLoc.X;
 
             pickingIndex = 1;
 
@@ -851,8 +861,8 @@ namespace GL_EditorFramework.GL_Core
             orientationCubeMtx =
                 Matrix4.CreateRotationY(camRotX) *
                 Matrix4.CreateRotationX(camRotY) *
-                Matrix4.CreateScale((stereoscopy ? 80f : 40f) / Width, 40f / Height, 0.25f) *
-                Matrix4.CreateTranslation(1 - (stereoscopy ? 160f : 80f) / Width, 1 - 80f / Height, 0);
+                Matrix4.CreateScale((crossEye ? 80f : 40f) / Width, 40f / Height, 0.25f) *
+                Matrix4.CreateTranslation(1 - (crossEye ? 160f : 80f) / Width, 1 - 80f / Height, 0);
             GL.LoadMatrix(ref orientationCubeMtx);
             GL.Disable(EnableCap.DepthTest);
 

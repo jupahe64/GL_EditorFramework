@@ -280,7 +280,7 @@ namespace GL_EditorFramework.GL_Core
                 base.OnMouseEnter(e);
                 return;
             }
-            if (stereoscopy)
+            if (crossEye)
             {
                 showFakeCursor = true;
                 Cursor.Hide();
@@ -296,7 +296,7 @@ namespace GL_EditorFramework.GL_Core
                 base.OnMouseLeave(e);
                 return;
             }
-            if (stereoscopy)
+            if (crossEye)
             {
                 showFakeCursor = false;
                 Cursor.Show();

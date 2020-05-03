@@ -105,7 +105,7 @@ namespace GL_EditorFramework.GL_Core
             }
 
             float aspect_ratio;
-            if (stereoscopy)
+            if (crossEye)
                 aspect_ratio = Width / 2 / (float)Height;
             else
                 aspect_ratio = Width / (float)Height;
@@ -130,7 +130,7 @@ namespace GL_EditorFramework.GL_Core
                 base.OnPaint(e);
                 e.Graphics.Clear(BackgroundColor1);
                 if(DesignMode)
-                    e.Graphics.DrawString("Modern Gl" + (stereoscopy ? " stereoscopy" : ""), SystemFonts.DefaultFont, SystemBrushes.ControlLight, 10f, 10f);
+                    e.Graphics.DrawString("Modern Gl" + (crossEye ? " stereoscopy" : ""), SystemFonts.DefaultFont, SystemBrushes.ControlLight, 10f, 10f);
                 return;
             }
             MakeCurrent();
@@ -152,10 +152,10 @@ namespace GL_EditorFramework.GL_Core
 
             float camDistance = GetAnimCameraDistance();
 
-            if (stereoscopy)
+            if (crossEye)
             {
                 #region left eye
-                GL.Viewport(0, 0, Width / 2, Height);
+                GL.Viewport((stereoscopyType == StereoscopyType.CROSS_EYE) ? Width / 2 : 0, 0, Width / 2, Height);
 
                 mtxMdl = Matrix4.Identity;
                 mtxCam =
@@ -195,7 +195,7 @@ namespace GL_EditorFramework.GL_Core
                 #endregion
 
                 #region right eye
-                GL.Viewport(Width / 2, 0, Width / 2, Height);
+                GL.Viewport((stereoscopyType == StereoscopyType.CROSS_EYE) ? 0 : Width / 2, 0, Width / 2, Height);
 
                 mtxMdl = Matrix4.Identity;
                 mtxCam =
@@ -279,7 +279,7 @@ namespace GL_EditorFramework.GL_Core
             GL.ClearColor(0f, 0f, 0f, 0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            if (stereoscopy)
+            if (crossEye)
                 GL.Viewport(0, 0, Width / 2, Height);
             else
                 GL.Viewport(0, 0, Width, Height);
