@@ -367,13 +367,19 @@ namespace GL_EditorFramework.EditorDrawables
                 inObjectIndex -= span;
             }
 
+            uint var = 0;
+
+            if (Hovered!=null)
+                var = REDRAW;
+
+            Hovered = null;
+            HoveredPart = -1;
+
             foreach (AbstractGlDrawable obj in StaticObjects)
             {
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
                 {
-                    Hovered = null;
-                    HoveredPart = -1;
                     return obj.MouseEnter(inObjectIndex, control);
                 }
                 inObjectIndex -= span;
@@ -381,7 +387,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             ObjectRenderState.ShouldBeDrawn = ObjectRenderState.ShouldBeDrawn_Default;
 
-            return 0;
+            return var;
         }
 
         public override uint MouseLeave(int inObjectIndex, GL_ControlBase control)
