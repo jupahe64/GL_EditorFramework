@@ -59,6 +59,26 @@ namespace GL_EditorFramework
             Extensions.CreateRotationZ(Math.PI * eulerAngles.Z / 180.0);
 
 
+        //from AbstractTransformAction.cs slightly modified
+        public static Vector3 ApplyRotation(Vector3 rot, Matrix3 deltaRotation)
+        {
+            Matrix3 rotMtx = Mat3FromEulerAnglesDeg(rot);
+
+            Matrix3 newRot = rotMtx * deltaRotation;
+            if (newRot == rotMtx)
+            {
+                return rot;
+            }
+            else
+            {
+                return newRot.ExtractDegreeEulerAngles() + new Vector3(
+                    (float)Math.Round(rot.X / 360f) * 360,
+                    (float)Math.Round(rot.Y / 360f) * 360,
+                    (float)Math.Round(rot.Z / 360f) * 360
+                    );
+            }
+        }
+
         public static Keys KeyStroke(string keyStrokeString)
         {
             bool hasValidKeyCode = false;
