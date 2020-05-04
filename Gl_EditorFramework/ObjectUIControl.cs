@@ -135,7 +135,7 @@ namespace GL_EditorFramework
             if (eventType == EventType.DRAG_END || eventType == EventType.CLICK)
                 draggingHSeperator = false;
 
-            if (eventType == EventType.DRAG_ABORT)
+            if (eventType == EventType.DRAG_ABORT && draggingHSeperator)
             {
                 draggingHSeperator = false;
                 seperatorPosition = seperatorPositionBeforeDrag;
