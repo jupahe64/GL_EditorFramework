@@ -108,11 +108,13 @@ namespace GL_EditorFramework.EditorDrawables
 
             uint var = 0;
             {
+                var buttons = OpenTK.Input.Mouse.GetCursorState();
+
                 if (SelectionTransformAction == NoAction && CurrentAction == null && Hovered != null && TryGetActionType(out DragActionType dragActionType))
                 {
                     Hovered.StartDragging(dragActionType, HoveredPart, this);
                 }
-                else
+                else if(buttons.RightButton== OpenTK.Input.ButtonState.Pressed || //the right mouse button is pressed or
                 {
                     var |= REDRAW_PICKING;
                     var |= FORCE_REENTER;
