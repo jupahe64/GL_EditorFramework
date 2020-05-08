@@ -91,6 +91,11 @@ namespace GL_EditorFramework.GL_Core
                 HandleCameraEvtResult(activeCamera.MouseMove(e, lastMouseLoc, this));
             }
 
+            if (e.X < 0 || e.X > Width || e.Y < 0 || e.Y > Height)
+                marginScrollTimer.Start();
+            else
+                marginScrollTimer.Stop();
+
             if (shouldRepick)
                 Repick();
 
@@ -113,7 +118,11 @@ namespace GL_EditorFramework.GL_Core
             HandleDrawableEvtResult(mainDrawable.MouseWheel(e, this));
 
             if (!skipCameraAction)
+            {
                 HandleCameraEvtResult(activeCamera.MouseWheel(e, this));
+
+                HandleDrawableEvtResult(mainDrawable.MouseMove(e, lastMouseLoc, this));
+            }
 
             if (shouldRepick)
                 Repick();

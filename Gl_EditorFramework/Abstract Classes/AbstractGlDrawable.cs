@@ -16,6 +16,21 @@ namespace GL_EditorFramework.Interfaces
         PICKING
     }
 
+    public class MarginScrollEventArgs : EventArgs
+    {
+        public Point Location { get; set; }
+
+        public int AmountX { get; set; }
+        public int AmountY { get; set; }
+
+        public MarginScrollEventArgs(Point location, int amountX, int amountY)
+        {
+            Location = location;
+            AmountX = amountX;
+            AmountY = amountY;
+        }
+    }
+
     public abstract class AbstractGlDrawable : AbstractEventHandling3DObj
     {
         [Browsable(false)]
@@ -36,6 +51,7 @@ namespace GL_EditorFramework.Interfaces
         public virtual uint MouseLeave(int index, GL_ControlBase control) { return 0; }
         public virtual uint MouseLeaveEntirely(GL_ControlBase control) { return 0; }
         public override uint MouseMove(MouseEventArgs e, Point lastMousePos, GL_ControlBase control) { return REPICK; }
+        public virtual void MarginScroll(MarginScrollEventArgs e, GL_ControlBase control) { }
 
         public virtual void Connect(GL_ControlBase control) { }
         public virtual void Disconnect(GL_ControlBase control) { }

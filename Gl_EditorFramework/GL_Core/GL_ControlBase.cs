@@ -26,6 +26,31 @@ namespace GL_EditorFramework.GL_Core
         {
             redrawer.Interval = redrawerInterval;
             redrawer.Tick += Redrawer_Tick;
+            marginScrollTimer.Tick += MarginScrollTimer_Tick;
+            marginScrollTimer.Interval = 10;
+        }
+
+        private void MarginScrollTimer_Tick(object sender, EventArgs e)
+        {
+            if (MainDrawable == null)
+                marginScrollTimer.Stop();
+            else
+            {
+                int x = 0;
+                int y = 0;
+
+                if (lastMouseLoc.X < 0)
+                    x = lastMouseLoc.X;
+                else if (lastMouseLoc.X > Width)
+                    x = lastMouseLoc.X - Width;
+
+                if (lastMouseLoc.Y < 0)
+                    y = lastMouseLoc.Y;
+                else if (lastMouseLoc.Y > Height)
+                    y = lastMouseLoc.Y - Height;
+
+                mainDrawable.MarginScroll(new MarginScrollEventArgs(lastMouseLoc, x, y), this);
+            }
         }
 
         bool drawAnim = false;
@@ -144,6 +169,8 @@ namespace GL_EditorFramework.GL_Core
 
         private Timer redrawer = new Timer();
 
+        private Timer marginScrollTimer = new Timer();
+
         private uint redrawerOwners = 0;
 
         private uint repickerOwners = 0;
@@ -152,7 +179,7 @@ namespace GL_EditorFramework.GL_Core
         protected Point dragStartPos = new Point(-1, -1);
 
         protected Matrix3 mtxRotInv;
-        public Vector3 CameraPosition;
+        public Vector3 CameraPosition { get; private set; }
 
         protected float zfar = 1000f;
         protected float znear = 0.01f;

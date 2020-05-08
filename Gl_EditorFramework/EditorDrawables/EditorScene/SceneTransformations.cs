@@ -98,6 +98,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public virtual void ApplyScrolling(Point mousePos, float deltaScroll) { }
 
+        public virtual void ApplyMarginScrolling(Point mousePos, float amountX, float amountY) { }
+
         public virtual void KeyDown(KeyEventArgs e)
         {
 
@@ -134,6 +136,12 @@ namespace GL_EditorFramework.EditorDrawables
             Update();
         }
 
+        public override void ApplyMarginScrolling(Point mousePos, float amountX, float amountY)
+        {
+            transformAction.ApplyMarginScrolling(mousePos, amountX, amountY);
+            Update();
+        }
+
         public override void KeyDown(KeyEventArgs e)
         {
             transformAction.KeyDown(e);
@@ -153,7 +161,6 @@ namespace GL_EditorFramework.EditorDrawables
 
     public class TranslateAction : AbstractTransformAction
     {
-        Point startMousePos;
         float scrolling = 0;
         readonly float draggingDepth;
         Vector3 planeOrigin;
@@ -164,13 +171,13 @@ namespace GL_EditorFramework.EditorDrawables
 
         enum AxisRestriction
         {
-            NONE,
-            X,
-            Y,
-            Z,
-            YZ,
-            XZ,
-            XY
+            NONE = 0b000,
+            X    = 0b011,
+            Y    = 0b101,
+            Z    = 0b110,
+            YZ   = 0b100,
+            XZ   = 0b010,
+            XY   = 0b001
         }
 
         AxisRestriction axisRestriction = AxisRestriction.NONE;
@@ -180,128 +187,121 @@ namespace GL_EditorFramework.EditorDrawables
         public TranslateAction(GL_ControlBase control, Point mousePos, Vector3 center, float draggingDepth)
         {
             this.control = control;
-            startMousePos = mousePos;
             this.draggingDepth = draggingDepth;
             planeOrigin = control.CoordFor(mousePos.X, mousePos.Y, draggingDepth);
             origin = center;
         }
 
-        Vector3 PointOnScrollPlane(Point mousePos)
-        {
-            Vector3 vec;
-            vec.X = (mousePos.X - startMousePos.X) * draggingDepth * control.FactorX;
-            vec.Y = -(mousePos.Y - startMousePos.Y) * draggingDepth * control.FactorY;
-
-            Vector2 normCoords = control.NormMouseCoords(mousePos.X, mousePos.Y);
-
-            vec.X += (-normCoords.X * scrolling) * control.FactorX;
-            vec.Y += (normCoords.Y * scrolling) * control.FactorY;
-            vec.Z = scrolling;
-
-            return Vector3.Transform(control.InvertedRotationMatrix, vec);
-        }
-
         public override void UpdateMousePos(Point mousePos)
         {
-            Vector3 vec;
+            Vector3 vec = control.InvertedRotationMatrix.Row2;
+
+            Vector3 UnrestrictedTranslation() =>
+                planeOrigin - control.ScreenCoordPlaneIntersection(mousePos, vec, -control.CameraPosition + (draggingDepth - scrolling) * vec);
+
             switch (axisRestriction)
             {
                 case AxisRestriction.NONE:
-                    translation = PointOnScrollPlane(mousePos);
+
+                    translation = UnrestrictedTranslation();
+
                     break;
 
                 case AxisRestriction.X:
 
-                    vec = control.InvertedRotationMatrix.Row2;
                     if (Math.Round(vec.X, 7) == 1 || Math.Round(vec.X, 7) == -1)
                     {
-                        translation = new Vector3(scrolling, 0, 0);
-                        return;
+                        vec = Vector3.UnitX * (float)Math.Round(vec.X, 7);
+
+                        translation = UnrestrictedTranslation();
+                        translation *= Vector3.UnitX;
+                        goto Snapping;
                     }
                     else
                         vec.X = 0;
 
-                    translation = control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
-                    translation *= -Vector3.UnitX;
+                    translation = planeOrigin - control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin);
+                    translation *= Vector3.UnitX;
                     break;
 
                 case AxisRestriction.Y:
 
-                    vec = control.InvertedRotationMatrix.Row2;
                     if (Math.Round(vec.Y, 7) == 1 || Math.Round(vec.Y, 7) == -1)
                     {
-                        translation = translation = new Vector3(0, scrolling, 0);
-                        return;
+                        vec = Vector3.UnitY * (float)Math.Round(vec.Y, 7);
+
+                        translation = UnrestrictedTranslation();
+                        translation *= Vector3.UnitY;
+                        goto Snapping;
                     }
                     else
                         vec.Y = 0;
 
-                    translation = control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
-                    translation *= -Vector3.UnitY;
+                    translation = planeOrigin - control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin);
+                    translation *= Vector3.UnitY;
                     break;
 
                 case AxisRestriction.Z:
 
-                    vec = control.InvertedRotationMatrix.Row2;
                     if (Math.Round(vec.Z, 7) == 1 || Math.Round(vec.Z, 7) == -1)
                     {
-                        translation = translation = new Vector3(0, 0, scrolling);
-                        return;
+                        vec = Vector3.UnitZ * (float)Math.Round(vec.Z, 7);
+
+                        translation = UnrestrictedTranslation();
+                        translation *= Vector3.UnitZ;
+                        goto Snapping;
                     }
                     else
                         vec.Z = 0;
 
-                    translation = control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin) - planeOrigin;
-                    translation *= -Vector3.UnitZ;
+                    translation = planeOrigin - control.ScreenCoordPlaneIntersection(mousePos, vec, planeOrigin);
+                    translation *= Vector3.UnitZ;
                     break;
 
                 case AxisRestriction.YZ:
 
-                    vec = control.InvertedRotationMatrix.Row2;
                     if (Math.Round(vec.X, 7) == 0)
                     {
-                        translation = PointOnScrollPlane(mousePos);
+                        translation = UnrestrictedTranslation();
                         translation.X = 0;
                     }
                     else
                     {
-                        translation = control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitX, planeOrigin) - planeOrigin;
-                        translation *= -1;
+                        translation = planeOrigin - control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitX, planeOrigin);
                     }
                     break;
 
                 case AxisRestriction.XZ:
 
-                    vec = control.InvertedRotationMatrix.Row2;
                     if (Math.Round(vec.Y, 7) == 0)
                     {
-                        translation = PointOnScrollPlane(mousePos);
+                        translation = UnrestrictedTranslation();
                         translation.Y = 0;
                     }
                     else
                     {
-                        translation = control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitY, planeOrigin) - planeOrigin;
-                        translation *= -1;
+                        translation = planeOrigin - control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitY, planeOrigin);
                     }
                     break;
 
                 case AxisRestriction.XY:
 
-                    vec = control.InvertedRotationMatrix.Row2;
                     if (Math.Round(vec.Z, 7) == 0)
                     {
-                        translation = PointOnScrollPlane(mousePos);
+                        translation = UnrestrictedTranslation();
                         translation.Z = 0;
                     }
                     else
                     {
-                        translation = control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitZ, planeOrigin) - planeOrigin;
-                        translation *= -1;
+                        translation = planeOrigin - control.ScreenCoordPlaneIntersection(mousePos, Vector3.UnitZ, planeOrigin);
                     }
                     break;
             }
 
-            //snapping
+        Snapping:
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
+                return;
+
             if (absoluteSnapping)
                 vec = origin + translation;
             else
@@ -331,9 +331,26 @@ namespace GL_EditorFramework.EditorDrawables
             UpdateMousePos(mousePos);
         }
 
+        public override void ApplyMarginScrolling(Point mousePos, float amountX, float amountY)
+        {
+            var targetTrans = new Vector3(amountX * control.FactorX * draggingDepth * 0.25f, -amountY * control.FactorY * draggingDepth * 0.25f, 0) * control.InvertedRotationMatrix;
+
+            if (((int)axisRestriction & 0b100) > 0)
+                targetTrans.X = 0;
+
+            if (((int)axisRestriction & 0b010) > 0)
+                targetTrans.Y = 0;
+
+            if (((int)axisRestriction & 0b001) > 0)
+                targetTrans.Z = 0;
+
+            control.CameraTarget += targetTrans;
+
+            UpdateMousePos(mousePos);
+        }
+
         public override void KeyDown(KeyEventArgs e)
         {
-            Vector3 vec;
             if (e.Shift && e.KeyCode == Keys.S)
                 absoluteSnapping = !absoluteSnapping;
 
@@ -356,17 +373,16 @@ namespace GL_EditorFramework.EditorDrawables
             if (axisRestriction == old)
                 axisRestriction = AxisRestriction.NONE;
 
+            Vector3 dir = control.InvertedRotationMatrix.Row2;
 
-            vec = control.InvertedRotationMatrix.Row2;
-
-            //determine weithert scrolling should be allowed based on the current axisRestriction and camera orientation
+            //determine whether scrolling should be allowed based on the current axisRestriction and camera orientation
             if (axisRestriction == AxisRestriction.NONE ||
-                (axisRestriction == AxisRestriction.X && (Math.Round(vec.X, 7) == 1 || Math.Round(vec.X, 7) == -1)) || //camera facing left/right
-                (axisRestriction == AxisRestriction.Y && (Math.Round(vec.Y, 7) == 1 || Math.Round(vec.Y, 7) == -1)) || //camera facing up/down
-                (axisRestriction == AxisRestriction.Z && (Math.Round(vec.Z, 7) == 1 || Math.Round(vec.Z, 7) == -1)) || //camera facing forward/backward
-                (axisRestriction == AxisRestriction.YZ && Math.Round(vec.X, 7) == 0) || //camera facing up/down/forward/backward
-                (axisRestriction == AxisRestriction.XZ && Math.Round(vec.Y, 7) == 0) || //camera facing left/right/forward/backward
-                (axisRestriction == AxisRestriction.YZ && Math.Round(vec.Z, 7) == 0)    //camera facing left/right/up/down
+                (axisRestriction == AxisRestriction.X    &&   (Math.Round(dir.X, 7) == 1 || Math.Round(dir.X, 7) == -1)) || //camera facing left/right
+                (axisRestriction == AxisRestriction.Y    &&   (Math.Round(dir.Y, 7) == 1 || Math.Round(dir.Y, 7) == -1)) || //camera facing up/down
+                (axisRestriction == AxisRestriction.Z    &&   (Math.Round(dir.Z, 7) == 1 || Math.Round(dir.Z, 7) == -1)) || //camera facing forward/backward
+                (axisRestriction == AxisRestriction.YZ   &&   Math.Round(dir.X, 7) == 0) || //camera facing up/down/forward/backward
+                (axisRestriction == AxisRestriction.XZ   &&   Math.Round(dir.Y, 7) == 0) || //camera facing left/right/forward/backward
+                (axisRestriction == AxisRestriction.YZ   &&   Math.Round(dir.Z, 7) == 0)    //camera facing left/right/up/down
                 )
             {
                 allowScrolling = true;
@@ -468,15 +484,11 @@ namespace GL_EditorFramework.EditorDrawables
 
         Vector3 planeOrigin;
 
-        Point centerPoint;
-
         Matrix3 deltaRotation = Matrix3.Identity;
 
         public override Matrix3 NewRot(Matrix3 rot) => rot * deltaRotation;
 
         public override Vector3 NewIndividualPos(Vector3 pos) => Vector3.Transform(pos, deltaRotation);
-
-        static readonly double halfPI = Math.PI / 2d;
 
         static readonly double eighthPI = Math.PI / 8d;
 
@@ -500,7 +512,6 @@ namespace GL_EditorFramework.EditorDrawables
             startMousePos = mousePos;
             this.center = center;
             planeOrigin = control.CoordFor(mousePos.X, mousePos.Y, draggingDepth);
-            centerPoint = control.ScreenCoordFor(center);
         }
 
         public override void UpdateMousePos(Point mousePos)
@@ -508,6 +519,8 @@ namespace GL_EditorFramework.EditorDrawables
             Vector3 vec = new Vector3();
 
             double angle = 0;
+
+            Point centerPoint = control.ScreenCoordFor(center);
 
             vec = control.InvertedRotationMatrix.Row2;
 
@@ -586,9 +599,7 @@ namespace GL_EditorFramework.EditorDrawables
                     break;
             }
 
-            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
-                angle = Math.Round(angle / halfPI) * halfPI;
-            else if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) && !WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
                 angle = Math.Round(angle / eighthPI) * eighthPI;
 
             deltaRotation = Matrix3.CreateFromAxisAngle(vec, (float)angle);
@@ -731,8 +742,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         Vector3 center;
 
-        Point centerPoint;
-
         public override Vector3 NewScale(Vector3 _scale, Matrix3 rotation)
         {
             return new Vector3(
@@ -764,11 +773,12 @@ namespace GL_EditorFramework.EditorDrawables
             this.control = control;
             startMousePos = mousePos;
             this.center = center;
-            centerPoint = control.ScreenCoordFor(center);
         }
 
         public override void UpdateMousePos(Point mousePos)
         {
+            Point centerPoint = control.ScreenCoordFor(center);
+
             int x1 = mousePos.X - centerPoint.X;
             int y1 = mousePos.Y - centerPoint.Y;
             int x2 = startMousePos.X - centerPoint.X;
@@ -913,8 +923,6 @@ namespace GL_EditorFramework.EditorDrawables
     {
         Point startMousePos;
 
-        Point centerPoint;
-
         public override Vector3 NewScale(Vector3 _scale, Matrix3 rotation) => new Vector3(
             WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.X * _scale.X * 2) * 0.5f : scale.X * _scale.X,
             WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift) ? (float)Math.Round(scale.Y * _scale.Y * 2) * 0.5f : scale.Y * _scale.Y,
@@ -949,11 +957,12 @@ namespace GL_EditorFramework.EditorDrawables
             this.control = control;
             startMousePos = mousePos;
             this.orientation = orientation;
-            centerPoint = control.ScreenCoordFor(orientation.Origin);
         }
 
         public override void UpdateMousePos(Point mousePos)
         {
+            Point centerPoint = control.ScreenCoordFor(orientation.Origin);
+
             int a1 = mousePos.X - centerPoint.X;
             int b1 = mousePos.Y - centerPoint.Y;
             int a2 = startMousePos.X - centerPoint.X;

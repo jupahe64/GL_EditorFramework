@@ -63,6 +63,8 @@ namespace GL_EditorFramework.EditorDrawables
             if (CurrentAction != null || SelectionTransformAction != NoAction)
                 return;
 
+            actionStartCamTarget = control.CameraTarget;
+
             if (revertable != null)
             {
                 BeginUndoCollection();
@@ -77,6 +79,8 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (CurrentAction != null || SelectionTransformAction != NoAction)
                 return;
+
+            actionStartCamTarget = control.CameraTarget;
 
             CurrentAction = action;
         }
@@ -115,12 +119,18 @@ namespace GL_EditorFramework.EditorDrawables
                     Hovered.StartDragging(dragActionType, HoveredPart, this);
                 }
                 else if(buttons.RightButton== OpenTK.Input.ButtonState.Pressed || //the right mouse button is pressed or
+                    (int)buttons.LeftButton +(int)buttons.RightButton + (int)buttons.MiddleButton >= 2) //atleast 2 buttons are pressed at once
                 {
                     var |= REDRAW_PICKING;
                     var |= FORCE_REENTER;
 
                     if(SelectionTransformAction!=NoAction)
+                    {
                         EndUndoCollection();
+                    }
+
+                    if(SelectionTransformAction != NoAction || CurrentAction != null)
+                        control.CameraTarget = actionStartCamTarget;
 
                     SelectionTransformAction = NoAction; //abort current action
                     CurrentAction?.Cancel();
@@ -171,6 +181,16 @@ namespace GL_EditorFramework.EditorDrawables
             return var;
         }
 
+        public override void MarginScroll(MarginScrollEventArgs e, GL_ControlBase control)
+        {
+            if(SelectionTransformAction!=NoAction || CurrentAction!=null)
+            {
+                SelectionTransformAction.ApplyMarginScrolling(e.Location, e.AmountX, e.AmountY);
+
+                CurrentAction?.ApplyMarginScrolling(e.Location, e.AmountX, e.AmountY);
+            }
+        }
+
         public override uint MouseWheel(MouseEventArgs e, GL_ControlBase control)
         {
             uint var = 0;
@@ -184,14 +204,23 @@ namespace GL_EditorFramework.EditorDrawables
                 var |= obj.MouseWheel(e, control);
             }
 
-            if (SelectionTransformAction != NoAction || CurrentAction != null)
+            if ((SelectionTransformAction != NoAction || CurrentAction != null))
             {
-                SelectionTransformAction.ApplyScrolling(e.Location, e.Delta);
-                CurrentAction?.ApplyScrolling(e.Location, e.Delta);
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftCtrl))
+                {
+                    SelectionTransformAction.UpdateMousePos(e.Location);
+                    CurrentAction?.UpdateMousePos(e.Location);
+                    var |= REDRAW;
+                }
+                else
+                {
+                    SelectionTransformAction.ApplyScrolling(e.Location, e.Delta);
+                    CurrentAction?.ApplyScrolling(e.Location, e.Delta);
 
-                var |= REDRAW | NO_CAMERA_ACTION;
+                    var |= REDRAW | NO_CAMERA_ACTION;
 
-                var &= ~REPICK;
+                    var &= ~REPICK;
+                }
             }
 
             return var;

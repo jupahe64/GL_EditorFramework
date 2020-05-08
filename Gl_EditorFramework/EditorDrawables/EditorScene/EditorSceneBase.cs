@@ -55,6 +55,8 @@ namespace GL_EditorFramework.EditorDrawables
 
         public virtual void ApplyScrolling(Point mousePos, float deltaScroll) { }
 
+        public virtual void ApplyMarginScrolling(Point mousePos, float amountX, float amountY) { }
+
         public virtual void KeyDown(KeyEventArgs e) { }
 
         public virtual void KeyUp(KeyEventArgs e) { }
@@ -283,6 +285,7 @@ namespace GL_EditorFramework.EditorDrawables
         bool isSaved = true;
 
         protected float draggingDepth;
+        protected Vector3 actionStartCamTarget;
 
         public GL_ControlBase GL_Control => control;
 
