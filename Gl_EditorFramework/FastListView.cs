@@ -120,7 +120,7 @@ namespace GL_EditorFramework
         /// </summary>
         public void UpdateAutoscrollHeight()
         {
-            if (list == null)
+            if (!(list?.Count>0))
                 return;
 
             AutoScrollMinSize = new Size(0, FontHeight * list?.Count ?? 0);
@@ -146,7 +146,7 @@ namespace GL_EditorFramework
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (list == null)
+            if (!(list?.Count>0))
                 return;
 
             VerticalScroll.Value = Math.Max(VerticalScroll.Minimum, Math.Min(VerticalScroll.Value+marginScrollSpeed, VerticalScroll.Maximum));
@@ -166,7 +166,7 @@ namespace GL_EditorFramework
         {
             base.OnMouseDown(e);
 
-            if (list == null)
+            if (!(list?.Count>0))
                 return;
 
             if (e.Button != MouseButtons.Left)
@@ -228,7 +228,7 @@ namespace GL_EditorFramework
         {
             base.OnMouseMove(e);
 
-            if (list == null)
+            if (!(list?.Count>0))
                 return;
 
             mouseY = e.Y;
@@ -264,7 +264,7 @@ namespace GL_EditorFramework
         {
             base.OnMouseUp(e);
 
-            if (list == null)
+            if (!(list?.Count>0))
                 return;
 
             if (e.Button != MouseButtons.Left)
@@ -457,7 +457,7 @@ namespace GL_EditorFramework
 
             Graphics g = e.Graphics;
 
-            if (CurrentList == null)
+            if (list == null)
             {
                 g.FillRectangle(SystemBrushes.ControlLight, 0, 0, Width, Height);
 
@@ -549,7 +549,7 @@ namespace GL_EditorFramework
         {
             base.OnScroll(se);
 
-            if (list == null)
+            if (!(list?.Count>0))
                 return;
 
             Refresh();
@@ -559,7 +559,7 @@ namespace GL_EditorFramework
         {
             base.OnMouseWheel(e);
 
-            if (list == null)
+            if (!(list?.Count>0))
                 return;
 
             if (mouseDown)
