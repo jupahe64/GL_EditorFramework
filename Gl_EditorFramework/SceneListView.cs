@@ -92,6 +92,8 @@ namespace GL_EditorFramework
         {
             if (RootLists.ContainsKey(listName))
             {
+                IList prevList = ItemsListView.CurrentList;
+
                 CurrentRootListName = listName;
                 listStack.Clear();
 
@@ -99,6 +101,9 @@ namespace GL_EditorFramework
                 btnBack.Visible = false;
 
                 ItemsListView.CurrentList = RootLists[listName];
+
+                if (!RootLists.ContainsValue(prevList))
+                    ListExited?.Invoke(null, new ListEventArgs(prevList));
             }
         }
 
@@ -218,7 +223,8 @@ namespace GL_EditorFramework
 
         private void RootListComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ItemsListView.CurrentList = rootLists[(string)RootListComboBox.SelectedItem];
+            if (RootListComboBox.Visible)
+                ItemsListView.CurrentList = rootLists[(string)RootListComboBox.SelectedItem];
         }
         
         private void ItemsListView_MouseDoubleClick(object sender, MouseEventArgs e)
