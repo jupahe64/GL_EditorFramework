@@ -166,10 +166,10 @@ namespace GL_EditorFramework
         {
             base.OnMouseDown(e);
 
-            if (!(list?.Count>0))
+            if (e.Button != MouseButtons.Left)
                 return;
 
-            if (e.Button != MouseButtons.Left)
+            if (!(list?.Count > 0))
                 return;
 
             mouseDown = true;
@@ -228,11 +228,12 @@ namespace GL_EditorFramework
         {
             base.OnMouseMove(e);
 
-            if (!(list?.Count>0))
+            mouseY = e.Y;
+
+            if (e.Button != MouseButtons.Left)
                 return;
 
-            mouseY = e.Y;
-            if (e.Button != MouseButtons.Left)
+            if (!(list?.Count>0))
                 return;
 
             if (action == Action.DRAG)
@@ -264,10 +265,10 @@ namespace GL_EditorFramework
         {
             base.OnMouseUp(e);
 
-            if (!(list?.Count>0))
+            if (e.Button != MouseButtons.Left)
                 return;
 
-            if (e.Button != MouseButtons.Left)
+            if (!(list?.Count>0))
                 return;
 
             mouseDown = false;
@@ -386,6 +387,10 @@ namespace GL_EditorFramework
         protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
         {
             base.OnPreviewKeyDown(e);
+
+            if (!(list?.Count > 0))
+                return;
+
             int index = list.IndexOf(lastSelectedObject);
 
             if (index == -1)
@@ -411,6 +416,9 @@ namespace GL_EditorFramework
         {
             base.OnKeyPress(e);
 
+            if (!(list?.Count > 0))
+                return;
+
             int index = (list.IndexOf(lastSelectedObject)+1)%list.Count;
             
             for (int i = 0; i < list.Count; i++)
@@ -429,7 +437,7 @@ namespace GL_EditorFramework
 
         public void EnsureVisisble(object item)
         {
-            int index = list.IndexOf(item);
+            int index = list?.IndexOf(item)??-1;
             if (index == -1)
                 return;
 
@@ -549,10 +557,8 @@ namespace GL_EditorFramework
         {
             base.OnScroll(se);
 
-            if (!(list?.Count>0))
-                return;
-
-            Refresh();
+            if(list!=null)
+                Refresh();
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
