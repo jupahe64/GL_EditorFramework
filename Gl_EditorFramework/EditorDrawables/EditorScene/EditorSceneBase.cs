@@ -209,12 +209,20 @@ namespace GL_EditorFramework.EditorDrawables
             public readonly float RotY;
             public readonly float Distance;
 
-            public CameraStateSave(Vector3 target, float rotX, float rotY, float distance)
+            public CameraStateSave(GL_ControlBase control)
             {
-                Target = target;
-                RotX = rotX;
-                RotY = rotY;
-                Distance = distance;
+                Target = control.CameraTarget;
+                RotX = control.CamRotX;
+                RotY = control.CamRotY;
+                Distance = control.CameraDistance;
+            }
+
+            public void ApplyTo(GL_ControlBase control)
+            {
+                control.CameraTarget = Target;
+                control.CamRotX = RotX;
+                control.CamRotY = RotY;
+                control.CameraDistance = Distance;
             }
         }
 
@@ -229,25 +237,14 @@ namespace GL_EditorFramework.EditorDrawables
         {
             this.control = control;
 
-            if (cameraSave.HasValue)
-            {
-                control.CameraTarget = cameraSave.Value.Target;
-                control.CamRotX = cameraSave.Value.RotX;
-                control.CamRotY = cameraSave.Value.RotY;
-                control.CameraDistance = cameraSave.Value.Distance;
-            }
+            cameraSave?.ApplyTo(control);
         }
 
         public override void Disconnect(GL_ControlBase control)
         {
             this.control = null;
 
-            cameraSave = new CameraStateSave(
-                control.CameraTarget, 
-                control.CamRotX, 
-                control.CamRotY, 
-                control.CameraDistance
-                );
+            cameraSave = new CameraStateSave(control);
         }
 
         public IList CurrentList { get; set; }
