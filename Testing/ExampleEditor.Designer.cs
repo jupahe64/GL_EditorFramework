@@ -112,7 +112,7 @@
             this.gL_ControlLegacy1.NormPickingDepth = 0F;
             this.gL_ControlLegacy1.ShowOrientationCube = false;
             this.gL_ControlLegacy1.Size = new System.Drawing.Size(326, 199);
-            this.gL_ControlLegacy1.Stereoscopy = true;
+            this.gL_ControlLegacy1.Stereoscopy = GL_EditorFramework.GL_Core.GL_ControlBase.StereoscopyType.CROSS_EYE;
             this.gL_ControlLegacy1.TabIndex = 2;
             this.gL_ControlLegacy1.VSync = false;
             this.gL_ControlLegacy1.ZFar = 32000F;
@@ -133,7 +133,7 @@
             this.gL_Control.NormPickingDepth = 0F;
             this.gL_Control.ShowOrientationCube = true;
             this.gL_Control.Size = new System.Drawing.Size(656, 741);
-            this.gL_Control.Stereoscopy = false;
+            this.gL_Control.Stereoscopy = GL_EditorFramework.GL_Core.GL_ControlBase.StereoscopyType.DISABLED;
             this.gL_Control.TabIndex = 1;
             this.gL_Control.VSync = false;
             this.gL_Control.ZFar = 32000F;
