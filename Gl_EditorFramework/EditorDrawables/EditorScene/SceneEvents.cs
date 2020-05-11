@@ -116,7 +116,8 @@ namespace GL_EditorFramework.EditorDrawables
 
                 if (SelectionTransformAction == NoAction && CurrentAction == null && Hovered != null && TryGetActionType(out DragActionType dragActionType))
                 {
-                    Hovered.StartDragging(dragActionType, HoveredPart, this);
+                    if(!WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftAlt))
+                        Hovered.StartDragging(dragActionType, HoveredPart, this);
                 }
                 else if(buttons.RightButton== OpenTK.Input.ButtonState.Pressed || //the right mouse button is pressed or
                     (int)buttons.LeftButton +(int)buttons.RightButton + (int)buttons.MiddleButton >= 2) //atleast 2 buttons are pressed at once
@@ -176,6 +177,17 @@ namespace GL_EditorFramework.EditorDrawables
             }
             else
             {
+                if (e.Button == MouseButtons.Left && WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftAlt))
+                {
+                    if(WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                        Hovered?.Deselect(HoveredPart, control);
+                    else
+                        Hovered?.Select(HoveredPart, control);
+
+                    SelectionChanged?.Invoke(this, new EventArgs());
+
+                    var |= NO_CAMERA_ACTION | FORCE_REENTER;
+                }
                 var |= REPICK;
             }
             return var;
