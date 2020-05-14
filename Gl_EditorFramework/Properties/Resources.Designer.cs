@@ -22,7 +22,7 @@ namespace GL_EditorFramework.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace GL_EditorFramework.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GL_EditorFramework.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace GL_EditorFramework.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap BackButtonIcon {
+        public static System.Drawing.Bitmap BackButtonIcon {
             get {
                 object obj = ResourceManager.GetObject("BackButtonIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -73,7 +73,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CloseTabIcon {
+        public static System.Drawing.Bitmap CloseTabIcon {
             get {
                 object obj = ResourceManager.GetObject("CloseTabIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -83,7 +83,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CloseTabIconHover {
+        public static System.Drawing.Bitmap CloseTabIconHover {
             get {
                 object obj = ResourceManager.GetObject("CloseTabIconHover", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -93,7 +93,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CopyIcon {
+        public static System.Drawing.Bitmap CopyIcon {
             get {
                 object obj = ResourceManager.GetObject("CopyIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -103,7 +103,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CopyIconClick {
+        public static System.Drawing.Bitmap CopyIconClick {
             get {
                 object obj = ResourceManager.GetObject("CopyIconClick", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -113,7 +113,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CopyIconHover {
+        public static System.Drawing.Bitmap CopyIconHover {
             get {
                 object obj = ResourceManager.GetObject("CopyIconHover", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -123,7 +123,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap PasteIcon {
+        public static System.Drawing.Bitmap PasteIcon {
             get {
                 object obj = ResourceManager.GetObject("PasteIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -133,7 +133,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap PasteIconClick {
+        public static System.Drawing.Bitmap PasteIconClick {
             get {
                 object obj = ResourceManager.GetObject("PasteIconClick", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -143,7 +143,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap PasteIconHover {
+        public static System.Drawing.Bitmap PasteIconHover {
             get {
                 object obj = ResourceManager.GetObject("PasteIconHover", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -153,7 +153,7 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap TextureSheet {
+        public static System.Drawing.Bitmap TextureSheet {
             get {
                 object obj = ResourceManager.GetObject("TextureSheet", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
