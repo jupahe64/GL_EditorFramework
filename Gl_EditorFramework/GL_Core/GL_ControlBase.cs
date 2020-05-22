@@ -450,6 +450,8 @@ namespace GL_EditorFramework.GL_Core
             {
                 cameraTarget = value;
                 RedrawFor(60, true);
+
+                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
             }
         }
 
@@ -461,6 +463,8 @@ namespace GL_EditorFramework.GL_Core
             {
                 cameraDistance = value;
                 RedrawFor(60, true);
+
+                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
             }
         }
 
@@ -472,6 +476,12 @@ namespace GL_EditorFramework.GL_Core
             {
                 camRotX = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
                 RedrawFor(60, true);
+
+                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
+
+                mtxRotInv =
+                    Matrix3.CreateRotationX(-camRotY) *
+                    Matrix3.CreateRotationY(-camRotX);
             }
         }
 
@@ -494,6 +504,12 @@ namespace GL_EditorFramework.GL_Core
             {
                 camRotY = ((value % Framework.TWO_PI) + Framework.TWO_PI) % Framework.TWO_PI;
                 RedrawFor(60, true);
+
+                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
+
+                mtxRotInv =
+                    Matrix3.CreateRotationX(-camRotY) *
+                    Matrix3.CreateRotationY(-camRotX);
             }
         }
 
