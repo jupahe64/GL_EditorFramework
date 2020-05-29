@@ -40,7 +40,6 @@
             this.ItemsListView.Name = "ItemsListView";
             this.ItemsListView.Size = new System.Drawing.Size(298, 270);
             this.ItemsListView.TabIndex = 0;
-            this.ItemsListView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.ItemsListView_MouseDoubleClick);
             // 
             // btnBack
             // 

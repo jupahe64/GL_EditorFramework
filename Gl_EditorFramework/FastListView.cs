@@ -15,6 +15,19 @@ namespace GL_EditorFramework
         SUBTRACT
     }
 
+    public class ItemClickedEventArgs : MouseEventArgs
+    {
+        public object Item { get; }
+
+        public ItemClickedEventArgs(object item, MouseButtons button, int clicks, int x, int y, int delta) :
+            base(button, clicks, x, y, delta)
+        {
+            Item = item;
+        }
+    }
+
+    public delegate void ItemClickedEventHandler(object sender, ItemClickedEventArgs e);
+
     public class SelectionChangedEventArgs : HandledEventArgs
     {
         public IEnumerable<object> Items { get; private set; }
@@ -63,6 +76,7 @@ namespace GL_EditorFramework
 
         private object lastSelectedObject = null;
 
+
         private enum Action
         {
             NONE,
@@ -73,14 +87,33 @@ namespace GL_EditorFramework
         Action action = Action.NONE;
 
         public event SelectionChangedEventHandler SelectionChanged;
-
         public event ItemsMovedEventHandler ItemsMoved;
+        public event ItemClickedEventHandler ItemClicked;
 
         private Timer marginScrollTimer = new Timer();
 
         private int marginScrollSpeed = 0;
 
-        
+        Timer doubleClickTimer = new Timer();
+
+        int succesiveClicks = 0;
+
+        public FastListView()
+        {
+            SetStyle(
+            ControlStyles.AllPaintingInWmPaint |
+            ControlStyles.UserPaint |
+            ControlStyles.OptimizedDoubleBuffer,
+            true);
+            Graphics g = CreateGraphics();
+            FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
+
+            marginScrollTimer.Interval = 1;
+            marginScrollTimer.Tick += MarginScrollTimer_Tick;
+
+            doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
+            doubleClickTimer.Tick += DoubleClickTimer_Tick;
+        }
 
         /// <summary>
         /// The set used to determine which objects are selected
@@ -126,25 +159,11 @@ namespace GL_EditorFramework
             AutoScrollMinSize = new Size(0, FontHeight * list?.Count ?? 0);
         }
 
-        public FastListView()
-        {
-            SetStyle(
-            ControlStyles.AllPaintingInWmPaint |
-            ControlStyles.UserPaint |
-            ControlStyles.OptimizedDoubleBuffer,
-            true);
-            Graphics g = CreateGraphics();
-            FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
-
-            marginScrollTimer.Interval = 1;
-            marginScrollTimer.Tick += Timer_Tick;
-        }
-
         int mouseY = 0;
 
         bool mouseDown = false;
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void MarginScrollTimer_Tick(object sender, EventArgs e)
         {
             if (!(list?.Count>0))
                 return;
@@ -160,6 +179,12 @@ namespace GL_EditorFramework
                     list.Count - draggedCount - draggedStartIndex));
 
             Refresh();
+        }
+
+        private void DoubleClickTimer_Tick(object sender, EventArgs e)
+        {
+            doubleClickTimer.Stop();
+            succesiveClicks = 0;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -581,6 +606,32 @@ namespace GL_EditorFramework
 
                 Refresh();
             }
+        }
+
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            base.OnMouseClick(e);
+            HandleClick(e);
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            base.OnMouseDoubleClick(e);
+            HandleClick(e);
+        }
+
+        private void HandleClick(MouseEventArgs e)
+        {
+            succesiveClicks++;
+
+            doubleClickTimer.Stop();
+            doubleClickTimer.Start();
+
+            Console.WriteLine("Clicks: " + succesiveClicks);
+
+            object item = GetItemAt(e.Location);
+            if (item != null)
+                ItemClicked?.Invoke(this, new ItemClickedEventArgs(item, e.Button, succesiveClicks, e.X, e.Y, e.Delta));
         }
     }
 }

@@ -9,18 +9,6 @@ using static GL_EditorFramework.Framework;
 
 namespace GL_EditorFramework
 {
-    public struct ItemDoubleClickedEventArgs
-    {
-        public ItemDoubleClickedEventArgs(object item) : this()
-        {
-            Item = item;
-        }
-
-        public object Item { get; }
-    }
-
-    public delegate void ItemDoubleClickedEventHandler(object sender, ItemDoubleClickedEventArgs e);
-
     /// <summary>
     /// A control for viewing the content of and selecting items in multiple <see cref="IList"/>s
     /// </summary>
@@ -52,10 +40,20 @@ namespace GL_EditorFramework
         public event SelectionChangedEventHandler SelectionChanged;
         public event ItemsMovedEventHandler ItemsMoved;
         public event ListEventHandler ListExited;
-        public event ItemDoubleClickedEventHandler ItemDoubleClicked;
+        public event ItemClickedEventHandler ItemClicked;
 
-        int fontHeight;
         private string currentRootListName = "None";
+
+        public SceneListView()
+        {
+            InitializeComponent();
+
+            ItemsListView.SelectionChanged += (x, y) => SelectionChanged?.Invoke(x, y);
+            ItemsListView.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
+            ItemsListView.ItemClicked += (x, y) => ItemClicked?.Invoke(x, y);
+
+            Graphics g = CreateGraphics();
+        }
 
         /// <summary>
         /// The set used to determine which objects are selected
@@ -202,18 +200,6 @@ namespace GL_EditorFramework
             ItemsListView.UpdateAutoscrollHeight();
         }
 
-        public SceneListView()
-        {
-            InitializeComponent();
-
-            ItemsListView.SelectionChanged += (x, y) => SelectionChanged?.Invoke(x, y);
-            ItemsListView.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
-
-            Graphics g = CreateGraphics();
-
-            fontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
-        }
-
         private void BackButton_Click(object sender, EventArgs e)
         {
             ExitList();
@@ -225,13 +211,6 @@ namespace GL_EditorFramework
         {
             if (RootListComboBox.Visible)
                 ItemsListView.CurrentList = rootLists[(string)RootListComboBox.SelectedItem];
-        }
-        
-        private void ItemsListView_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            object item = ItemsListView.GetItemAt(e.Location);
-            if (item != null)
-                ItemDoubleClicked?.Invoke(this, new ItemDoubleClickedEventArgs(item));
         }
 
         public override void Refresh()
