@@ -30,6 +30,14 @@ namespace GL_EditorFramework.GL_Core
             marginScrollTimer.Interval = 10;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            redrawer.Stop();
+            marginScrollTimer.Stop();
+
+            base.Dispose(disposing);
+        }
+
         private void MarginScrollTimer_Tick(object sender, EventArgs e)
         {
             if (MainDrawable == null)
