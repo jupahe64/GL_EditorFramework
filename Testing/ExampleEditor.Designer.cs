@@ -35,7 +35,7 @@
             this.sceneListView1 = new GL_EditorFramework.SceneListView();
             this.objectUIControl1 = new GL_EditorFramework.ObjectUIControl();
             this.gL_ControlLegacy1 = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
-            this.gL_Control = new GL_EditorFramework.GL_Core.GL_ControlLegacy();
+            this.gL_Control = new GL_EditorFramework.GL_Core.GL_ControlModern();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.hideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -85,7 +85,7 @@
             this.sceneListView1.RootLists = ((System.Collections.Generic.Dictionary<string, System.Collections.IList>)(resources.GetObject("sceneListView1.RootLists")));
             this.sceneListView1.Size = new System.Drawing.Size(326, 226);
             this.sceneListView1.TabIndex = 6;
-            this.sceneListView1.ItemDoubleClicked += new GL_EditorFramework.ItemDoubleClickedEventHandler(this.SceneListView1_ItemDoubleClicked);
+            this.sceneListView1.ItemClicked += new GL_EditorFramework.ItemClickedEventHandler(this.SceneListView1_ItemDoubleClicked);
             // 
             // objectUIControl1
             // 
@@ -104,6 +104,8 @@
             this.gL_ControlLegacy1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gL_ControlLegacy1.BackColor = System.Drawing.Color.Black;
+            this.gL_ControlLegacy1.CameraDistance = 10F;
+            this.gL_ControlLegacy1.CameraTarget = ((OpenTK.Vector3)(resources.GetObject("gL_ControlLegacy1.CameraTarget")));
             this.gL_ControlLegacy1.CamRotX = 0F;
             this.gL_ControlLegacy1.CamRotY = 0F;
             this.gL_ControlLegacy1.Fov = 0.7853982F;
@@ -118,18 +120,21 @@
             this.gL_ControlLegacy1.ZFar = 32000F;
             this.gL_ControlLegacy1.ZNear = 0.32F;
             // 
-            // gL_ControlModern1
+            // gL_Control
             // 
             this.gL_Control.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gL_Control.BackColor = System.Drawing.Color.Black;
+            this.gL_Control.CameraDistance = 10F;
+            this.gL_Control.CameraTarget = ((OpenTK.Vector3)(resources.GetObject("gL_Control.CameraTarget")));
             this.gL_Control.CamRotX = 0F;
             this.gL_Control.CamRotY = 0F;
             this.gL_Control.ContextMenuStrip = this.contextMenuStrip1;
+            this.gL_Control.CurrentShader = null;
             this.gL_Control.Fov = 0.7853982F;
             this.gL_Control.Location = new System.Drawing.Point(3, 3);
-            this.gL_Control.Name = "gL_ControlModern1";
+            this.gL_Control.Name = "gL_Control";
             this.gL_Control.NormPickingDepth = 0F;
             this.gL_Control.ShowOrientationCube = true;
             this.gL_Control.Size = new System.Drawing.Size(656, 741);
@@ -179,7 +184,6 @@
         }
 
         #endregion
-        private GL_EditorFramework.GL_Core.GL_ControlBase gL_Control;
         private GL_EditorFramework.GL_Core.GL_ControlLegacy gL_ControlLegacy1;
         private System.Windows.Forms.Button btnAdd;
         private GL_EditorFramework.ObjectUIControl objectUIControl1;
@@ -188,6 +192,7 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem hideToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showAllToolStripMenuItem;
+        private GL_EditorFramework.GL_Core.GL_ControlModern gL_Control;
     }
 }
 

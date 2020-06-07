@@ -248,9 +248,9 @@ namespace Example
             sceneListView1.UpdateAutoScrollHeight();
         }
 
-        private void SceneListView1_ItemDoubleClicked(object sender, ItemDoubleClickedEventArgs e)
+        private void SceneListView1_ItemDoubleClicked(object sender, ItemClickedEventArgs e)
         {
-            if (e.Item is IEditableObject obj)
+            if (e.Clicks==2 && e.Item is IEditableObject obj)
                 gL_Control.CameraTarget = obj.GetFocusPoint();
         }
 
