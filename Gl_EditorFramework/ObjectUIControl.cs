@@ -237,7 +237,7 @@ namespace GL_EditorFramework
 
             g.ResetClip();
 
-            number = NumericInputField(usableWidth - fieldWidth - margin, currentY, fieldWidth, number,
+            number = NumericInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth * 4 + fieldSpace * 3, number,
                 new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround), true);
             currentY += rowHeight;
             return number;
