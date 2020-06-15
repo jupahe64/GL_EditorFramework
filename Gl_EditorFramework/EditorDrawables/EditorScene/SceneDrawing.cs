@@ -69,24 +69,6 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public override void Prepare(GL_ControlModern control)
-        {
-            this.control = control;
-            foreach (IEditableObject obj in GetObjects())
-                obj.Prepare(control);
-            foreach (AbstractGlDrawable obj in StaticObjects)
-                obj.Prepare(control);
-        }
-
-        public override void Prepare(GL_ControlLegacy control)
-        {
-            this.control = control;
-            foreach (IEditableObject obj in GetObjects())
-                obj.Prepare(control);
-            foreach (AbstractGlDrawable obj in StaticObjects)
-                obj.Prepare(control);
-        }
-
         public override int GetPickableSpan()
         {
             int var = 0;

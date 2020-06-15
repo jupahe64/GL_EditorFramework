@@ -156,13 +156,31 @@ namespace GL_EditorFramework
             //    }
             //}
 
+            //solid shader
+            var solidColorFrag = new FragmentShader(
+                @"#version 330
+                        uniform vec4 color;
+                        void main(){
+                            gl_FragColor = color;
+                        }");
+            var solidColorVert = new VertexShader(
+                @"#version 330
+                        layout(location = 0) in vec4 position;
+                        uniform mat4 mtxMdl;
+                        uniform mat4 mtxCam;
+                        void main(){
+                            gl_Position = mtxCam*mtxMdl*position;
+                        }");
+
+            SolidColorShaderProgram = new ShaderProgram(solidColorFrag, solidColorVert);
+
             //texture sheet
             TextureSheet = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, TextureSheet);
 
             var bmp = Properties.Resources.TextureSheet;
             var bmpData = bmp.LockBits(
-                new System.Drawing.Rectangle(0, 0, 128*4, 128*2),
+                new Rectangle(0, 0, 128*4, 128*2),
                 System.Drawing.Imaging.ImageLockMode.ReadOnly,
                 System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
@@ -175,8 +193,16 @@ namespace GL_EditorFramework
             initialized = true;
         }
 
+        internal static List<VertexArrayObject> vaos = new List<VertexArrayObject>();
+
+        internal static List<ShaderProgram> shaderPrograms = new List<ShaderProgram>();
+
+        internal static List<GL_ControlModern> modernGlControls = new List<GL_ControlModern>();
+
         private static bool initialized = false;
-        public static int TextureSheet;
+
+        public static int TextureSheet { get; private set; }
+        public static ShaderProgram SolidColorShaderProgram { get; private set; }
     }
 
 

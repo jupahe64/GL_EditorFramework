@@ -173,18 +173,6 @@ namespace Example
             Renderers.ColorBlockRenderer.DrawLineBox(control, pass, lineBoxColor, pickingColor);
         }
 
-        public override void Prepare(GL_ControlModern control)
-        {
-            Renderers.ColorBlockRenderer.Initialize(control);
-            base.Prepare(control);
-        }
-
-        public override void Prepare(GL_ControlLegacy control)
-        {
-            Renderers.ColorBlockRenderer.Initialize(control);
-            base.Prepare(control);
-        }
-
         public override uint Select(int index, GL_ControlBase control)
         {
             

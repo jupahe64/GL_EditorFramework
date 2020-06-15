@@ -261,16 +261,6 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public override void Prepare(GL_ControlModern control)
-        {
-            //probably never gets called
-        }
-
-        public override void Prepare(GL_ControlLegacy control)
-        {
-            //probably never gets called
-        }
-
         public override void Draw(GL_ControlModern control, Pass pass)
         {
             //probably never gets called

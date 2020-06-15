@@ -4,13 +4,18 @@ using OpenTK.Graphics.OpenGL;
 
 namespace GL_EditorFramework.GL_Core
 {
-    public struct VertexArrayObject
+    public class VertexArrayObject
     {
         private Dictionary<GLControl, int> vaos;
         private readonly int buffer;
         private readonly int? indexBuffer;
         private readonly Dictionary<int, VertexAttribute> attributes;
 
+        /// <summary>
+        /// Creates an object to which you can add Attributes. When you are done call Submit()!
+        /// </summary>
+        /// <param name="buffer">The opengl buffer where all the vertexdata is/will be stored</param>
+        /// <param name="indexBuffer">The opengl buffer where all the indices are/will be stored</param>
         public VertexArrayObject(int buffer, int? indexBuffer = null)
         {
             vaos = new Dictionary<GLControl, int>();
@@ -24,7 +29,18 @@ namespace GL_EditorFramework.GL_Core
             attributes[index] = new VertexAttribute(size, type, normalized, stride, offset);
         }
 
-        public void Initialize(GLControl control)
+        public void Submit()
+        {
+            foreach (GL_ControlModern control in Framework.modernGlControls)
+            {
+                control.MakeCurrent();
+                Initialize(control);
+            }
+
+            Framework.vaos.Add(this);
+        }
+
+        internal void Initialize(GL_ControlModern control)
         {
             if (vaos.ContainsKey(control))
                 return;
@@ -41,11 +57,18 @@ namespace GL_EditorFramework.GL_Core
             vaos[control] = vao;
         }
 
+        /// <summary>
+        /// Binds the vertex data buffer
+        /// </summary>
         public void Bind()
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, buffer);
         }
 
+        /// <summary>
+        /// Binds this VertexArrayObject and the associated IndexBuffer if there is one
+        /// </summary>
+        /// <param name="control"></param>
         public void Use(GLControl control)
         {
             GL.BindVertexArray(vaos[control]);
@@ -54,7 +77,7 @@ namespace GL_EditorFramework.GL_Core
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer.Value);
         }
 
-        private struct VertexAttribute
+        public struct VertexAttribute
         {
             public int size;
             public VertexAttribPointerType type;

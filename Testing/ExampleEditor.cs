@@ -35,7 +35,7 @@ namespace Example
 
             #region Create scene and add objects to it
             scene = new EditorScene();
-            
+
             scene.objects.Add(obj = new ExampleObject(new Vector3(0, -4, 0)));
 
             List<PathPoint> pathPoints = new List<PathPoint>
@@ -96,6 +96,7 @@ namespace Example
 
             //setup the gl controls
             gL_Control.MainDrawable = scene;
+
             gL_Control.ActiveCamera = new GL_EditorFramework.StandardCameras.InspectCamera(1f);
 
             gL_ControlLegacy1.MainDrawable = new SingleObject(new Vector3());
@@ -125,10 +126,6 @@ namespace Example
             sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
             sceneListView1.ItemsMoved += SceneListView1_ItemsMoved;
             sceneListView1.ListExited += SceneListView1_ListExited;
-
-            //auto select the 5th object for testing purposes
-            scene.ToogleSelected(scene.objects[4], true);
-            Scene_SelectionChanged(this, null);
         }
 
         private void Scene_ListInvalidated(object sender, ListEventArgs e)
@@ -271,6 +268,11 @@ namespace Example
 
             gL_Control.Repick();
             gL_Control.Refresh();
+        }
+
+        private void BtnNewWindow_Click(object sender, EventArgs e)
+        {
+            new ExampleEditor().Show();
         }
     }
     /*

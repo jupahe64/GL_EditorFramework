@@ -33,6 +33,18 @@ namespace GL_EditorFramework.GL_Core
             if (DesignMode) return;
             MakeCurrent();
             Framework.Initialize();
+
+            foreach (var program in Framework.shaderPrograms)
+            {
+                program.Initialize(this);
+            }
+
+            foreach (var vao in Framework.vaos)
+            {
+                vao.Initialize(this);
+            }
+
+            Framework.modernGlControls.Add(this);
         }
 
         private ShaderProgram shader;
@@ -63,8 +75,6 @@ namespace GL_EditorFramework.GL_Core
 
                 mainDrawable = value;
                 mainDrawable.Connect(this);
-                MakeCurrent();
-                mainDrawable.Prepare(this);
                 Refresh();
             }
         }

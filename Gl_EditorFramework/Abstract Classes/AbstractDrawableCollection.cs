@@ -121,22 +121,6 @@ namespace GL_EditorFramework.EditorDrawables
             return var;
         }
 
-        public override void Prepare(GL_ControlModern control)
-        {
-            foreach (AbstractGlDrawable obj in GetDrawables())
-            {
-                obj.Prepare(control);
-            }
-        }
-
-        public override void Prepare(GL_ControlLegacy control)
-        {
-            foreach (AbstractGlDrawable obj in GetDrawables())
-            {
-                obj.Prepare(control);
-            }
-        }
-
         public override void Draw(GL_ControlModern control, Pass pass)
         {
             foreach (AbstractGlDrawable obj in GetDrawables())

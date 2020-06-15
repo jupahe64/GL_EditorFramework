@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using static GL_EditorFramework.Framework;
+
 namespace GL_EditorFramework
 {
     public static class Renderers
@@ -59,10 +61,8 @@ namespace GL_EditorFramework
         public static class ColorBlockRenderer
         {
             private static bool Initialized = false;
-            private static bool InitializedLegacy = false;
 
             public static ShaderProgram DefaultShaderProgram { get; private set; }
-            public static ShaderProgram SolidColorShaderProgram { get; private set; }
 
             private static VertexArrayObject linesVao;
             private static VertexArrayObject blockVao;
@@ -82,7 +82,7 @@ namespace GL_EditorFramework
             };
 
 
-            public static void Initialize(GL_ControlModern control)
+            public static void Initialize()
             {
                 if (!Initialized)
                 {
@@ -95,12 +95,6 @@ namespace GL_EditorFramework
                 
                         void main(){
                             gl_FragColor = fragColor*((fragPosition.y+2)/3)*texture(tex, uv, 100);
-                        }");
-                    var solidColorFrag = new FragmentShader(
-                        @"#version 330
-                        uniform vec4 color;
-                        void main(){
-                            gl_FragColor = color;
                         }");
                     var defaultVert = new VertexShader(
                         @"#version 330
@@ -122,17 +116,7 @@ namespace GL_EditorFramework
                             gl_Position = mtxCam*mtxMdl*position;
                             fragColor = color;
                         }");
-                    var solidColorVert = new VertexShader(
-                        @"#version 330
-                        layout(location = 0) in vec4 position;
-                        uniform mat4 mtxMdl;
-                        uniform mat4 mtxCam;
-                        void main(){
-                            gl_Position = mtxCam*mtxMdl*position;
-                        }");
-                    DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert, control);
-                    
-                    SolidColorShaderProgram = new ShaderProgram(solidColorFrag, solidColorVert, control);
+                    DefaultShaderProgram = new ShaderProgram(defaultFrag, defaultVert);
                     
                     int buffer;
 
@@ -141,7 +125,7 @@ namespace GL_EditorFramework
                     
                     blockVao = new VertexArrayObject(buffer);
                     blockVao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-                    blockVao.Initialize(control);
+                    blockVao.Submit();
 
                     List<float> list = new List<float>();
                     Face(ref points, ref list, 0, 1, 2, 3);
@@ -162,8 +146,8 @@ namespace GL_EditorFramework
 
                     linesVao = new VertexArrayObject(buffer);
                     linesVao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
-                    linesVao.Initialize(control);
-                    
+                    linesVao.Submit();
+
                     list = new List<float>();
                     LineFace(ref points, ref list, 0, 1, 2, 3);
                     LineFace(ref points, ref list, 4, 5, 6, 7);
@@ -174,25 +158,10 @@ namespace GL_EditorFramework
 
                     data = list.ToArray();
                     GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * data.Length, data, BufferUsageHint.StaticDraw);
-                    
+
                     #endregion
-                    
-                    Initialized = true;
 
-                }
-                else
-                {
-                    DefaultShaderProgram.Link(control);
-                    SolidColorShaderProgram.Link(control);
-                    blockVao.Initialize(control);
-                    linesVao.Initialize(control);
-                }
-            }
-
-            public static void Initialize(GL_ControlLegacy control)
-            {
-                if (!InitializedLegacy)
-                {
+                    #region legacy lines
                     lineDrawList = GL.GenLists(1);
 
                     GL.NewList(lineDrawList, ListMode.Compile);
@@ -219,7 +188,9 @@ namespace GL_EditorFramework
                     GL.Vertex3(points[5]);
                     GL.End();
                     GL.EndList();
-                    InitializedLegacy = true;
+                    #endregion
+
+                    Initialized = true;
                 }
             }
 

@@ -19,55 +19,107 @@ namespace GL_EditorFramework.GL_Core
         public Dictionary<GLControl, int> programs = new Dictionary<GLControl, int>();
         private HashSet<Shader> shaders = new HashSet<Shader>();
 
-        public ShaderProgram(Shader frag, Shader vert, GLControl control)
+        public ShaderProgram(Shader frag, Shader vert)
         {
             shaders.Add(frag);
             shaders.Add(vert);
-            Link(control);
+
+            foreach (GL_ControlModern control in Framework.modernGlControls)
+            {
+                control.MakeCurrent();
+                Initialize(control);
+            }
+
+            Framework.shaderPrograms.Add(this);
         }
 
-        public ShaderProgram(Shader frag, Shader vert, Shader geom, GLControl control)
+        public ShaderProgram(FragmentShader frag, VertexShader vert, Shader geom)
         {
             shaders.Add(frag);
             shaders.Add(vert);
             shaders.Add(geom);
-            Link(control);
+
+            foreach (GL_ControlModern control in Framework.modernGlControls)
+            {
+                control.MakeCurrent();
+                Initialize(control);
+            }
+
+            Framework.shaderPrograms.Add(this);
         }
 
-        public ShaderProgram(Shader[] shaders, GLControl control)
+        public ShaderProgram(params Shader[] shaders)
         {
             foreach (Shader shader in shaders)
             {
                 if (!this.shaders.Contains(shader))
                     this.shaders.Add(shader);
             }
-            Link(control);
+
+            foreach (GL_ControlModern control in Framework.modernGlControls)
+            {
+                control.MakeCurrent();
+                Initialize(control);
+            }
+
+            Framework.shaderPrograms.Add(this);
         }
 
-        public void Link(GLControl control)
+        public void Link()
+        {
+            foreach (int program in programs.Values)
+            {
+                GL.LinkProgram(program);
+            }
+
+            if (programs.Count > 0)
+            {
+                LoadAttributes(programs.First().Value);
+                LoadUniorms(programs.First().Value);
+
+                ShowErrors();
+            }
+        }
+
+        private void ShowErrors()
+        {
+            foreach (var shader in shaders)
+            {
+                Console.WriteLine($"{shader.type}:");
+
+                string log = GL.GetShaderInfoLog(shader.id);
+                Console.WriteLine(log);
+                if (Framework.ShowShaderErrors && log != "" && !log.StartsWith("warning"))
+                    MessageBox.Show(log);
+            }
+        }
+
+        /// <summary>
+        /// Creates an instance of the program for the current context and associates it with the control
+        /// </summary>
+        /// <param name="control"></param>
+        internal void Initialize(GL_ControlModern control)
         {
             if (programs.ContainsKey(control))
                 return;
-            
+
             int program = GL.CreateProgram();
-            
+
             foreach (Shader shader in shaders)
             {
                 GL.AttachShader(program, shader.id);
             }
 
             GL.LinkProgram(program);
-            foreach (var shader in shaders)
-            {
-                Console.WriteLine($"{shader.type.ToString("g")}:");
 
-                string log = GL.GetShaderInfoLog(shader.id);
-                Console.WriteLine(log);
-                if (Framework.ShowShaderErrors && log != "")
-                    MessageBox.Show(log);
+            if (programs.Count == 0) //this is the first program instance
+            {
+                LoadAttributes(program);
+                LoadUniorms(program);
+
+                ShowErrors();
             }
-            LoadAttributes(program);
-            LoadUniorms(program);
+
             programs[control] = program;
         }
 
@@ -86,6 +138,8 @@ namespace GL_EditorFramework.GL_Core
             {
                 LoadAttributes(programs.First().Value);
                 LoadUniorms(programs.First().Value);
+
+                ShowErrors();
             }
         }
 
@@ -101,12 +155,14 @@ namespace GL_EditorFramework.GL_Core
                 if (linkImediatly)
                     GL.LinkProgram(program);
             }
-        }
 
-        public void LinkAll()
-        {
-            foreach (int program in programs.Values)
-                GL.LinkProgram(program);
+            if (linkImediatly && programs.Count > 0)
+            {
+                LoadAttributes(programs.First().Value);
+                LoadUniorms(programs.First().Value);
+
+                ShowErrors();
+            }
         }
 
         public void Setup(Matrix4 mtxMdl, Matrix4 mtxCam, Matrix4 mtxProj, GLControl control)

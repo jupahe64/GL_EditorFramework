@@ -256,10 +256,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part, ref TransformChangeInfos transformChangeInfos);
 
-        void Prepare(GL_ControlModern control);
-
-        void Prepare(GL_ControlLegacy control);
-
         void Draw(GL_ControlModern control, Pass pass);
 
         void Draw(GL_ControlLegacy control, Pass pass);

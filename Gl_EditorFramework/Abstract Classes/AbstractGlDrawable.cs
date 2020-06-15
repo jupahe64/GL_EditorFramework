@@ -42,8 +42,6 @@ namespace GL_EditorFramework.Interfaces
         public const uint NO_CAMERA_ACTION = 0x20000000;
         public const uint FORCE_REENTER = 0x10000000;
 
-        public abstract void Prepare(GL_ControlModern control);
-        public abstract void Prepare(GL_ControlLegacy control);
         public abstract void Draw(GL_ControlModern control, Pass pass);
         public abstract void Draw(GL_ControlLegacy control, Pass pass);
         public virtual int GetPickableSpan() => 1;

@@ -32,16 +32,15 @@ namespace GL_EditorFramework.EditorDrawables
         public float ControlCubeScale => 0.25f;
 
         private static bool Initialized = false;
-        private static bool InitializedLegacy = false;
         private static ShaderProgram triangleShaderProgram;
         private static ShaderProgram lineShaderProgram;
         private static int colorLoc_Line, gapIndexLoc_Line, isPickingModeLoc_Line, 
             isPickingModeLoc_Tri, colorLoc_Tri;
 
         private static int drawLists;
+        private static VertexArrayObject pathPointVao;
+        private static int pathPointBuffer;
 
-        private int pathPointVao;
-        private int pathPointBuffer;
         protected List<T> pathPoints;
 
         public IReadOnlyList<T> PathPoints => pathPoints;
@@ -51,10 +50,136 @@ namespace GL_EditorFramework.EditorDrawables
 
         protected Path()
         {
+            if (!Initialized)
+            {
+                #region modern gl
 
+                pathPointVao = new VertexArrayObject(pathPointBuffer = GL.GenBuffer());
+                pathPointVao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 12, 0); //pos
+                pathPointVao.AddAttribute(1, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 12, sizeof(float) * 3); //col
+                pathPointVao.AddAttribute(2, 3, VertexAttribPointerType.Float, false, sizeof(float) * 12, sizeof(float) * 4); //controlPoint1
+                pathPointVao.AddAttribute(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 12, sizeof(float) * 7); //cp1Col
+                pathPointVao.AddAttribute(4, 3, VertexAttribPointerType.Float, false, sizeof(float) * 12, sizeof(float) * 8); //controlPoint2
+                pathPointVao.AddAttribute(5, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 12, sizeof(float) * 11); //cp2Col
+                pathPointVao.Submit();
+
+                float[] data = new float[0];
+                GL.BufferData(BufferTarget.ArrayBuffer, data.Length, data, BufferUsageHint.DynamicDraw);
+
+
+                var defaultFrag = new FragmentShader(
+              @"#version 330
+                in vec4 fragColor;
+                void main(){
+                    gl_FragColor = fragColor;
+                    if(gl_FragColor==vec4(0,0,0,0))
+                        discard;
+                }");
+
+                var defaultVert = new VertexShader(
+              @"#version 330
+                layout(location = 0) in vec3 position;
+                layout(location = 1) in vec4 _color;
+                layout(location = 2) in vec3 _cp1;
+                layout(location = 3) in vec4 _color_cp1;
+                layout(location = 4) in vec3 _cp2;
+                layout(location = 5) in vec4 _color_cp2;
+
+                out vec4 color;
+                out vec4 color_cp1;
+                out vec4 color_cp2;
+                out vec3 cp1;
+                out vec3 cp2;
+
+                void main(){
+                    gl_Position = vec4(position,1);
+                    cp1 = _cp1;
+                    cp2 = _cp2;
+                    color = _color;
+                    color_cp1 = _color_cp1;
+                    color_cp2 = _color_cp2;
+                }");
+
+                triangleShaderProgram = new ShaderProgram(defaultFrag, defaultVert,
+                    new GeomertyShader(File.ReadAllText(
+                        System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\Shaders\\TriangleShader.geom"
+                        )));
+
+
+                lineShaderProgram = new ShaderProgram(defaultFrag, defaultVert,
+                    new GeomertyShader(File.ReadAllText(System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\Shaders\\LineShader.geom")));
+
+                colorLoc_Line = lineShaderProgram["pathColor"];
+                gapIndexLoc_Line = lineShaderProgram["gapIndex"];
+                isPickingModeLoc_Line = lineShaderProgram["isPickingMode"];
+
+                colorLoc_Tri = triangleShaderProgram["pathColor"];
+                isPickingModeLoc_Tri = triangleShaderProgram["isPickingMode"];
+                #endregion
+
+                #region legacy gl
+                drawLists = GL.GenLists(2);
+
+                GL.NewList(drawLists, ListMode.Compile);
+                GL.Begin(PrimitiveType.Quads);
+                GL.Vertex3(ColorBlockRenderer.points[7]);
+                GL.Vertex3(ColorBlockRenderer.points[6]);
+                GL.Vertex3(ColorBlockRenderer.points[2]);
+                GL.Vertex3(ColorBlockRenderer.points[3]);
+
+                GL.Vertex3(ColorBlockRenderer.points[4]);
+                GL.Vertex3(ColorBlockRenderer.points[5]);
+                GL.Vertex3(ColorBlockRenderer.points[1]);
+                GL.Vertex3(ColorBlockRenderer.points[0]);
+                GL.End();
+
+                GL.Begin(PrimitiveType.QuadStrip);
+                GL.Vertex3(ColorBlockRenderer.points[7]);
+                GL.Vertex3(ColorBlockRenderer.points[5]);
+                GL.Vertex3(ColorBlockRenderer.points[6]);
+                GL.Vertex3(ColorBlockRenderer.points[4]);
+                GL.Vertex3(ColorBlockRenderer.points[2]);
+                GL.Vertex3(ColorBlockRenderer.points[0]);
+                GL.Vertex3(ColorBlockRenderer.points[3]);
+                GL.Vertex3(ColorBlockRenderer.points[1]);
+                GL.Vertex3(ColorBlockRenderer.points[7]);
+                GL.Vertex3(ColorBlockRenderer.points[5]);
+                GL.End();
+                GL.EndList();
+
+
+                GL.NewList(drawLists + 1, ListMode.Compile);
+                GL.Begin(PrimitiveType.LineStrip);
+                GL.Vertex3(ColorBlockRenderer.points[6]);
+                GL.Vertex3(ColorBlockRenderer.points[2]);
+                GL.Vertex3(ColorBlockRenderer.points[3]);
+                GL.Vertex3(ColorBlockRenderer.points[7]);
+                GL.Vertex3(ColorBlockRenderer.points[6]);
+
+                GL.Vertex3(ColorBlockRenderer.points[4]);
+                GL.Vertex3(ColorBlockRenderer.points[5]);
+                GL.Vertex3(ColorBlockRenderer.points[1]);
+                GL.Vertex3(ColorBlockRenderer.points[0]);
+                GL.Vertex3(ColorBlockRenderer.points[4]);
+                GL.End();
+
+                GL.Begin(PrimitiveType.Lines);
+                GL.Vertex3(ColorBlockRenderer.points[2]);
+                GL.Vertex3(ColorBlockRenderer.points[0]);
+                GL.Vertex3(ColorBlockRenderer.points[3]);
+                GL.Vertex3(ColorBlockRenderer.points[1]);
+                GL.Vertex3(ColorBlockRenderer.points[7]);
+                GL.Vertex3(ColorBlockRenderer.points[5]);
+                GL.End();
+                GL.EndList();
+                #endregion
+
+                Initialized = true;
+            }
         }
 
         public Path(List<T> pathPoints)
+            : this()
         {
             this.pathPoints = pathPoints;
             foreach (T point in pathPoints)
@@ -84,9 +209,10 @@ namespace GL_EditorFramework.EditorDrawables
 
             if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
-                
 
-            GL.BindVertexArray(pathPointVao);
+
+            pathPointVao.Use(control);
+            pathPointVao.Bind();
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, pathPointBuffer);
 
@@ -312,8 +438,6 @@ namespace GL_EditorFramework.EditorDrawables
                 GL.BufferData(BufferTarget.ArrayBuffer, data.Length * 4, data, BufferUsageHint.DynamicDraw);
                 #endregion
             }
-
-            GL.BindVertexArray(pathPointVao);
 
             //draw triangles
             control.CurrentShader = triangleShaderProgram;
@@ -686,158 +810,6 @@ namespace GL_EditorFramework.EditorDrawables
             #endregion
 
             GL.LineWidth(2f);
-        }
-
-        public override void Prepare(GL_ControlModern control)
-        {
-            pathPointVao = GL.GenVertexArray();
-            GL.BindVertexArray(pathPointVao);
-
-            pathPointBuffer = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, pathPointBuffer);
-
-            float[] data = new float[pathPoints.Count];
-
-            GL.BufferData(BufferTarget.ArrayBuffer, data.Length, data, BufferUsageHint.DynamicDraw);
-
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 12, 0); //pos
-
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 12, sizeof(float) * 3); //col
-
-            GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, sizeof(float) * 12, sizeof(float) * 4); //controlPoint1
-
-            GL.EnableVertexAttribArray(3);
-            GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 12, sizeof(float) * 7); //cp1Col
-
-            GL.EnableVertexAttribArray(4);
-            GL.VertexAttribPointer(4, 3, VertexAttribPointerType.Float, false, sizeof(float) * 12, sizeof(float) * 8); //controlPoint2
-
-            GL.EnableVertexAttribArray(5);
-            GL.VertexAttribPointer(5, 4, VertexAttribPointerType.UnsignedByte, true, sizeof(float) * 12, sizeof(float) * 11); //cp2Col
-
-            if (!Initialized)
-            {
-                var defaultFrag = new FragmentShader(
-              @"#version 330
-                in vec4 fragColor;
-                void main(){
-                    gl_FragColor = fragColor;
-                    if(gl_FragColor==vec4(0,0,0,0))
-                        discard;
-                }");
-
-                var defaultVert = new VertexShader(
-              @"#version 330
-                layout(location = 0) in vec3 position;
-                layout(location = 1) in vec4 _color;
-                layout(location = 2) in vec3 _cp1;
-                layout(location = 3) in vec4 _color_cp1;
-                layout(location = 4) in vec3 _cp2;
-                layout(location = 5) in vec4 _color_cp2;
-
-                out vec4 color;
-                out vec4 color_cp1;
-                out vec4 color_cp2;
-                out vec3 cp1;
-                out vec3 cp2;
-
-                void main(){
-                    gl_Position = vec4(position,1);
-                    cp1 = _cp1;
-                    cp2 = _cp2;
-                    color = _color;
-                    color_cp1 = _color_cp1;
-                    color_cp2 = _color_cp2;
-                }");
-
-                triangleShaderProgram = new ShaderProgram(defaultFrag, defaultVert, 
-                    new GeomertyShader(File.ReadAllText(
-                        System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\Shaders\\TriangleShader.geom"
-                        )), control);
-                
-
-                lineShaderProgram = new ShaderProgram(defaultFrag, defaultVert,
-                    new GeomertyShader(File.ReadAllText(System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\Shaders\\LineShader.geom")), control);
-                
-                colorLoc_Line = lineShaderProgram["pathColor"];
-                gapIndexLoc_Line = lineShaderProgram["gapIndex"];
-                isPickingModeLoc_Line = lineShaderProgram["isPickingMode"];
-
-                colorLoc_Tri = triangleShaderProgram["pathColor"];
-                isPickingModeLoc_Tri = triangleShaderProgram["isPickingMode"];
-
-                Initialized = true;
-            }
-            else
-            {
-                triangleShaderProgram.Link(control);
-                lineShaderProgram.Link(control);
-            }
-        }
-
-        public override void Prepare(GL_ControlLegacy control)
-        {
-            if (!InitializedLegacy)
-            {
-                drawLists = GL.GenLists(2);
-
-                GL.NewList(drawLists, ListMode.Compile);
-                GL.Begin(PrimitiveType.Quads);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
-
-                GL.Vertex3(ColorBlockRenderer.points[4]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
-                GL.End();
-
-                GL.Begin(PrimitiveType.QuadStrip);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
-                GL.Vertex3(ColorBlockRenderer.points[4]);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.End();
-                GL.EndList();
-
-
-                GL.NewList(drawLists + 1, ListMode.Compile);
-                GL.Begin(PrimitiveType.LineStrip);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
-
-                GL.Vertex3(ColorBlockRenderer.points[4]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
-                GL.Vertex3(ColorBlockRenderer.points[4]);
-                GL.End();
-
-                GL.Begin(PrimitiveType.Lines);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.End();
-                GL.EndList();
-                InitializedLegacy = true;
-            }
         }
 
         public override int GetPickableSpan()

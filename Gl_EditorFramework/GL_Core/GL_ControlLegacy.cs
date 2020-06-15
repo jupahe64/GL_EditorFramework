@@ -46,8 +46,6 @@ namespace GL_EditorFramework.GL_Core
 
                 mainDrawable = value;
                 mainDrawable.Connect(this);
-                MakeCurrent();
-                mainDrawable.Prepare(this);
                 Refresh();
             }
         }
