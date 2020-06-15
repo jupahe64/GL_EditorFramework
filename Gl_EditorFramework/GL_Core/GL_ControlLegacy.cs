@@ -28,10 +28,11 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void OnLoad(EventArgs e)
         {
-            base.OnLoad(e);
             if (DesignMode) return;
             MakeCurrent();
             Framework.Initialize();
+
+            base.OnLoad(e);
         }
 
         public override AbstractGlDrawable MainDrawable

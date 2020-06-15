@@ -578,6 +578,7 @@ namespace GL_EditorFramework.GL_Core
 
             GL.Hint(HintTarget.MultisampleFilterHintNv, HintMode.Nicest);
 
+            base.OnLoad(e);
         }
 
         protected override void OnResize(EventArgs e)
