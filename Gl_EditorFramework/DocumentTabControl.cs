@@ -144,6 +144,10 @@ namespace GL_EditorFramework
                 selectedIndex--;
                 SelectedTabChanged?.Invoke(this, new EventArgs());
             }
+            else if(index == selectedIndex)
+            {
+                SelectedTabChanged?.Invoke(this, new EventArgs());
+            }
 
             Invalidate();
         }
