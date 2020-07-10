@@ -69,13 +69,12 @@ namespace GL_EditorFramework.GL_Core
             get => mainDrawable;
             set
             {
-                if (value == null || DesignMode) return;
+                if (DesignMode) return;
 
-                if (mainDrawable != null)
-                    mainDrawable.Disconnect(this);
+                mainDrawable?.Disconnect(this);
 
                 mainDrawable = value;
-                mainDrawable.Connect(this);
+                mainDrawable?.Connect(this);
                 Refresh();
             }
         }
