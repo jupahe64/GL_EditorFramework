@@ -316,5 +316,21 @@ namespace GL_EditorFramework.GL_Core
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            MakeCurrent();
+
+            foreach (var program in Framework.shaderPrograms)
+            {
+                program.Delete(this);
+            }
+
+            foreach (var vao in Framework.vaos)
+            {
+                vao.Delete(this);
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }
