@@ -106,6 +106,8 @@ namespace GL_EditorFramework.GL_Core
                             errorString += line + '\n';
                     }
 
+                    errorString = errorString.Trim('\n');
+
                     if (errorString != "")
                         MessageBox.Show(errorString);
                 }
