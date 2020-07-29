@@ -95,8 +95,20 @@ namespace GL_EditorFramework.GL_Core
 
                 string log = GL.GetShaderInfoLog(shader.id);
                 Console.WriteLine(log);
-                if (Framework.ShowShaderErrors && log != "" && !log.StartsWith("warning"))
-                    MessageBox.Show(log);
+
+                if(Framework.ShowShaderErrors && log != null)
+                {
+                    string errorString = "";
+
+                    foreach (var line in log.Split('\n'))
+                    {
+                        if (!line.ToLower().Contains("warning"))
+                            errorString += line + '\n';
+                    }
+
+                    if (errorString != "")
+                        MessageBox.Show(errorString);
+                }
             }
         }
 
