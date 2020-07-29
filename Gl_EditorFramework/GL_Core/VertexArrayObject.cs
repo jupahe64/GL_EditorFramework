@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -6,7 +7,7 @@ namespace GL_EditorFramework.GL_Core
 {
     public class VertexArrayObject
     {
-        private Dictionary<GLControl, int> vaos;
+        public Dictionary<GLControl, int> vaos;
         private readonly int buffer;
         private readonly int? indexBuffer;
         private readonly Dictionary<int, VertexAttribute> attributes;
@@ -40,13 +41,22 @@ namespace GL_EditorFramework.GL_Core
             Framework.vaos.Add(this);
         }
 
+        public void Delete(GLControl control)
+        {
+            GL.DeleteVertexArray(vaos[control]);
+            vaos.Remove(control);
+        }
+
         internal void Initialize(GL_ControlModern control)
         {
             if (vaos.ContainsKey(control))
                 return;
 
-            int vao = GL.GenVertexArray();
+
+            GL.GenVertexArrays(1, out int vao);
+            if (GL.GetError() == ErrorCode.InvalidOperation) Debugger.Break();
             GL.BindVertexArray(vao);
+            if (GL.GetError() == ErrorCode.InvalidOperation) Debugger.Break();
             GL.BindBuffer(BufferTarget.ArrayBuffer, buffer);
 
             foreach (KeyValuePair<int, VertexAttribute> a in attributes)
@@ -72,6 +82,7 @@ namespace GL_EditorFramework.GL_Core
         public void Use(GLControl control)
         {
             GL.BindVertexArray(vaos[control]);
+            if (GL.GetError() == ErrorCode.InvalidOperation) Debugger.Break();
 
             if (indexBuffer.HasValue)
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer.Value);

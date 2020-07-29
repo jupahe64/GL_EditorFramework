@@ -16,7 +16,7 @@ namespace GL_EditorFramework.GL_Core
         private Dictionary<string, int> attributes = new Dictionary<string, int>();
         private int activeAttributeCount;
         private Dictionary<string, int> uniforms = new Dictionary<string, int>();
-        public Dictionary<GLControl, int> programs = new Dictionary<GLControl, int>();
+        private Dictionary<GLControl, int> programs = new Dictionary<GLControl, int>();
         private HashSet<Shader> shaders = new HashSet<Shader>();
 
         public ShaderProgram(Shader frag, Shader vert)
@@ -79,6 +79,12 @@ namespace GL_EditorFramework.GL_Core
 
                 ShowErrors();
             }
+        }
+
+        public void Delete(GLControl control)
+        {
+            GL.DeleteProgram(programs[control]);
+            programs.Remove(control);
         }
 
         private void ShowErrors()
