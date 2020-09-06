@@ -129,6 +129,9 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="GL_Core\ShaderClass.cs" />
+    <Compile Include="SuggestingTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="GL_Core\Resources\TextureSheet.png" />

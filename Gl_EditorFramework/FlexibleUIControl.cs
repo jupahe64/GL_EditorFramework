@@ -72,12 +72,12 @@ namespace GL_EditorFramework
 
         bool mouseWasDragged = false;
         protected readonly int textBoxHeight;
-        protected readonly int comboBoxHeight;
 
         bool textBoxHasNumericFilter = false;
 
         protected TextBox textBox1;
-        protected ComboBox comboBox1;
+
+        protected SuggestionDropDown suggestionsDropDown = new SuggestionDropDown();
 
         public FlexibleUIControl()
         {
@@ -99,29 +99,17 @@ namespace GL_EditorFramework
                 TextAlign = HorizontalAlignment.Center,
                 Visible = false
             };
-            textBox1.MouseClick += new MouseEventHandler(TextBox1_MouseClick);
-            textBox1.KeyDown += new KeyEventHandler(TextBox1_KeyDown);
-            textBox1.LostFocus += new EventHandler(TextBox1_LostFocus);
+            textBox1.MouseClick += TextBox1_MouseClick;
+            textBox1.KeyDown += TextBox1_KeyDown;
+            textBox1.LostFocus += TextBox1_LostFocus;
+            textBox1.GotFocus += TextBox1_GotFocus;
+            textBox1.TextChanged += TextBox1_TextChanged;
 
-
-            comboBox1 = new ComboBox
-            {
-                FormattingEnabled = true,
-                Location = new Point(83, 96),
-                Margin = new Padding(0),
-                Name = "comboBox1",
-                Size = new Size(69, 11),
-                TabIndex = 1,
-                Visible = false
-            };
-            comboBox1.KeyDown += new KeyEventHandler(ComboBox1_KeyDown);
-            comboBox1.LostFocus += new EventHandler(ComboBox1_LostFocus);
-
+            suggestionsDropDown.ItemSelected += SuggestionsDropDown_ItemSelected;
 
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
-            Controls.Add(comboBox1);
             Controls.Add(textBox1);
             Size = new Size(220, 160);
             ResumeLayout(false);
@@ -136,7 +124,12 @@ namespace GL_EditorFramework
             doubleClickTimer.Tick += DoubleClickTimer_Tick;
 
             textBoxHeight = textBox1.Height;
-            comboBoxHeight = comboBox1.Height-2;
+        }
+
+        private void SuggestionsDropDown_ItemSelected(object sender, EventArgs e)
+        {
+            textBox1.Text = suggestionsDropDown.SelectedSuggestion;
+            Focus();
         }
 
         protected int usableWidth;
@@ -150,13 +143,6 @@ namespace GL_EditorFramework
                 usableWidth = Width - 2;
 
             Refresh();
-
-            if (comboBoxUpdateRequest.HasValue)
-            {
-                comboBox1.SetBounds(comboBoxUpdateRequest.Value.X, comboBoxUpdateRequest.Value.Y, comboBoxUpdateRequest.Value.Width, -1, BoundsSpecified.Location | BoundsSpecified.Width);
-
-                comboBoxUpdateRequest = null;
-            }
         }
 
         private void TextBox1_MouseClick(object sender, MouseEventArgs e)
@@ -177,8 +163,16 @@ namespace GL_EditorFramework
 
         public void UnFocusInput()
         {
-            if (textBox1.Focused || comboBox1.Focused)
+            if (textBox1.Focused)
                 Focus();
+        }
+
+        private void TextBox1_GotFocus(object sender, EventArgs e)
+        {
+            if (suggestionsForTextBox.Length != 0)
+            {
+                suggestionsDropDown.Show(textBox1.PointToScreen(new Point(-1, textBox1.Height - 1)), textBox1.Width, textBox1.Text, suggestionsForTextBox, true, true);
+            }
         }
 
         private void TextBox1_LostFocus(object sender, EventArgs e)
@@ -195,24 +189,14 @@ namespace GL_EditorFramework
 
             eventType = EventType.DRAW;
 
+            suggestionsDropDown.Hide();
+
             changeTypes = 0;
         }
 
-        private void ComboBox1_LostFocus(object sender, EventArgs e)
+        private void TextBox1_TextChanged(object sender, EventArgs e)
         {
-            if (focusedIndex == -1)
-                return;
-
-            eventType = EventType.LOST_FOCUS;
-
-            Refresh();
-
-            comboBox1.Visible = false;
-            focusedIndex = -1;
-
-            eventType = EventType.DRAW;
-
-            changeTypes = 0;
+            suggestionsDropDown.UpdateSuggestions(textBox1.Text);
         }
 
         private void TextBox1_KeyDown(object sender, KeyEventArgs e)
@@ -224,14 +208,52 @@ namespace GL_EditorFramework
             }
         }
 
-        private void ComboBox1_KeyDown(object sender, KeyEventArgs e)
+        #region make sure suggestionDropDown behaves correctly
+        protected override void OnParentChanged(EventArgs e)
         {
-            if (e.KeyCode == Keys.Return && comboBox1.Focused)
+            base.OnParentChanged(e);
+
+            Form parentForm = this.FindForm();
+
+            if (parentForm != null)
             {
-                Focus();
-                e.SuppressKeyPress = true;
+                parentForm.LocationChanged += ParentForm_LocationChanged;
+                parentForm.SizeChanged += ParentForm_SizeChanged;
+
+                parentForm.FormClosed += ParentForm_FormClosed;
             }
         }
+
+        protected override void OnLayout(LayoutEventArgs e)
+        {
+            base.OnLayout(e);
+
+            Form parentForm = this.FindForm();
+
+            if (parentForm != null)
+            {
+                parentForm.LocationChanged += ParentForm_LocationChanged;
+                parentForm.SizeChanged += ParentForm_SizeChanged;
+
+                parentForm.FormClosed += ParentForm_FormClosed;
+            }
+        }
+
+        private void ParentForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            suggestionsDropDown.Close();
+        }
+
+        private void ParentForm_SizeChanged(object sender, EventArgs e)
+        {
+            suggestionsDropDown.Width = textBox1.Width;
+        }
+
+        private void ParentForm_LocationChanged(object sender, EventArgs e)
+        {
+            suggestionsDropDown.Location = textBox1.PointToScreen(new Point(-1, textBox1.Height - 1));
+        }
+        #endregion
 
         private void TextBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -335,6 +357,8 @@ namespace GL_EditorFramework
 
             if (textBoxRequest.HasValue)
             {
+                suggestionsForTextBox = Array.Empty<string>();
+
                 SuspendLayout();
                 textBox1.Visible = true;
 
@@ -370,32 +394,34 @@ namespace GL_EditorFramework
 
             if (comboBoxRequest.HasValue)
             {
-                
+                suggestionsForTextBox = comboBoxRequest.Value.items;
+
                 SuspendLayout();
-                comboBox1.Visible = true;
+                textBox1.Visible = true;
 
-                comboBox1.Text = comboBoxRequest.Value.value;
-                comboBox1.Location = new Point(comboBoxRequest.Value.x, comboBoxRequest.Value.y);
-                comboBox1.Width = comboBoxRequest.Value.width;
+                textBox1.Text = comboBoxRequest.Value.value;
+                textBox1.TextAlign = HorizontalAlignment.Left;
+                textBox1.Location = new Point(comboBoxRequest.Value.x, comboBoxRequest.Value.y);
+                textBox1.Width = comboBoxRequest.Value.width;
+                ResumeLayout();
 
-                comboBox1.Focus();
+                textBox1.Focus();
 
                 if (focusRequest.HasValue)
                     focusedIndex = focusRequest.Value;
 
-                comboBox1.Items.Clear();
-                if (comboBoxRequest.Value.items != null && comboBoxRequest.Value.items.Length != 0)
-                    comboBox1.Items.AddRange(comboBoxRequest.Value.items);
+                int lParam = mousePos.Y - textBox1.Top << 16 | (mousePos.X - textBox1.Left & 65535);
+                int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
 
-                comboBox1.DropDownStyle = comboBoxRequest.Value.hasTextBox ? ComboBoxStyle.DropDown : ComboBoxStyle.DropDownList;
-
-                ResumeLayout();
+                textBox1.Select(Math.Max(0, num), 0);
 
                 comboBoxRequest = null;
             }
 
             changeTypes = 0;
         }
+
+        private string[] suggestionsForTextBox = Array.Empty<string>();
 
         protected bool TryInitDrawing(PaintEventArgs e)
         {
@@ -432,14 +458,14 @@ namespace GL_EditorFramework
 
         protected virtual void DrawComboBoxField(int x, int y, int width, string value, Brush outline, Brush background, bool isCentered = true)
         {
-            g.FillRectangle(outline, x, y, width, comboBoxHeight + 2);
-            g.FillRectangle(background, x + 1, y + 1, width - 2, comboBoxHeight);
+            g.FillRectangle(outline, x, y, width, textBoxHeight + 2);
+            g.FillRectangle(background, x + 1, y + 1, width - 2, textBoxHeight);
 
             g.SetClip(new Rectangle(
                 x + 1,
                 y + 1,
                 width - 2,
-                comboBoxHeight));
+                textBoxHeight));
 
             if (isCentered)
                 g.DrawString(value, Font, SystemBrushes.ControlText,
@@ -496,8 +522,6 @@ namespace GL_EditorFramework
         int? focusRequest;
 
         ComboBoxSetup? comboBoxRequest;
-
-        Rectangle? comboBoxUpdateRequest;
 
         private void PrepareFieldForInput(int x, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
         {
@@ -557,7 +581,7 @@ namespace GL_EditorFramework
                 case EventType.CLICK:
                     if (new Rectangle(x + 1, y + 1, width - 1, textBoxHeight - 2).Contains(mousePos))
                     {
-                        DrawField(x, y, width, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, number.ToString(), isCentered);
 
                         eventType = EventType.DRAW; //Click Handled
@@ -663,7 +687,7 @@ namespace GL_EditorFramework
                 case EventType.CLICK:
                     if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
                     {
-                        DrawField(x, y, width, "", SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, text, false, isCentered);
 
                         eventType = EventType.DRAW; //Click Handled
@@ -703,20 +727,22 @@ namespace GL_EditorFramework
         private void UpdateTextbox(int x, int y, int width)
         {
             textBox1.SetBounds(x + 1, y + 1, width - 2, -1, BoundsSpecified.Location | BoundsSpecified.Width);
+            if (suggestionsDropDown.Visible)
+            {
+                suggestionsDropDown.Location = textBox1.PointToScreen(new Point(-1, textBox1.Height - 1));
+                suggestionsDropDown.Width = width;
+            }
         }
 
         protected string DropDownTextInputField(int x, int y, int width, string text, string[] dropDownItems)
         {
             if (focusedIndex == index)
-            {
-                //UpdateCombobox
-                comboBoxUpdateRequest = new Rectangle(x, y, width, 0);
-            }
+                UpdateTextbox(x, y, width);
 
             switch (eventType)
             {
                 case EventType.CLICK:
-                    if (new Rectangle(x + 1, y + 1, width - 2, comboBoxHeight - 2).Contains(mousePos))
+                    if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
                     {
                         PrepareComboBox(x, y, width, text, dropDownItems, true);
 
@@ -731,11 +757,11 @@ namespace GL_EditorFramework
                     if (focusedIndex == index)
                     {
                         changeTypes |= VALUE_SET;
-                        text = comboBox1.Text;
+                        text = textBox1.Text;
                     }
 
                     if (focusedIndex == index)
-                        DrawComboBoxField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawComboBoxField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, false);
                     else
                         DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
@@ -743,7 +769,7 @@ namespace GL_EditorFramework
 
                 default:
                     if (focusedIndex == index)
-                        DrawComboBoxField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawComboBoxField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, false);
                     else
                         DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
