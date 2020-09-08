@@ -531,7 +531,7 @@ namespace GL_EditorFramework
             return value;
         }
 
-        public string DropDownTextInput(string name, string text, string[] dropDownItems)
+        public string DropDownTextInput(string name, string text, string[] dropDownItems, bool filterSuggestions = true)
         {
             EndHorizontalSeperator(); //this control doesn't get aligned to it
 
@@ -543,7 +543,7 @@ namespace GL_EditorFramework
 
             currentY += rowHeight;
 
-            text = DropDownTextInputField(margin, currentY, usableWidth - margin * 2, text, dropDownItems);
+            text = DropDownTextInputField(margin, currentY, usableWidth - margin * 2, text, dropDownItems, filterSuggestions);
 
             currentY += rowHeight;
 
@@ -568,6 +568,24 @@ namespace GL_EditorFramework
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
         }
         #endregion
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // suggestionsDropDown
+            // 
+            this.suggestionsDropDown.ClientSize = new System.Drawing.Size(300, 300);
+            this.suggestionsDropDown.Location = new System.Drawing.Point(52, 52);
+            // 
+            // ObjectUIControl
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.Name = "ObjectUIControl";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
     }
 
     /// <summary>
@@ -595,7 +613,7 @@ namespace GL_EditorFramework
         string TextInput(string text, string name);
         string FullWidthTextInput(string text, string name);
         object ChoicePicker(string name, object value, IList values);
-        string DropDownTextInput(string name, string text, string[] dropDownItems);
+        string DropDownTextInput(string name, string text, string[] dropDownItems, bool filterSuggestions = true);
         void Spacing(int amount);
         void VerticalSeperator();
     }

@@ -171,7 +171,7 @@ namespace GL_EditorFramework
         {
             if (suggestionsForTextBox.Length != 0)
             {
-                suggestionsDropDown.Show(textBox1.PointToScreen(new Point(-1, textBox1.Height - 1)), textBox1.Width, textBox1.Text, suggestionsForTextBox, true, true);
+                suggestionsDropDown.Show(textBox1.PointToScreen(new Point(-1, textBox1.Height - 1)), textBox1.Width, textBox1.Text, suggestionsForTextBox, true, filterSuggestionsForTextBox);
             }
         }
 
@@ -396,6 +396,8 @@ namespace GL_EditorFramework
             {
                 suggestionsForTextBox = comboBoxRequest.Value.items;
 
+                filterSuggestionsForTextBox = comboBoxRequest.Value.filterSuggestions;
+
                 SuspendLayout();
                 textBox1.Visible = true;
 
@@ -415,6 +417,12 @@ namespace GL_EditorFramework
 
                 textBox1.Select(Math.Max(0, num), 0);
 
+                if (textBoxHasNumericFilter)
+                {
+                    textBox1.KeyPress -= TextBox1_KeyPress;
+                    textBoxHasNumericFilter = false;
+                }
+
                 comboBoxRequest = null;
             }
 
@@ -422,6 +430,8 @@ namespace GL_EditorFramework
         }
 
         private string[] suggestionsForTextBox = Array.Empty<string>();
+
+        private bool filterSuggestionsForTextBox = true;
 
         protected bool TryInitDrawing(PaintEventArgs e)
         {
@@ -507,8 +517,9 @@ namespace GL_EditorFramework
             public string value;
             public string[] items;
             public bool hasTextBox;
+            public bool filterSuggestions;
 
-            public ComboBoxSetup(int x, int y, int width, string value, string[] items, bool hasTextBox)
+            public ComboBoxSetup(int x, int y, int width, string value, string[] items, bool hasTextBox, bool filterSuggestions)
             {
                 this.x = x;
                 this.y = y;
@@ -516,6 +527,7 @@ namespace GL_EditorFramework
                 this.value = value;
                 this.items = items;
                 this.hasTextBox = hasTextBox;
+                this.filterSuggestions = filterSuggestions;
             }
         }
 
@@ -548,9 +560,9 @@ namespace GL_EditorFramework
             }
         }
 
-        protected void PrepareComboBox(int x, int y, int width, string value, string[] items, bool hasTextBox)
+        protected void PrepareComboBox(int x, int y, int width, string value, string[] items, bool hasTextBox, bool filterSuggestions)
         {
-            comboBoxRequest = new ComboBoxSetup(x, y, width, value, items, hasTextBox);
+            comboBoxRequest = new ComboBoxSetup(x, y, width, value, items, hasTextBox, filterSuggestions);
 
             focusRequest = index;
             changeTypes |= VALUE_CHANGE_START;
@@ -734,7 +746,7 @@ namespace GL_EditorFramework
             }
         }
 
-        protected string DropDownTextInputField(int x, int y, int width, string text, string[] dropDownItems)
+        protected string DropDownTextInputField(int x, int y, int width, string text, string[] dropDownItems, bool filterSuggestions)
         {
             if (focusedIndex == index)
                 UpdateTextbox(x, y, width);
@@ -744,7 +756,7 @@ namespace GL_EditorFramework
                 case EventType.CLICK:
                     if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
                     {
-                        PrepareComboBox(x, y, width, text, dropDownItems, true);
+                        PrepareComboBox(x, y, width, text, dropDownItems, true, filterSuggestions);
 
                         eventType = EventType.DRAW; //Click Handled
                     }
