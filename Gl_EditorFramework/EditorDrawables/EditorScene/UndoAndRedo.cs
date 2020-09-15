@@ -21,6 +21,11 @@ namespace GL_EditorFramework.EditorDrawables
         protected Stack<IRevertable> undoStack = new Stack<IRevertable>();
         protected Stack<RedoEntry> redoStack = new Stack<RedoEntry>();
 
+        protected virtual void OnUndo(IRevertable revertable) { }
+        protected virtual void OnRedo(RedoEntry redoEntry) { }
+        protected virtual void OnSubmitUndoable(IRevertable revertable) { }
+
+
         public void Undo()
         {
             EndUndoCollection(); //just in case this wasn't called before
@@ -29,6 +34,8 @@ namespace GL_EditorFramework.EditorDrawables
             {
                 var undoable = undoStack.Pop();
                 var redoable = undoable.Revert(this);
+
+                OnUndo(undoable);
 
                 redoStack.Push(new RedoEntry { undoable = undoable, redoable = redoable });
                 Reverted?.Invoke(this, new RevertedEventArgs(redoable));
@@ -47,6 +54,8 @@ namespace GL_EditorFramework.EditorDrawables
             if (redoStack.Count > 0)
             {
                 var entry = redoStack.Pop();
+
+                OnRedo(entry);
 
                 entry.redoable.Revert(this);
 
@@ -181,6 +190,10 @@ namespace GL_EditorFramework.EditorDrawables
                 undoCollection = null;
 
                 IsSaved = false;
+
+                redoStack.Clear();
+
+                OnSubmitUndoable(undoCollection.Last());
             }
         }
 
@@ -205,9 +218,11 @@ namespace GL_EditorFramework.EditorDrawables
                 undoStack.Push(revertable);
 
                 IsSaved = false;
-            }
 
-            redoStack.Clear();
+                redoStack.Clear();
+
+                OnSubmitUndoable(revertable);
+            }
         }
 
         public class RevertablePosChange : IRevertable
