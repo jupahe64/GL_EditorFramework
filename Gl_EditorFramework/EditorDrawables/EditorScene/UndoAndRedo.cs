@@ -187,13 +187,13 @@ namespace GL_EditorFramework.EditorDrawables
                 else if (undoCollection.Count > 2)
                     undoStack.Push(new MultiRevertable(undoCollection.ToArray()));
 
-                undoCollection = null;
-
                 IsSaved = false;
 
                 redoStack.Clear();
 
                 OnSubmitUndoable(undoCollection.Last());
+
+                undoCollection = null;
             }
         }
 
@@ -225,6 +225,7 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
+        #region Transform Changes
         public class RevertablePosChange : IRevertable
         {
             private PosInfo[] posInfos;
@@ -437,6 +438,7 @@ namespace GL_EditorFramework.EditorDrawables
                     infos.Add(new TransformChangeInfo(obj, part, position, rotation, scale));
             }
         }
+        #endregion
 
         #region List Operations
         public class RevertableSingleAddition : IRevertable
@@ -912,6 +914,7 @@ namespace GL_EditorFramework.EditorDrawables
         }
         #endregion
 
+        #region Property Changes
         public struct PropertyCapture
         {
             public class Undoable : Attribute { }
@@ -1031,6 +1034,50 @@ namespace GL_EditorFramework.EditorDrawables
                 }
 
                 return new RevertableMulityPropertyChange(newInfos);
+            }
+        }
+        #endregion
+
+
+        public class RevertableMassPropertyChange<TObject, TValue> : IRevertable
+        {
+            public struct Info
+            {
+                public readonly TObject obj;
+                public readonly TValue value;
+
+                public Info(TObject obj, TValue value)
+                {
+                    this.obj = obj;
+                    this.value = value;
+                }
+            }
+
+            readonly ValueGetter<TObject, TValue> getter;
+            readonly ValueSetter<TObject, TValue> setter;
+            readonly Info[] infos;
+
+            public RevertableMassPropertyChange(ValueGetter<TObject, TValue> getter, ValueSetter<TObject, TValue> setter, Info[] infos)
+            {
+                this.getter = getter;
+                this.setter = setter;
+                this.infos = infos;
+            }
+
+            public IRevertable Revert(EditorSceneBase scene)
+            {
+                Info[] newInfos = new Info[infos.Length];
+
+                for (int i = 0; i < infos.Length; i++)
+                {
+                    TValue prevValue = getter(infos[i].obj);
+
+                    setter(infos[i].obj, infos[i].value);
+
+                    newInfos[i] = new Info(infos[i].obj, prevValue);
+                }
+
+                return new RevertableMassPropertyChange<TObject, TValue>(getter, setter, newInfos);
             }
         }
     }

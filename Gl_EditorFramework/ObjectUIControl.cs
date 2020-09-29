@@ -1,7 +1,10 @@
-﻿using System;
+﻿using GL_EditorFramework.EditorDrawables;
+using OpenTK;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +12,240 @@ using System.Windows.Forms;
 
 namespace GL_EditorFramework
 {
-    public class ObjectUIControl : FlexibleUIControl, IObjectUIControl
+    public delegate TValue ValueGetter<TObject, TValue>(TObject obj);
+    public delegate void ValueSetter<TObject, TValue>(TObject obj, TValue value);
+
+    public class MultipleValueCapture<TObject, TValue>
+    {
+        private ValueGetter<TObject, TValue> getter;
+        private ValueSetter<TObject, TValue> setter;
+        
+        private Multiple<TValue> prevValue;
+
+        public Multiple<TValue> Value { get; set; }
+
+
+        public MultipleValueCapture(ValueGetter<TObject, TValue> getter, ValueSetter<TObject, TValue> setter, IList objects)
+        {
+            this.getter = getter;
+            this.setter = setter;
+
+            Update(objects);
+        }
+
+        public void Update(IList objects)
+        {
+            Multiple<TValue> res = getter((TObject)objects[0]);
+
+            for (int i = 0; i < objects.Count; i++)
+            {
+                if (res != getter((TObject)objects[i]))
+                {
+                    Value = new Multiple<TValue>();
+                    return;
+                }
+            }
+
+            prevValue = res;
+            Value = res;
+        }
+
+        public void ApplyIfChanged(IList objects, EditorSceneBase scene = null)
+        {
+            var infos = new List<EditorSceneBase.RevertableMassPropertyChange<TObject, TValue>.Info>();
+
+            if (Value != prevValue)
+            {
+                for (int i = 0; i < objects.Count; i++)
+                {
+                    var value = getter((TObject)objects[i]);
+
+                    if(!value.Equals(Value.SharedValue))
+                    {
+                        infos.Add(new EditorSceneBase.RevertableMassPropertyChange<TObject, TValue>.Info((TObject)objects[i], value));
+
+                        setter((TObject)objects[i], Value.SharedValue);
+                    }
+                }
+
+                prevValue = Value;
+
+                if (infos.Count > 0)
+                    scene?.AddToUndo(new EditorSceneBase.RevertableMassPropertyChange<TObject, TValue>(getter, setter, infos.ToArray()));
+            }
+        }
+    }
+
+    public class MultipleVector3Capture<TObject>
+    {
+        private ValueGetter<TObject, Vector3> getter;
+        private ValueSetter<TObject, Vector3> setter;
+
+        private MultipleVector3 prevValue;
+
+        public MultipleVector3 Value { get; set; }
+
+
+        public MultipleVector3Capture(ValueGetter<TObject, Vector3> getter, ValueSetter<TObject, Vector3> setter, IList objects)
+        {
+            this.getter = getter;
+            this.setter = setter;
+
+            Update(objects);
+        }
+
+        public void Update(IList objects)
+        {
+            MultipleVector3 res = getter((TObject)objects[0]);
+            for (int i = 1; i < objects.Count; i++)
+            {
+                if (getter((TObject)objects[i]).X != res.X)
+                {
+                    res.X = new Multiple<float>();
+                }
+
+                if (getter((TObject)objects[i]).Y != res.Y)
+                {
+                    res.Y = new Multiple<float>();
+                }
+
+                if (getter((TObject)objects[i]).Z != res.Z)
+                {
+                    res.Z = new Multiple<float>();
+                }
+
+                if (res == new MultipleVector3())
+                    break;
+            }
+
+            prevValue = res;
+            Value = res;
+        }
+
+        public void ApplyIfChanged(IList objects, EditorSceneBase scene = null)
+        {
+            if (Value != prevValue)
+            {
+                var infos = new List<EditorSceneBase.RevertableMassPropertyChange<TObject, Vector3>.Info>();
+
+                for (int i = 0; i < objects.Count; i++)
+                {
+                    var value = getter((TObject)objects[i]);
+                    var _prevValue = value;
+
+                    if (Value.X != value.X)
+                        value.X = Value.X.SharedValue;
+
+                    if (Value.Y != value.Y)
+                        value.Y = Value.Y.SharedValue;
+
+                    if (Value.Z != value.Z)
+                        value.Z = Value.Z.SharedValue;
+
+                    if(_prevValue != value)
+                    {
+                        infos.Add(new EditorSceneBase.RevertableMassPropertyChange<TObject, Vector3>.Info((TObject)objects[i], _prevValue));
+
+                        setter((TObject)objects[i], value);
+                    }
+                }
+
+                prevValue = Value;
+
+                if(infos.Count>0)
+                    scene?.AddToUndo(new EditorSceneBase.RevertableMassPropertyChange<TObject, Vector3>(getter, setter, infos.ToArray()));
+            }
+        }
+    }
+
+    public struct Multiple<T>
+    {
+        public Multiple(T value)
+        {
+            SharedValue = value;
+            HasSharedValue = true;
+        }
+
+
+        public T SharedValue { get; set; }
+
+        public bool HasSharedValue { get; set; }
+
+        public static implicit operator Multiple<T>(T value) => new Multiple<T>() { HasSharedValue = true, SharedValue = value};
+
+        public static bool operator ==(Multiple<T> left, Multiple<T> right)
+        {
+            if ((left.HasSharedValue == false) && (right.HasSharedValue = false))
+                return true;
+            else
+                return left.HasSharedValue == right.HasSharedValue && left.SharedValue.Equals(right.SharedValue);
+        }
+
+        public static bool operator !=(Multiple<T> left, Multiple<T> right)
+        {
+            return !(left == right);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Multiple<T> other)
+                return this == other;
+            else
+                return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+    }
+
+    public struct MultipleVector3
+    {
+        public MultipleVector3(Multiple<float> x, Multiple<float> y, Multiple<float> z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
+        public bool IsAllShared => X.HasSharedValue && Y.HasSharedValue && Z.HasSharedValue;
+
+        public static implicit operator MultipleVector3(Vector3 vec) => new MultipleVector3(vec.X, vec.Y, vec.Z);
+
+        public Vector3 SharedVector => new Vector3(X.SharedValue, Y.SharedValue, Z.SharedValue);
+
+        public Multiple<float> X { get; set; }
+        public Multiple<float> Y { get; set; }
+        public Multiple<float> Z { get; set; }
+
+        public static bool operator ==(MultipleVector3 left, MultipleVector3 right)
+        {
+            return left.X == right.X &&
+                   left.Y == right.Y &&
+                   left.Z == right.Z;
+        }
+
+        public static bool operator !=(MultipleVector3 left, MultipleVector3 right)
+        {
+            return !(left == right);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is MultipleVector3 other)
+                return this == other;
+            else
+                return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+    }
+
+    public class ObjectUIControl : FlexibleUIControl, IObjectUIControl, IObjectUIControlWithMultipleSupport
     {
         int fieldWidth;
         const int fieldSpace = 2;
@@ -122,6 +358,12 @@ namespace GL_EditorFramework
 
         Rectangle contentClipping;
 
+        float[] clipboardNumbers;
+
+        int clipboardVectorSize;
+
+        static int copyBtnImageWidth = Properties.Resources.CopyIcon.Width;
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -213,13 +455,13 @@ namespace GL_EditorFramework
 
                 Spacing(margin);
 
-                if (changeTypes != 0)
+                if (valueChangeEvents != 0)
                 {
-                    if ((changeTypes & VALUE_CHANGE_START) > 0)
+                    if ((valueChangeEvents & VALUE_CHANGE_START) > 0)
                         containerInfo.objectUIContainer.OnValueChangeStart();
-                    if ((changeTypes & VALUE_CHANGED) > 0)
+                    if ((valueChangeEvents & VALUE_CHANGED) > 0)
                         containerInfo.objectUIContainer.OnValueChanged();
-                    if ((changeTypes & VALUE_SET) > 0)
+                    if ((valueChangeEvents & VALUE_SET) > 0)
                         containerInfo.objectUIContainer.OnValueSet();
                 }
             }
@@ -227,8 +469,61 @@ namespace GL_EditorFramework
             AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y + margin);
         }
 
-        #region IObjectControl
+
+
+        #region autogenerated code (I wish lol)
+
         public float NumberInput(float number, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+            =>
+        NumberInput((Multiple<float>)number, name,
+            increment, incrementDragDivider, min, max, wrapAround).SharedValue;
+
+
+        public Vector3 Vector3Input(Vector3 vec, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+            => 
+        Vector3Input((MultipleVector3)vec, name,
+            increment, incrementDragDivider, min, max, wrapAround).SharedVector;
+
+
+        public Vector3 FullWidthVector3Input(Vector3 vec, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+            =>
+        FullWidthVector3Input((MultipleVector3)vec, name,
+            increment, incrementDragDivider, min, max, wrapAround).SharedVector;
+
+
+        public bool CheckBox(string name, bool isChecked) 
+            =>
+        CheckBox(name, (Multiple<bool>)isChecked).SharedValue;
+
+
+        public string TextInput(string text, string name)
+            =>
+        TextInput((Multiple<string>)text, name).SharedValue;
+
+
+        public string FullWidthTextInput(string text, string name)
+            =>
+        FullWidthTextInput((Multiple<string>)text, name).SharedValue;
+
+
+        public object ChoicePicker(string name, object value, IList values)
+            =>
+        ChoicePicker(name, new Multiple<object>(value), values).SharedValue;
+
+
+        public string DropDownTextInput(string name, string value, string[] dropDownItems, bool filterSuggestions = true)
+            =>
+        DropDownTextInput(name, (Multiple<string>)value, dropDownItems, filterSuggestions).SharedValue;
+        #endregion
+
+
+
+        #region IObjectControl
+
+        public Multiple<float> NumberInput(Multiple<float> number, string name,
             float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
         {
             g.SetClip(nameClipping);
@@ -237,16 +532,76 @@ namespace GL_EditorFramework
 
             g.ResetClip();
 
-            number = NumericInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth * 4 + fieldSpace * 3, number,
+            number = MultipleNumericInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth * 4 + fieldSpace * 3, number,
                 new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround), true);
             currentY += rowHeight;
             return number;
         }
 
-        public OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name,
-            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+        protected bool UndefinedFieldButton(int x, int y, int width, string text, bool isCentered = true)
         {
+            bool clicked = false;
+
+            if (new Rectangle(x, y, width, textBoxHeight + 2).Contains(mousePos))
+            {
+                DrawField(x, y, width, text, SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered, Brushes.Gray);
+
+                clicked = eventType == EventType.CLICK;
+
+                if (clicked)
+                    eventType = EventType.DRAW; //Click Handled
+            }
+            else
+            {
+                DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered, Brushes.Gray);
+            }
+
+            index++;
+
+            return clicked;
+        }
+
+        protected Multiple<float> MultipleNumericInputField(int x, int y, int width, Multiple<float> number, NumberInputInfo info, bool isCentered, float multiResolveValue = 0)
+        {
+            if (number.HasSharedValue)
+                return NumericInputField(x, y, width, number.SharedValue, info, isCentered);
+            else
+            {
+                if (UndefinedFieldButton(x, y, width, "?"))
+                {
+                    valueChangeEvents |= VALUE_SET;
+                    return multiResolveValue;
+                }
+                else
+                    return number;
+            }
+        }
+
+        public MultipleVector3 Vector3Input(MultipleVector3 vec, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false, Vector3 multiResolveValue = new Vector3(), bool allowMixed = true)
+        {
+            void ResolveVec()
+            {
+                if (allowMixed)
+                {
+                    if (!vec.X.HasSharedValue)
+                        vec.X = multiResolveValue.X;
+
+                    if (!vec.Y.HasSharedValue)
+                        vec.Y = multiResolveValue.Y;
+
+                    if (!vec.Z.HasSharedValue)
+                        vec.Z = multiResolveValue.Z;
+                }
+                else
+                    vec = multiResolveValue;
+            }
+
+
             NumberInputInfo input = new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround);
+
+            if (eventType == EventType.DRAG_START && new Rectangle(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, usableWidth, 15).Contains(mousePos))
+                valueChangeEvents |= VALUE_CHANGE_START;
 
             g.SetClip(nameClipping);
 
@@ -254,29 +609,56 @@ namespace GL_EditorFramework
 
             g.ResetClip();
 
-            vec.X = NumericInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth, vec.X, input, true);
-            vec.Y = NumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.Y, input, true);
-            vec.Z = NumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Z, input, true);
+            if (!allowMixed && !vec.IsAllShared)
+            {
+                bool clicked = false;
+                clicked |= UndefinedFieldButton(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth, "?", true);
+                clicked |= UndefinedFieldButton(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, "?", true);
+                clicked |= UndefinedFieldButton(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, "?", true);
+
+                if (clicked)
+                {
+                    ResolveVec();
+                    valueChangeEvents |= VALUE_SET;
+                }
+            }
+            else
+            {
+                vec.X = MultipleNumericInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth, vec.X, input, true, multiResolveValue.X);
+                vec.Y = MultipleNumericInputField(usableWidth - margin - fieldWidth * 3 - fieldSpace * 2, currentY, fieldWidth, vec.Y, input, true, multiResolveValue.Y);
+                vec.Z = MultipleNumericInputField(usableWidth - margin - fieldWidth * 2 - fieldSpace * 1, currentY, fieldWidth, vec.Z, input, true, multiResolveValue.Z);
+            }
 
             int copyBtnX = usableWidth - margin - fieldWidth;
 
             g.SetClip(contentClipping);
 
-            if (ImageButton(copyBtnX, currentY, Properties.Resources.CopyIcon, Properties.Resources.CopyIconClick, Properties.Resources.CopyIconHover))
-                Clipboard.SetText($"{vec.X},{vec.Y},{vec.Z}");
+            if (vec.IsAllShared)
+            {
+                //Copy Button
+                if (ImageButton(copyBtnX, currentY, Properties.Resources.CopyIcon, Properties.Resources.CopyIconClick, Properties.Resources.CopyIconHover))
+                    Clipboard.SetText($"{vec.X.SharedValue},{vec.Y.SharedValue},{vec.Z.SharedValue}");
+            }
+            else
+            {
+                //Multi Resolve Button
+                if (ImageButton(copyBtnX, currentY, Properties.Resources.ResolveMultiVector3Icon, Properties.Resources.ResolveMultiVector3IconClick, Properties.Resources.ResolveMultiVector3IconHover))
+                {
+                    valueChangeEvents |= VALUE_SET;
+                    ResolveVec();
+                }
+            }
 
             if (clipboardVectorSize == 3)
             {
-                if (eventType == EventType.DRAG_START && new Rectangle(copyBtnX + copyBtnImageWidth, currentY, copyBtnImageWidth, 15).Contains(mousePos))
-                    changeTypes |= VALUE_CHANGE_START;
-
+                //Paste Button
                 if (ImageButton(copyBtnX + copyBtnImageWidth, currentY, Properties.Resources.PasteIcon, Properties.Resources.PasteIconClick, Properties.Resources.PasteIconHover))
                 {
                     vec.X = clipboardNumbers[0];
                     vec.Y = clipboardNumbers[1];
                     vec.Z = clipboardNumbers[2];
 
-                    changeTypes |= VALUE_SET;
+                    valueChangeEvents |= VALUE_SET;
                 }
             }
 
@@ -286,14 +668,8 @@ namespace GL_EditorFramework
             return vec;
         }
 
-        float[] clipboardNumbers;
-
-        int clipboardVectorSize;
-
-        static int copyBtnImageWidth = Properties.Resources.CopyIcon.Width;
-
-        public OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
-            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false)
+        public MultipleVector3 FullWidthVector3Input(MultipleVector3 vec, string name,
+            float increment = 1, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false, Vector3 multiResolveValue = new Vector3())
         {
             EndHorizontalSeperator(); //this control doesn't get aligned to it
 
@@ -308,13 +684,13 @@ namespace GL_EditorFramework
             currentY += rowHeight;
 
             DrawText(margin, currentY, "X");
-            vec.X = NumericInputField(margin + nameWidth, currentY, width - nameWidth, vec.X, input, true);
+            vec.X = MultipleNumericInputField(margin + nameWidth, currentY, width - nameWidth, vec.X, input, true, multiResolveValue.X);
 
             DrawText(10 + width + fullWidthSpace, currentY, "Y");
-            vec.Y = NumericInputField(margin + nameWidth + width + fullWidthSpace, currentY, width - nameWidth, vec.Y, input, true);
+            vec.Y = MultipleNumericInputField(margin + nameWidth + width + fullWidthSpace, currentY, width - nameWidth, vec.Y, input, true, multiResolveValue.Y);
 
             DrawText(10 + width * 2 + fullWidthSpace * 2, currentY, "Z");
-            vec.Z = NumericInputField(margin + nameWidth + width * 2 + fullWidthSpace * 2, currentY, width - nameWidth, vec.Z, input, true);
+            vec.Z = MultipleNumericInputField(margin + nameWidth + width * 2 + fullWidthSpace * 2, currentY, width - nameWidth, vec.Z, input, true, multiResolveValue.Z);
 
 
             currentY += rowHeight;
@@ -451,8 +827,10 @@ namespace GL_EditorFramework
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
         }
 
-        public bool CheckBox(string name, bool isChecked)
+        public Multiple<bool> CheckBox(string name, Multiple<bool> isChecked, bool multiResolveValue = false)
         {
+            string markString = "?";
+
             EndHorizontalSeperator(); //this control doesn't get aligned to it
 
             DrawText(margin, currentY, name);
@@ -460,22 +838,32 @@ namespace GL_EditorFramework
             if (new Rectangle(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, textBoxHeight + 2).Contains(mousePos))
             {
                 if (eventType == EventType.DRAG_START)
-                    changeTypes |= VALUE_CHANGE_START;
+                    valueChangeEvents |= VALUE_CHANGE_START;
 
                 if (eventType == EventType.CLICK)
                 {
-                    isChecked = !isChecked;
-                    changeTypes |= VALUE_SET;
+                    if (isChecked.HasSharedValue)
+                        isChecked = !isChecked.SharedValue;
+                    else
+                        isChecked = multiResolveValue;
+
+                    valueChangeEvents |= VALUE_SET;
 
                     eventType = EventType.DRAW; //Click Handled
                 }
 
-                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "",
+                if (isChecked.HasSharedValue)
+                    markString = isChecked.SharedValue ? "x" : "";
+
+                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, markString,
                     SystemBrushes.Highlight, SystemBrushes.ControlLightLight);
             }
             else
             {
-                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, isChecked ? "x" : "",
+                if (isChecked.HasSharedValue)
+                    markString = isChecked.SharedValue ? "x" : "";
+
+                DrawField(usableWidth - margin - (textBoxHeight + 2), currentY, textBoxHeight + 2, markString,
                     SystemBrushes.ActiveBorder, SystemBrushes.ControlLightLight);
             }
 
@@ -487,7 +875,23 @@ namespace GL_EditorFramework
             return isChecked;
         }
 
-        public string TextInput(string text, string name)
+        protected Multiple<string> MultipleTextInputField(int x, int y, int width, Multiple<string> text, bool isCentered, string multiResolveValue = "")
+        {
+            if (text.HasSharedValue)
+                return TextInputField(x, y, width, text.SharedValue, isCentered);
+            else
+            {
+                if (UndefinedFieldButton(x, y, width, "???"))
+                {
+                    valueChangeEvents |= VALUE_SET;
+                    return multiResolveValue;
+                }
+                else
+                    return text;
+            }
+        }
+
+        public Multiple<string> TextInput(Multiple<string> text, string name, string multiResolveValue = "")
         {
             g.SetClip(nameClipping);
 
@@ -495,19 +899,19 @@ namespace GL_EditorFramework
 
             g.ResetClip();
 
-            text = TextInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth * 4 + fieldSpace * 3, text, false);
+            text = MultipleTextInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth * 4 + fieldSpace * 3, text, false, multiResolveValue);
 
             currentY += rowHeight;
             return text;
         }
 
-        public string FullWidthTextInput(string text, string name)
+        public Multiple<string> FullWidthTextInput(Multiple<string> text, string name, string multiResolveValue = "")
         {
             EndHorizontalSeperator(); //this control doesn't get aligned to it
 
             DrawText(margin, currentY, name);
             currentY += rowHeight;
-            text = TextInputField(margin, currentY, usableWidth - margin * 2, text, false);
+            text = MultipleTextInputField(margin, currentY, usableWidth - margin * 2, text, false, multiResolveValue);
             currentY += rowHeight;
 
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
@@ -515,9 +919,11 @@ namespace GL_EditorFramework
             return text;
         }
 
-        public object ChoicePicker(string name, object value, IList values)
+        public Multiple<object> ChoicePicker(string name, Multiple<object> value, IList values, object multiResolveValue = null)
         {
             int width = fieldWidth * 4 + fieldSpace * 3;
+
+            int x = usableWidth - width - margin;
 
             g.SetClip(nameClipping);
 
@@ -525,15 +931,28 @@ namespace GL_EditorFramework
 
             g.ResetClip();
 
-            value = ChoicePickerField(usableWidth - width - margin, currentY, width, value, values);
+
+
+            if (value.HasSharedValue)
+                value = ChoicePickerField(x, currentY, width, value.SharedValue, values);
+            else
+            {
+                if (UndefinedFieldButton(x, currentY, width, "?", true))
+                {
+                    valueChangeEvents |= VALUE_SET;
+                    value = multiResolveValue ?? values[0];
+                }
+            }
 
             currentY += rowHeight;
             return value;
         }
 
-        public string DropDownTextInput(string name, string text, string[] dropDownItems, bool filterSuggestions = true)
+        public Multiple<string> DropDownTextInput(string name, Multiple<string> value, string[] dropDownItems, bool filterSuggestions = true, string multiResolveValue = "")
         {
             EndHorizontalSeperator(); //this control doesn't get aligned to it
+            
+            int width = usableWidth -margin * 2;
 
             g.SetClip(nameClipping);
 
@@ -543,13 +962,23 @@ namespace GL_EditorFramework
 
             currentY += rowHeight;
 
-            text = DropDownTextInputField(margin, currentY, usableWidth - margin * 2, text, dropDownItems, filterSuggestions);
+
+            if (value.HasSharedValue)
+                value = DropDownTextInputField(margin, currentY, width, value.SharedValue, dropDownItems, filterSuggestions);
+            else
+            {
+                if (UndefinedFieldButton(margin, currentY, width, "???"))
+                {
+                    valueChangeEvents |= VALUE_SET;
+                    value = multiResolveValue;
+                }
+            }
 
             currentY += rowHeight;
 
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
 
-            return text;
+            return value;
         }
 
         public void Spacing(int amount)
@@ -568,40 +997,31 @@ namespace GL_EditorFramework
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
         }
         #endregion
-
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
-            // 
-            // suggestionsDropDown
-            // 
-            this.suggestionsDropDown.ClientSize = new System.Drawing.Size(300, 300);
-            this.suggestionsDropDown.Location = new System.Drawing.Point(52, 52);
-            // 
-            // ObjectUIControl
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.Name = "ObjectUIControl";
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
-        }
     }
 
     /// <summary>
     /// A control for displaying object specific UI that an <see cref="IObjectUIContainer"/> provides
     /// </summary>
-    public interface IObjectUIControl
+    public interface IObjectUIControlWithMultipleSupport : IObjectUIControlBase
     {
-        float NumberInput(float number, string name,
-            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+        Multiple<float> NumberInput(Multiple<float> number, string name,
+    float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
 
-        OpenTK.Vector3 Vector3Input(OpenTK.Vector3 vec, string name,
-            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+        MultipleVector3 Vector3Input(MultipleVector3 vec, string name,
+            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false, Vector3 multiResolveValue = new Vector3(), bool allowMixed = true);
 
-        OpenTK.Vector3 FullWidthVector3Input(OpenTK.Vector3 vec, string name,
-            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+        MultipleVector3 FullWidthVector3Input(MultipleVector3 vec, string name,
+            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false, Vector3 multiResolveValue = new Vector3());
 
+        Multiple<bool> CheckBox(string name, Multiple<bool> isChecked, bool multiResolveValue = false);
+        Multiple<string> TextInput(Multiple<string> text, string name, string multiResolveValue = "");
+        Multiple<string> FullWidthTextInput(Multiple<string> text, string name, string multiResolveValue = "");
+        Multiple<object> ChoicePicker(string name, Multiple<object> value, IList values, object multiResolveValue = null);
+        Multiple<string> DropDownTextInput(string name, Multiple<string> value, string[] dropDownItems, bool filterSuggestions = true, string multiResolveValue = "");
+    }
+
+    public interface IObjectUIControlBase
+    {
         bool Button(string name);
         int DoubleButton(string name, string name2);
         int TripleButton(string name, string name2, string name3);
@@ -609,14 +1029,28 @@ namespace GL_EditorFramework
         bool Link(string name);
         void PlainText(string text);
         void Heading(string text);
+        void Spacing(int amount);
+        void VerticalSeperator();
+    }
+
+    public interface IObjectUIControl : IObjectUIControlBase
+    {
+        float NumberInput(float number, string name,
+    float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+
+        Vector3 Vector3Input(Vector3 vec, string name,
+            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+
+        Vector3 FullWidthVector3Input(Vector3 vec, string name,
+            float increment = 1f, int incrementDragDivider = 8, float min = float.MinValue, float max = float.MaxValue, bool wrapAround = false);
+
         bool CheckBox(string name, bool isChecked);
         string TextInput(string text, string name);
         string FullWidthTextInput(string text, string name);
         object ChoicePicker(string name, object value, IList values);
         string DropDownTextInput(string name, string text, string[] dropDownItems, bool filterSuggestions = true);
-        void Spacing(int amount);
-        void VerticalSeperator();
     }
+
 
     /// <summary>
     /// A provider for object specific UI for example properties

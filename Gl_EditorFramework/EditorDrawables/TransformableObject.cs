@@ -15,6 +15,102 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public class TransformableObject : SingleObject
     {
+        public new class MultiEditUIContainer : IObjectUIContainer
+        {
+            private readonly List<IEditableObject> objs;
+
+            private readonly EditorSceneBase scene;
+
+            private readonly PropertyChanges propertyChangesAction = new PropertyChanges();
+
+            Vector3 centerPosition;
+            Vector3 changeStartCenterPosition;
+            MultipleVector3Capture<TransformableObject> rotation;
+            MultipleVector3Capture<TransformableObject> scale;
+
+            public MultiEditUIContainer(List<IEditableObject> objs, EditorSceneBase scene)
+            {
+                this.objs = objs;
+                this.scene = scene;
+
+                UpdateProperties();
+            }
+
+            public void DoUI(IObjectUIControl _control)
+            {
+                var control = (IObjectUIControlWithMultipleSupport)_control;
+
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    centerPosition = _control.Vector3Input(centerPosition, "Center Position", 1, 16);
+                else
+                    centerPosition = _control.Vector3Input(centerPosition, "Center Position", 0.125f, 2);
+
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    rotation.Value = control.Vector3Input(rotation.Value, "Rotation", 45, 18, -180, 180, true, allowMixed: false);
+                else
+                    rotation.Value = control.Vector3Input(rotation.Value, "Rotation", 5, 2, -180, 180, true, allowMixed: false);
+
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    scale.Value = control.Vector3Input(scale.Value, "Scale", 1, 16, multiResolveValue: Vector3.One);
+                else
+                    scale.Value = control.Vector3Input(scale.Value, "Scale", 0.125f, 2, multiResolveValue: Vector3.One);
+            }
+
+            public void OnValueChanged()
+            {
+                propertyChangesAction.translation = centerPosition - changeStartCenterPosition;
+
+                if (rotation.Value.IsAllShared)
+                    propertyChangesAction.rotOverride = Framework.Mat3FromEulerAnglesDeg(rotation.Value.SharedVector);
+
+                propertyChangesAction.scaleOverride = scale.Value;
+
+                scene.Refresh();
+            }
+
+            public void OnValueChangeStart()
+            {
+                changeStartCenterPosition = centerPosition;
+                propertyChangesAction.translation = Vector3.Zero;
+                propertyChangesAction.rotOverride = null;
+                propertyChangesAction.scaleOverride = new MultipleVector3();
+
+                scene.SelectionTransformAction = propertyChangesAction;
+            }
+
+            public void OnValueSet()
+            {
+                OnValueChanged();
+                scene.ApplyCurrentTransformAction();
+                scene.Refresh();
+            }
+
+            public void UpdateProperties()
+            {
+                centerPosition = Vector3.Zero;
+
+                for (int i = 0; i < objs.Count; i++)
+                {
+                    centerPosition += (objs[i] as SingleObject).Position;
+                }
+
+                centerPosition /= objs.Count;
+
+                rotation = new MultipleVector3Capture<TransformableObject>(x => x.Rotation, (x, y) => x.Rotation = y, objs);
+                scale = new MultipleVector3Capture<TransformableObject>(x => x.Scale, (x, y) => x.Scale = y, objs);
+            }
+
+            ~MultiEditUIContainer()
+            {
+                scene.SelectionTransformAction = NoAction;
+            }
+        }
+
+        public static new void SetupUIForMultiEditing(EditorSceneBase scene, ObjectUIControl control, List<IEditableObject> objects)
+        {
+            control.AddObjectUIContainer(new MultiEditUIContainer(objects, scene), "General");
+        }
+
         public TransformableObject(Vector3 pos, Vector3 rot, Vector3 scale)
             : base(pos)
         {

@@ -1125,7 +1125,7 @@ namespace GL_EditorFramework.EditorDrawables
     {
         public Vector3 translation = Vector3.Zero;
         public Matrix3? rotOverride = null;
-        public Vector3? scaleOverride = null;
+        public MultipleVector3 scaleOverride;
 
         public override Vector3 NewPos(Vector3 pos)
         {
@@ -1142,10 +1142,16 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override Vector3 NewScale(Vector3 scale, Matrix3 rotation)
         {
-            if (scaleOverride.HasValue)
-                return scaleOverride.Value;
-            else
-                return scale;
+            if (scaleOverride.X.HasSharedValue)
+                scale.X = scaleOverride.X.SharedValue;
+
+            if (scaleOverride.Y.HasSharedValue)
+                scale.Y = scaleOverride.Y.SharedValue;
+
+            if (scaleOverride.Z.HasSharedValue)
+                scale.Z = scaleOverride.Z.SharedValue;
+
+            return scale;
         }
 
         public override bool IsApplyOnRelease() => false;

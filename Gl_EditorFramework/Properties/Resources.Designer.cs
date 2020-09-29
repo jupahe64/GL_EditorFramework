@@ -153,6 +153,36 @@ namespace GL_EditorFramework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap ResolveMultiVector3Icon {
+            get {
+                object obj = ResourceManager.GetObject("ResolveMultiVector3Icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ResolveMultiVector3IconClick {
+            get {
+                object obj = ResourceManager.GetObject("ResolveMultiVector3IconClick", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ResolveMultiVector3IconHover {
+            get {
+                object obj = ResourceManager.GetObject("ResolveMultiVector3IconHover", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap TextureSheet {
             get {
                 object obj = ResourceManager.GetObject("TextureSheet", resourceCulture);

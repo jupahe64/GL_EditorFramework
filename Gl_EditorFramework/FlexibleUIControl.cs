@@ -44,11 +44,11 @@ namespace GL_EditorFramework
             RIGHT_CLICK
         }
 
-        protected static uint VALUE_CHANGE_START = 1;
-        protected static uint VALUE_CHANGED = 2;
-        protected static uint VALUE_SET = 4;
+        protected const uint VALUE_CHANGE_START = 1;
+        protected const uint VALUE_CHANGED = 2;
+        protected const uint VALUE_SET = 4;
 
-        protected uint changeTypes = 0;
+        protected uint valueChangeEvents = 0;
 
         protected EventType eventType = EventType.DRAW;
 
@@ -191,7 +191,7 @@ namespace GL_EditorFramework
 
             suggestionsDropDown.Hide();
 
-            changeTypes = 0;
+            valueChangeEvents = 0;
         }
 
         private void TextBox1_TextChanged(object sender, EventArgs e)
@@ -313,7 +313,7 @@ namespace GL_EditorFramework
                 eventType = EventType.DRAW;
             }
 
-            changeTypes = 0;
+            valueChangeEvents = 0;
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -331,7 +331,7 @@ namespace GL_EditorFramework
             eventType = EventType.DRAW;
             lastMousePos = e.Location;
 
-            changeTypes = 0;
+            valueChangeEvents = 0;
         }
 
         protected virtual bool HasNoUIContent() => false;
@@ -426,7 +426,7 @@ namespace GL_EditorFramework
                 comboBoxRequest = null;
             }
 
-            changeTypes = 0;
+            valueChangeEvents = 0;
         }
 
         private string[] suggestionsForTextBox = Array.Empty<string>();
@@ -445,7 +445,7 @@ namespace GL_EditorFramework
             return true;
         }
 
-        protected virtual void DrawField(int x, int y, int width, string value, Brush outline, Brush background, bool isCentered = true)
+        protected virtual void DrawField(int x, int y, int width, string value, Brush outline, Brush background, bool isCentered = true, Brush textColor = null)
         {
             g.FillRectangle(outline, x, y, width, textBoxHeight + 2);
             g.FillRectangle(background, x + 1, y + 1, width - 2, textBoxHeight);
@@ -457,10 +457,10 @@ namespace GL_EditorFramework
                 textBoxHeight));
 
             if (isCentered)
-                g.DrawString(value, Font, SystemBrushes.ControlText,
+                g.DrawString(value, Font, textColor ?? SystemBrushes.ControlText,
                 x + 1 + (width - (int)Math.Ceiling(g.MeasureString(value, Font).Width)) / 2, y);
             else
-                g.DrawString(value, Font, SystemBrushes.ControlText,
+                g.DrawString(value, Font, textColor ?? SystemBrushes.ControlText,
                 x + 1, y);
 
             g.ResetClip();
@@ -541,7 +541,7 @@ namespace GL_EditorFramework
 
             focusRequest = index;
 
-            changeTypes |= VALUE_CHANGE_START;
+            valueChangeEvents |= VALUE_CHANGE_START;
 
             acceptDoubleClick = true;
             doubleClickTimer.Start();
@@ -565,7 +565,7 @@ namespace GL_EditorFramework
             comboBoxRequest = new ComboBoxSetup(x, y, width, value, items, hasTextBox, filterSuggestions);
 
             focusRequest = index;
-            changeTypes |= VALUE_CHANGE_START;
+            valueChangeEvents |= VALUE_CHANGE_START;
         }
 
 
@@ -595,6 +595,7 @@ namespace GL_EditorFramework
                     {
                         DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, number.ToString(), isCentered);
+                        valueChangeEvents |= VALUE_CHANGE_START;
 
                         eventType = EventType.DRAW; //Click Handled
                     }
@@ -614,7 +615,7 @@ namespace GL_EditorFramework
                         {
                             dragIndex = index;
                             valueBeforeDrag = number;
-                            changeTypes |= VALUE_CHANGE_START;
+                            valueChangeEvents |= VALUE_CHANGE_START;
                         }
                     }
 
@@ -623,7 +624,7 @@ namespace GL_EditorFramework
                 case EventType.DRAG:
                     if (dragIndex == index)
                     {
-                        changeTypes |= VALUE_CHANGED;
+                        valueChangeEvents |= VALUE_CHANGED;
                         number = Clamped(valueBeforeDrag + (mousePos.X - dragStarPos.X) / info.incrementDragDivider * info.increment,
                             info.min, info.max, info.wrapAround);
                     }
@@ -637,7 +638,7 @@ namespace GL_EditorFramework
                 case EventType.DRAG_END:
                     if (dragIndex == index)
                     {
-                        changeTypes |= VALUE_SET;
+                        valueChangeEvents |= VALUE_SET;
                         dragIndex = -1;
                     }
 
@@ -651,7 +652,7 @@ namespace GL_EditorFramework
                 case EventType.LOST_FOCUS:
                     if (focusedIndex == index && float.TryParse(textBox1.Text, out float parsed))
                     {
-                        changeTypes |= VALUE_SET;
+                        valueChangeEvents |= VALUE_SET;
                         number = Clamped(parsed, info.min, info.max, info.wrapAround);
                     }
 
@@ -665,7 +666,7 @@ namespace GL_EditorFramework
                 case EventType.DRAG_ABORT:
                     if (dragIndex == index)
                     {
-                        changeTypes |= VALUE_CHANGED;
+                        valueChangeEvents |= VALUE_CHANGED;
                         number = valueBeforeDrag;
                         dragIndex = -1;
                     }
@@ -701,6 +702,7 @@ namespace GL_EditorFramework
                     {
                         DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, text, false, isCentered);
+                        valueChangeEvents |= VALUE_CHANGE_START;
 
                         eventType = EventType.DRAW; //Click Handled
                     }
@@ -712,7 +714,7 @@ namespace GL_EditorFramework
                 case EventType.LOST_FOCUS:
                     if (focusedIndex == index)
                     {
-                        changeTypes |= VALUE_SET;
+                        valueChangeEvents |= VALUE_SET;
                         text = textBox1.Text;
                     }
 
@@ -757,6 +759,7 @@ namespace GL_EditorFramework
                     if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
                     {
                         PrepareComboBox(x, y, width, text, dropDownItems, true, filterSuggestions);
+                        valueChangeEvents |= VALUE_CHANGE_START;
 
                         eventType = EventType.DRAW; //Click Handled
                     }
@@ -768,7 +771,7 @@ namespace GL_EditorFramework
                 case EventType.LOST_FOCUS:
                     if (focusedIndex == index)
                     {
-                        changeTypes |= VALUE_SET;
+                        valueChangeEvents |= VALUE_SET;
                         text = textBox1.Text;
                     }
 
@@ -820,7 +823,7 @@ namespace GL_EditorFramework
             MOUSE_DOWN
         }
 
-        protected virtual void DrawButton(int x, int y, int width, string name, InteractionType buttonInteraction)
+        protected virtual void DrawButton(int x, int y, int width, string text, InteractionType buttonInteraction)
         {
             switch (buttonInteraction)
             {
@@ -839,7 +842,7 @@ namespace GL_EditorFramework
             }
         }
 
-        protected bool Button(int x, int y, int width, string name)
+        protected bool Button(int x, int y, int width, string text)
         {
             bool clicked = false;
 
@@ -847,11 +850,11 @@ namespace GL_EditorFramework
             {
                 if (mouseDown)
                 {
-                    DrawButton(x, y, width, name, InteractionType.MOUSE_DOWN);
+                    DrawButton(x, y, width, text, InteractionType.MOUSE_DOWN);
                 }
                 else
                 {
-                    DrawButton(x, y, width, name, InteractionType.HOVER);
+                    DrawButton(x, y, width, text, InteractionType.HOVER);
                 }
 
                 clicked = eventType == EventType.CLICK;
@@ -861,11 +864,11 @@ namespace GL_EditorFramework
             }
             else
             {
-                DrawButton(x, y, width, name, InteractionType.NONE);
+                DrawButton(x, y, width, text, InteractionType.NONE);
             }
 
-            g.DrawString(name, Font, SystemBrushes.ControlText,
-                x + (width - (int)g.MeasureString(name, Font).Width) / 2, y + 3);
+            g.DrawString(text, Font, SystemBrushes.ControlText,
+                x + (width - (int)g.MeasureString(text, Font).Width) / 2, y + 3);
 
             index++;
 
@@ -916,12 +919,12 @@ namespace GL_EditorFramework
                 if (new Rectangle(x + 1, y + 1, clickAreaWidth, textBoxHeight - 2).Contains(mousePos))
                 {
                     if (eventType == EventType.DRAG_START)
-                        changeTypes |= VALUE_CHANGE_START;
+                        valueChangeEvents |= VALUE_CHANGE_START;
 
                     if (eventType == EventType.CLICK)
                     {
                         value = values[index - 1];
-                        changeTypes |= VALUE_SET;
+                        valueChangeEvents |= VALUE_SET;
 
                         eventType = EventType.DRAW; //Click Handled
                     }
@@ -934,12 +937,12 @@ namespace GL_EditorFramework
                 if (new Rectangle(x + width - clickAreaWidth, y + 1, clickAreaWidth, textBoxHeight - 2).Contains(mousePos))
                 {
                     if (eventType == EventType.DRAG_START)
-                        changeTypes |= VALUE_CHANGE_START;
+                        valueChangeEvents |= VALUE_CHANGE_START;
 
                     if (eventType == EventType.CLICK)
                     {
                         value = values[index + 1];
-                        changeTypes |= VALUE_SET;
+                        valueChangeEvents |= VALUE_SET;
 
                         eventType = EventType.DRAW; //Click Handled
                     }

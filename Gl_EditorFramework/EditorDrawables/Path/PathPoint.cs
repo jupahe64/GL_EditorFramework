@@ -8,30 +8,50 @@ using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
 
 namespace GL_EditorFramework.EditorDrawables
 {
-    public class PathPoint : EditableObject
+    public class PathPoint : SingleObject
     {
-        public bool Selected = false;
-
         public override string ToString() => "PathPoint";
 
         public PathPoint()
+            : base(Vector3.Zero)
         {
-            Position = Vector3.Zero;
             ControlPoint1 = Vector3.Zero;
             ControlPoint2 = Vector3.Zero;
         }
 
         public PathPoint(Vector3 position, Vector3 controlPoint1, Vector3 controlPoint2)
+            : base(position)
         {
-            Position = position;
             ControlPoint1 = controlPoint1;
             ControlPoint2 = controlPoint2;
         }
 
-        [PropertyCapture.Undoable]
-        public Vector3 Position { get; set; }
 
-        public virtual Vector3 GlobalPos { get => Position; set => Position = value; }
+        public new bool Selected { get => base.Selected; set => base.Selected = value; }
+
+        public override uint Select(int partIndex, GL_ControlBase control)
+        {
+            if (partIndex == 0)
+            {
+                Selected = true;
+
+
+            }
+            return REDRAW;
+        }
+
+        public override uint Deselect(int partIndex, GL_ControlBase control)
+        {
+            if (partIndex == 0)
+            {
+                Selected = false;
+
+
+            }
+            return REDRAW;
+        }
+
+        public virtual Vector3 GlobalPos { get => GlobalPosition; set => GlobalPosition = value; }
 
         /// <summary>
         /// The position of the first ControlPoint (in) relative to the PathPoint
@@ -172,62 +192,12 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public override bool IsSelected(int partIndex) => Selected;
-
         public override void GetSelectionBox(ref BoundingBox boundingBox)
         {
             if (!Selected)
                 return;
 
             boundingBox.Include(GlobalPos);
-        }
-
-        public override bool IsInRange(float range, float rangeSquared, Vector3 pos) => true; //probably never gets called
-
-        public override uint SelectAll(GL_ControlBase control)
-        {
-            Selected = true;
-
-
-            return REDRAW;
-        }
-
-        public override uint SelectDefault(GL_ControlBase control)
-        {
-            Selected = true;
-
-
-            return REDRAW;
-        }
-
-        public override uint Select(int partIndex, GL_ControlBase control)
-        {
-            if (partIndex == 0)
-            {
-                Selected = true;
-
-
-            }
-            return REDRAW;
-        }
-
-        public override uint Deselect(int partIndex, GL_ControlBase control)
-        {
-            if (partIndex == 0)
-            {
-                Selected = false;
-
-
-            }
-            return REDRAW;
-        }
-
-        public override uint DeselectAll(GL_ControlBase control)
-        {
-            Selected = false;
-
-
-            return REDRAW;
         }
 
         public override void SetTransform(Vector3? pos, Vector3? rot, Vector3? scale, int _part, out Vector3? prevPos, out Vector3? prevRot, out Vector3? prevScale)
@@ -313,85 +283,11 @@ namespace GL_EditorFramework.EditorDrawables
             }
         }
 
-        public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
-        {
-            if (_part == 0)
-            {
-                Vector3 pp = Position;
-
-                var newPos = transformAction.NewPos(GlobalPos, out bool posHasChanged);
-
-                if (posHasChanged)
-                {
-                    GlobalPos = newPos;
-                    transformChangeInfos.Add(this, 0, pp, null, null);
-                }
-
-                return;
-            }
-
-            if (ControlPoint1 != Vector3.Zero)
-            {
-                if (_part == 1)
-                {
-                    Console.WriteLine("hovered: " + _part);
-
-                    Vector3 pc = ControlPoint1;
-
-                    var newPos = transformAction.NewPos(GlobalPos + GlobalCP1, out bool posHasChanged) - GlobalPos;
-
-                    if (posHasChanged)
-                    {
-                        GlobalCP1 = newPos;
-                        transformChangeInfos.Add(this, 1, pc, null, null);
-                    }
-
-                    return;
-                }
-            }
-
-            if (ControlPoint2 != Vector3.Zero)
-            {
-                if (_part == 2)
-                {
-                    Console.WriteLine("hovered: " + _part);
-
-                    Vector3 pc = ControlPoint2;
-
-                    var newPos = transformAction.NewPos(GlobalPos + GlobalCP2, out bool posHasChanged) - GlobalPos;
-
-                    if (posHasChanged)
-                    {
-                        GlobalCP2 = newPos;
-                        transformChangeInfos.Add(this, 2, pc, null, null);
-                    }
-
-                    return;
-                }
-            }
-        }
-
-        public override int GetPickableSpan() => 3;
-
-        public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
-        {
-            if (Selected)
-                manager.Add(list, this);
-        }
-
-        public override bool IsSelectedAll()
-        {
-            return Selected;
-        }
-
-        public override bool IsSelected()
-        {
-            return Selected;
-        }
-
         public override Vector3 GetFocusPoint()
         {
             return GlobalPos;
         }
+
+        public override int GetPickableSpan() => 3;
     }
 }

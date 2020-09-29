@@ -1139,22 +1139,6 @@ namespace GL_EditorFramework.EditorDrawables
                 point.ApplyTransformActionToSelection(transformAction, ref transformChangeInfos);
         }
 
-        public override void ApplyTransformActionToPart(AbstractTransformAction transformAction, int _part, ref TransformChangeInfos transformChangeInfos)
-        {
-            _part--;
-            foreach (T point in pathPoints)
-            {
-                int span = point.GetPickableSpan();
-                if (_part >= 0 && _part < span)
-                {
-                    point.ApplyTransformActionToPart(transformAction, _part, ref transformChangeInfos);
-                    return;
-                }
-                _part -= span;
-            }
-            throw new Exception("Invalid partIndex");
-        }
-
         public override uint DeselectAll(GL_ControlBase control)
         {
             
@@ -1245,6 +1229,16 @@ namespace GL_EditorFramework.EditorDrawables
                 objectUIControl.AddObjectUIContainer(new SinglePathPointUIContainer(points[0], scene), "Path Point");
 
             return true;
+        }
+
+        public override void MultiEditSelected(EditorSceneBase scene, MultiEditManager manager)
+        {
+            for (int i = 0; i < pathPoints.Count; i++)
+            {
+                if (pathPoints[i].Selected)
+                    manager.Add(pathPoints[i]);
+
+            }
         }
 
         public override bool IsSelectedAll()

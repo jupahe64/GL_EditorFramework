@@ -13,6 +13,7 @@ using static GL_EditorFramework.EditorDrawables.EditableObject;
 using System.Collections;
 using static GL_EditorFramework.Framework;
 using static GL_EditorFramework.EditorDrawables.EditorSceneBase;
+using Fasterflect;
 
 namespace GL_EditorFramework.EditorDrawables
 {
@@ -339,6 +340,18 @@ namespace GL_EditorFramework.EditorDrawables
         /// </summary>
         public abstract void DeleteSelected();
 
+        public class MultiEditManager
+        {
+            public List<IEditableObject> Objects { get; private set; } = new List<IEditableObject>();
+            public HashSet<Type> ObjectTypes { get; private set; } = new HashSet<Type>();
+
+            public void Add(IEditableObject obj)
+            {
+                ObjectTypes.Add(obj.GetType());
+                Objects.Add(obj);
+            }
+        }
+
         /// <summary>
         /// Sets up an <see cref="ObjectUIControl"/> based on the currently selected objects
         /// </summary>
@@ -354,14 +367,74 @@ namespace GL_EditorFramework.EditorDrawables
                 {
                     if (atleastOne)
                     {
-                        objectUIControl.ClearObjectUIContainers();
-                        return;
+                        goto MORE_THAN_ONE;
                     }
                     else
                         atleastOne = true;
                 }
             }
             objectUIControl.Refresh();
+
+            return;
+
+        MORE_THAN_ONE:
+
+            #region Try setup MultiEditUIContainers
+
+            objectUIControl.ClearObjectUIContainers();
+
+            MultiEditManager manager = new MultiEditManager();
+
+            //collect object types in selection
+            foreach (IEditableObject obj in GetObjects())
+                obj.MultiEditSelected(this, manager);
+
+            Dictionary<Type, int> typeReferences = new Dictionary<Type, int>(); //keeps track of how often types, that have a static SetupUIForMultiEditing method, are referenced as a BaseClass
+
+            Type[] typeArray = manager.ObjectTypes.ToArray();
+
+            Type commonType;
+
+            int finishedSearches = 0;
+
+            //find common basetype
+            while (true)
+            {
+                for (int i = 0; i < typeArray.Length; i++)
+                {
+                    if (typeArray[i] == typeof(object))
+                        continue;
+
+                    if (typeArray[i].Method("SetupUIForMultiEditing", Flags.StaticAnyDeclaredOnly) != null)
+                    {
+                        if (!typeReferences.ContainsKey(typeArray[i]))
+                            typeReferences.Add(typeArray[i], 1);
+                        else
+                            typeReferences[typeArray[i]]++;
+
+                        if (typeReferences[typeArray[i]] == typeArray.Length)
+                        {
+                            commonType = typeArray[i];
+                            goto COMMON_TYPE_FOUND;
+                        }
+                    }
+
+                    typeArray[i] = typeArray[i].BaseType;
+
+                    if(typeArray[i] == typeof(object))
+                    {
+                        if (finishedSearches + 1 == typeArray.Length)
+                            return;
+                        else
+                            finishedSearches++;
+                    }
+                }
+            }
+
+        COMMON_TYPE_FOUND:
+            commonType.Method("SetupUIForMultiEditing", Flags.StaticAnyDeclaredOnly).Call(null, this, objectUIControl, manager.Objects);
+
+            #endregion
         }
 
         /// <summary>

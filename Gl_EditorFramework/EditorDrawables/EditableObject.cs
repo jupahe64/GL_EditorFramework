@@ -18,6 +18,45 @@ namespace GL_EditorFramework.EditorDrawables
 {
     public abstract class EditableObject : AbstractGlDrawable, IEditableObject
     {
+        class MultiEditUIContainer : IObjectUIContainer
+        {
+            private readonly List<IEditableObject> objs;
+
+            public MultiEditUIContainer(List<IEditableObject> objs)
+            {
+                this.objs = objs;
+            }
+
+            public void DoUI(IObjectUIControl control)
+            {
+                control.PlainText(objs.Count.ToString());
+            }
+
+            public void OnValueChanged()
+            {
+                
+            }
+
+            public void OnValueChangeStart()
+            {
+                
+            }
+
+            public void OnValueSet()
+            {
+                
+            }
+
+            public void UpdateProperties()
+            {
+                
+            }
+        }
+
+        public static void SetupUIForMultiEditing(EditorSceneBase scene, ObjectUIControl control, List<IEditableObject> objects)
+        {
+            control.AddObjectUIContainer(new MultiEditUIContainer(objects), "Editable Object");
+        }
 
         public static Vector4 hoverColor = new Vector4(1, 1, 1, 1);
         public static Vector4 hoverSelectColor = new Vector4(1, 1, 0.75f, 1);
@@ -74,17 +113,17 @@ namespace GL_EditorFramework.EditorDrawables
             
         }
 
-        public virtual void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part, ref TransformChangeInfos transformChangeInfos)
-        {
-
-        }
-
         public virtual void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
         {
 
         }
 
         public virtual bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl) => false;
+
+        public virtual void MultiEditSelected(EditorSceneBase scene, MultiEditManager manager)
+        {
+
+        }
 
         public struct BoundingBox
         {
@@ -254,8 +293,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         void ApplyTransformActionToSelection(AbstractTransformAction transformAction, ref TransformChangeInfos transformChangeInfos);
 
-        void ApplyTransformActionToPart(AbstractTransformAction transformAction, int part, ref TransformChangeInfos transformChangeInfos);
-
         void Draw(GL_ControlModern control, Pass pass);
 
         void Draw(GL_ControlLegacy control, Pass pass);
@@ -285,6 +322,8 @@ namespace GL_EditorFramework.EditorDrawables
         void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list);
 
         bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl);
+
+        void MultiEditSelected(EditorSceneBase scene, MultiEditManager manager);
 
         void ListChanged(IList list);
 

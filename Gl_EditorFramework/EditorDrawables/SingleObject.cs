@@ -20,6 +20,76 @@ namespace GL_EditorFramework.EditorDrawables
     /// </summary>
     public class SingleObject : EditableObject
     {
+        public class MultiEditUIContainer : IObjectUIContainer
+        {
+            private readonly List<IEditableObject> objs;
+
+            private readonly EditorSceneBase scene;
+
+            private readonly PropertyChanges propertyChangesAction = new PropertyChanges();
+
+            Vector3 centerPosition;
+            Vector3 changeStartCenterPosition;
+
+            public MultiEditUIContainer(List<IEditableObject> objs, EditorSceneBase scene)
+            {
+                this.objs = objs;
+                this.scene = scene;
+
+                UpdateProperties();
+            }
+
+            public void DoUI(IObjectUIControl _control)
+            {
+                if (WinInput.Keyboard.IsKeyDown(WinInput.Key.LeftShift))
+                    centerPosition = _control.Vector3Input(centerPosition, "Center Position", 1, 16);
+                else
+                    centerPosition = _control.Vector3Input(centerPosition, "Center Position", 0.125f, 2);
+            }
+
+            public void OnValueChanged()
+            {
+                propertyChangesAction.translation = centerPosition - changeStartCenterPosition;
+                scene.Refresh();
+            }
+
+            public void OnValueChangeStart()
+            {
+                changeStartCenterPosition = centerPosition;
+                propertyChangesAction.translation = Vector3.Zero;
+
+                scene.SelectionTransformAction = propertyChangesAction;
+            }
+
+            public void OnValueSet()
+            {
+                propertyChangesAction.translation = centerPosition - changeStartCenterPosition;
+                scene.ApplyCurrentTransformAction();
+                scene.Refresh();
+            }
+
+            public void UpdateProperties()
+            {
+                centerPosition = Vector3.Zero;
+
+                for (int i = 0; i < objs.Count; i++)
+                {
+                    centerPosition += (objs[i] as SingleObject).Position;
+                }
+
+                centerPosition /= objs.Count;
+            }
+
+            ~MultiEditUIContainer()
+            {
+                scene.SelectionTransformAction = NoAction;
+            }
+        }
+
+        public static new void SetupUIForMultiEditing(EditorSceneBase scene, ObjectUIControl control, List<IEditableObject> objects)
+        {
+            control.AddObjectUIContainer(new MultiEditUIContainer(objects, scene), "General");
+        }
 
         [PropertyCapture.Undoable]
         public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
@@ -140,16 +210,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         }
 
-        public virtual void Translate(Vector3 lastPos, Vector3 translate, int subObj)
-        {
-            Position = lastPos + translate;
-        }
-
-        public virtual void UpdatePosition(int subObj)
-        {
-            
-        }
-
         public override void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)
         {
             if(Selected)
@@ -244,6 +304,12 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (Selected)
                 manager.Add(list, this);
+        }
+
+        public override void MultiEditSelected(EditorSceneBase scene, MultiEditManager manager)
+        {
+            if (Selected)
+                manager.Add(this);
         }
 
         public override bool TrySetupObjectUIControl(EditorSceneBase scene, ObjectUIControl objectUIControl)
