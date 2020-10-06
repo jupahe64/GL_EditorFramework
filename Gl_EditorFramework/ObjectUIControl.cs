@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -245,8 +246,116 @@ namespace GL_EditorFramework
         }
     }
 
+    public class ObjectUITooltip : Form
+    {
+        string text = string.Empty;
+
+        public new string Text
+        {
+            get => text;
+            set
+            {
+                text = value;
+                Refresh();
+            }
+        }
+
+        public ObjectUITooltip()
+        {
+            SetStyle(
+        ControlStyles.AllPaintingInWmPaint |
+        ControlStyles.UserPaint |
+        ControlStyles.OptimizedDoubleBuffer,
+        true);
+
+            FormBorderStyle = FormBorderStyle.None;
+            TopMost = true;
+            BackColor = SystemColors.ControlLightLight;
+        }
+
+        #region make absolutely sure that this form can't be focused on
+        private const int SW_SHOWNOACTIVATE = 4;
+        private const int HWND_TOPMOST = -1;
+        private const uint SWP_NOACTIVATE = 0x0010;
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowPos")]
+        static extern bool SetWindowPos(
+             int hWnd,             // Window handle
+             int hWndInsertAfter,  // Placement-order handle
+             int X,                // Horizontal position
+             int Y,                // Vertical position
+             int cx,               // Width
+             int cy,               // Height
+             uint uFlags);         // Window positioning flags
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        static void ShowInactiveTopmost(Form frm)
+        {
+            ShowWindow(frm.Handle, SW_SHOWNOACTIVATE);
+            SetWindowPos(frm.Handle.ToInt32(), HWND_TOPMOST,
+            frm.Left, frm.Top, frm.Width, frm.Height,
+            SWP_NOACTIVATE);
+        }
+        #endregion
+
+        public void Show(Point location, int width, string text)
+        {
+            Bounds = new Rectangle(location, new Size(width, 20));
+
+            this.text = text;
+
+            ShowInactiveTopmost(this);
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            e.Graphics.DrawRectangle(SystemPens.Highlight, new Rectangle(0, 0, Width - 1, Height - 1));
+
+            e.Graphics.DrawString(text, Font, SystemBrushes.ControlText, new RectangleF(2, 2, Width - 4, Height - 4));
+
+            SetBounds(-1, -1, -1, (int)e.Graphics.MeasureString(text, Font, Width).Height+4, BoundsSpecified.Height);
+        }
+
+        protected override bool ShowWithoutActivation => true;
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams baseParams = base.CreateParams;
+
+                const int WS_EX_NOACTIVATE = 0x08000000;
+                const int WS_EX_TOOLWINDOW = 0x00000080;
+                baseParams.ExStyle |= (int)(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW);
+
+                if (Environment.OSVersion.Version.Major >= 6)
+                    baseParams.ExStyle |= 0x02000000; //WS_EX_COMPOSITED
+
+                return baseParams;
+            }
+        }
+
+        private const int WM_MOUSEACTIVATE = 0x0021, MA_NOACTIVATE = 0x0003;
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_MOUSEACTIVATE)
+            {
+                m.Result = (IntPtr)MA_NOACTIVATE;
+                return;
+            }
+            base.WndProc(ref m);
+        }
+    }
+
     public class ObjectUIControl : FlexibleUIControl, IObjectUIControl, IObjectUIControlWithMultipleSupport
     {
+        ObjectUITooltip tooltip = new ObjectUITooltip();
+
         int fieldWidth;
         const int fieldSpace = 2;
         const int beforeTwoLineSpacing = 5;
@@ -275,6 +384,23 @@ namespace GL_EditorFramework
         List<ContainerInfo> containerInfos = new List<ContainerInfo>();
 
         public IEnumerable<IObjectUIContainer> ObjectUIContainers => containerInfos.Select(x => x.objectUIContainer);
+
+        Timer tooltipFadeTimer = new Timer() { Interval = 20 };
+
+        public ObjectUIControl()
+        {
+            tooltipFadeTimer.Tick += TooltipFadeTimer_Tick;
+            tooltipFadeTimer.Start();
+        }
+
+        private void TooltipFadeTimer_Tick(object sender, EventArgs e)
+        {
+            if(tooltip.Opacity<0.01)
+                tooltip.Opacity += 0.0005;
+            else
+                tooltip.Opacity += 0.3;
+        }
+
 
         public void AddObjectUIContainer(IObjectUIContainer objectUIContainer, string name)
         {
@@ -364,6 +490,35 @@ namespace GL_EditorFramework
 
         static int copyBtnImageWidth = Properties.Resources.CopyIcon.Width;
 
+        string tooltipText;
+        int tooltipY;
+
+        string currentTooltipAreaText = null;
+        int currentTooltipAreaTop = 0;
+
+        /// <summary>
+        /// <para>Sets the tooltip text for all following controls in the ObjectUIContainer</para>
+        /// <para>Setting text to null will deactivate tooltips for the following controls</para>
+        /// </summary>
+        /// <param name="text">The text that will be displayed in the tooltip box</param>
+        public void SetTooltip(string text)
+        {
+            if(tooltipText == null && //no tooltip area was hovered yet
+
+                currentTooltipAreaText != null && //the current tooltip area has a tooltip defined
+
+                mousePos.Y >= currentTooltipAreaTop && mousePos.Y < currentY) //the current tooltip is hovered
+            {
+                tooltipText = currentTooltipAreaText;
+                tooltipY = currentY;
+            }
+            else
+            {
+                currentTooltipAreaText = text;
+                currentTooltipAreaTop = currentY;
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -395,6 +550,10 @@ namespace GL_EditorFramework
             contentClipping = new Rectangle(0, 0, usableWidth - margin, Height);
 
             currentY = margin + AutoScrollPosition.Y;
+
+            tooltipText = null;
+
+            currentTooltipAreaText = null;
 
             #region Check Clipboard
             if (Clipboard.ContainsText())
@@ -455,6 +614,8 @@ namespace GL_EditorFramework
 
                 Spacing(margin);
 
+                SetTooltip(null);
+
                 if (valueChangeEvents != 0)
                 {
                     if ((valueChangeEvents & VALUE_CHANGE_START) > 0)
@@ -467,9 +628,41 @@ namespace GL_EditorFramework
             }
 
             AutoScrollMinSize = new Size(0, currentY - AutoScrollPosition.Y + margin);
+
+            if (tooltipText == null)
+                tooltip.Hide();
+            else
+            {
+                if (!tooltip.Visible)
+                {
+                    tooltip.Opacity = 0.0;
+                    tooltip.Show(PointToScreen(new Point(margin, tooltipY)), usableWidth, tooltipText);
+                }
+                else
+                {
+                    Point screenPoint = PointToScreen(new Point(margin, tooltipY));
+                    if (tooltip.Location.Y != screenPoint.Y)
+                    {
+                        tooltip.Location = screenPoint;
+                        tooltip.Opacity = 0.0;
+                    }
+
+                    tooltip.Text = tooltipText;
+                }
+            }
         }
 
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            Refresh();
+        }
 
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            tooltip.Hide();
+        }
 
         #region autogenerated code (I wish lol)
 
@@ -520,7 +713,6 @@ namespace GL_EditorFramework
         #endregion
 
 
-
         #region IObjectControl
 
         public Multiple<float> NumberInput(Multiple<float> number, string name,
@@ -534,7 +726,9 @@ namespace GL_EditorFramework
 
             number = MultipleNumericInputField(usableWidth - margin - fieldWidth * 4 - fieldSpace * 3, currentY, fieldWidth * 4 + fieldSpace * 3, number,
                 new NumberInputInfo(increment, incrementDragDivider, min, max, wrapAround), true);
+            
             currentY += rowHeight;
+
             return number;
         }
 
@@ -1031,6 +1225,7 @@ namespace GL_EditorFramework
         void Heading(string text);
         void Spacing(int amount);
         void VerticalSeperator();
+        void SetTooltip(string text);
     }
 
     public interface IObjectUIControl : IObjectUIControlBase
