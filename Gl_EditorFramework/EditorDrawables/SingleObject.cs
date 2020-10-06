@@ -106,7 +106,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public SingleObject(Vector3 pos)
         {
-            Renderers.ColorBlockRenderer.Initialize();
+            Renderers.ColorCubeRenderer.Initialize();
 
             Position = pos;
         }
@@ -121,7 +121,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale * 2) *
                 Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
@@ -145,7 +145,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
                 blockColor = Color;
 
-            Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
+            Renderers.ColorCubeRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
 
         }
 
@@ -154,10 +154,10 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale * 2) *
                 Matrix4.CreateTranslation(Position));
 
-            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
+            Renderers.ColorCubeRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
 
         }
 
@@ -171,7 +171,7 @@ namespace GL_EditorFramework.EditorDrawables
 
             bool hovered = editorScene.Hovered == this;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale * 2) *
                 Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position));
 
             Vector4 blockColor;
@@ -195,7 +195,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
                 blockColor = Color;
 
-            Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
+            Renderers.ColorCubeRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
         }
 
         public override void Draw(GL_ControlLegacy control, Pass pass)
@@ -203,10 +203,10 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale) *
+            control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale * 2) *
                 Matrix4.CreateTranslation(Position));
 
-            Renderers.ColorBlockRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
+            Renderers.ColorCubeRenderer.Draw(control, pass, Color, Color, control.NextPickingColor());
 
         }
 

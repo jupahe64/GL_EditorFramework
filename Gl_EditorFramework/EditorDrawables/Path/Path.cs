@@ -122,54 +122,54 @@ namespace GL_EditorFramework.EditorDrawables
 
                 GL.NewList(drawLists, ListMode.Compile);
                 GL.Begin(PrimitiveType.Quads);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
+                GL.Vertex3(ColorCubeRenderer.points[7]);
+                GL.Vertex3(ColorCubeRenderer.points[6]);
+                GL.Vertex3(ColorCubeRenderer.points[2]);
+                GL.Vertex3(ColorCubeRenderer.points[3]);
 
-                GL.Vertex3(ColorBlockRenderer.points[4]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
+                GL.Vertex3(ColorCubeRenderer.points[4]);
+                GL.Vertex3(ColorCubeRenderer.points[5]);
+                GL.Vertex3(ColorCubeRenderer.points[1]);
+                GL.Vertex3(ColorCubeRenderer.points[0]);
                 GL.End();
 
                 GL.Begin(PrimitiveType.QuadStrip);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
-                GL.Vertex3(ColorBlockRenderer.points[4]);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
+                GL.Vertex3(ColorCubeRenderer.points[7]);
+                GL.Vertex3(ColorCubeRenderer.points[5]);
+                GL.Vertex3(ColorCubeRenderer.points[6]);
+                GL.Vertex3(ColorCubeRenderer.points[4]);
+                GL.Vertex3(ColorCubeRenderer.points[2]);
+                GL.Vertex3(ColorCubeRenderer.points[0]);
+                GL.Vertex3(ColorCubeRenderer.points[3]);
+                GL.Vertex3(ColorCubeRenderer.points[1]);
+                GL.Vertex3(ColorCubeRenderer.points[7]);
+                GL.Vertex3(ColorCubeRenderer.points[5]);
                 GL.End();
                 GL.EndList();
 
 
                 GL.NewList(drawLists + 1, ListMode.Compile);
                 GL.Begin(PrimitiveType.LineStrip);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[6]);
+                GL.Vertex3(ColorCubeRenderer.points[6]);
+                GL.Vertex3(ColorCubeRenderer.points[2]);
+                GL.Vertex3(ColorCubeRenderer.points[3]);
+                GL.Vertex3(ColorCubeRenderer.points[7]);
+                GL.Vertex3(ColorCubeRenderer.points[6]);
 
-                GL.Vertex3(ColorBlockRenderer.points[4]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
-                GL.Vertex3(ColorBlockRenderer.points[4]);
+                GL.Vertex3(ColorCubeRenderer.points[4]);
+                GL.Vertex3(ColorCubeRenderer.points[5]);
+                GL.Vertex3(ColorCubeRenderer.points[1]);
+                GL.Vertex3(ColorCubeRenderer.points[0]);
+                GL.Vertex3(ColorCubeRenderer.points[4]);
                 GL.End();
 
                 GL.Begin(PrimitiveType.Lines);
-                GL.Vertex3(ColorBlockRenderer.points[2]);
-                GL.Vertex3(ColorBlockRenderer.points[0]);
-                GL.Vertex3(ColorBlockRenderer.points[3]);
-                GL.Vertex3(ColorBlockRenderer.points[1]);
-                GL.Vertex3(ColorBlockRenderer.points[7]);
-                GL.Vertex3(ColorBlockRenderer.points[5]);
+                GL.Vertex3(ColorCubeRenderer.points[2]);
+                GL.Vertex3(ColorCubeRenderer.points[0]);
+                GL.Vertex3(ColorCubeRenderer.points[3]);
+                GL.Vertex3(ColorCubeRenderer.points[1]);
+                GL.Vertex3(ColorCubeRenderer.points[7]);
+                GL.Vertex3(ColorCubeRenderer.points[5]);
                 GL.End();
                 GL.EndList();
                 #endregion
@@ -527,7 +527,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLineColors[i] = col;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(CubeScale) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(CubeScale*2) * Matrix4.CreateTranslation(pos));
                     GL.Color4(color * .125f + col * .125f);
                     GL.CallList(drawLists);
                     GL.Color4(col);
@@ -559,7 +559,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLinePositions[posIndex+1] = pos;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale*2) * Matrix4.CreateTranslation(pos));
                     GL.Color4(color * .125f + col * .125f);
                     GL.CallList(drawLists);
                     GL.Color4(col);
@@ -591,7 +591,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLinePositions[posIndex+2] = pos;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale * 2) * Matrix4.CreateTranslation(pos));
                     GL.Color4(color * .125f + col * .125f);
                     GL.CallList(drawLists);
                     GL.Color4(col);
@@ -632,7 +632,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLineColors[i] = color; //colors need to be the same for proper picking
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(CubeScale) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(CubeScale * 2) * Matrix4.CreateTranslation(pos));
                     GL.Color4(col);
                     GL.CallList(drawLists);
 
@@ -653,7 +653,7 @@ namespace GL_EditorFramework.EditorDrawables
                     connectLinePositions[posIndex+1] = pos;
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale * 2) * Matrix4.CreateTranslation(pos));
                     GL.Color4(col);
                     GL.CallList(drawLists);
 
@@ -671,7 +671,7 @@ namespace GL_EditorFramework.EditorDrawables
                     col = control.NextPickingColor();
 
                     //draw point
-                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale) * Matrix4.CreateTranslation(pos));
+                    control.UpdateModelMatrix(Matrix4.CreateScale(ControlCubeScale * 2) * Matrix4.CreateTranslation(pos));
                     GL.Color4(col);
                     GL.CallList(drawLists);
 
