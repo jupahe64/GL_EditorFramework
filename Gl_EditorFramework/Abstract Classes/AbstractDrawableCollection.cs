@@ -67,6 +67,9 @@ namespace GL_EditorFramework.EditorDrawables
         {
             foreach (AbstractGlDrawable obj in GetDrawables())
             {
+                if (!obj.Visible)
+                    continue;
+
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
                 {
@@ -81,6 +84,9 @@ namespace GL_EditorFramework.EditorDrawables
         {
             foreach (AbstractGlDrawable obj in GetDrawables())
             {
+                if (!obj.Visible)
+                    continue;
+
                 int span = obj.GetPickableSpan();
                 if (inObjectIndex >= 0 && inObjectIndex < span)
                 {

@@ -207,9 +207,6 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!ObjectRenderState.ShouldBeDrawn(this))
-                return;
-
 
             pathPointVao.Use(control);
             pathPointVao.Bind();
@@ -465,9 +462,6 @@ namespace GL_EditorFramework.EditorDrawables
         public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)
-                return;
-
-            if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
 
             GL.Disable(EnableCap.Texture2D);
@@ -814,13 +808,7 @@ namespace GL_EditorFramework.EditorDrawables
 
         public override int GetPickableSpan()
         {
-            if (!ObjectRenderState.ShouldBeDrawn(this))
-                return 0;
-            int i = 1;
-            foreach (T point in pathPoints)
-                i += point.GetPickableSpan();
-
-            return i;
+            return 1 + pathPoints.Count * pathPoints[0].GetPickableSpan(); //let's hope that works
         }
 
         public override void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)

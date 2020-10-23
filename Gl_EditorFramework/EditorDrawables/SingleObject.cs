@@ -116,9 +116,6 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!ObjectRenderState.ShouldBeDrawn(this))
-                return;
-
             bool hovered = editorScene.Hovered == this;
 
             control.UpdateModelMatrix(Matrix4.CreateScale(BoxScale * 2) *
@@ -164,9 +161,6 @@ namespace GL_EditorFramework.EditorDrawables
         public override void Draw(GL_ControlLegacy control, Pass pass, EditorSceneBase editorScene)
         {
             if (pass == Pass.TRANSPARENT)
-                return;
-
-            if (!ObjectRenderState.ShouldBeDrawn(this))
                 return;
 
             bool hovered = editorScene.Hovered == this;
@@ -229,11 +223,6 @@ namespace GL_EditorFramework.EditorDrawables
                 GlobalPosition.Z - BoxScale,
                 GlobalPosition.Z + BoxScale
             ));
-        }
-
-        public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
-        {
-            return (pos - GlobalPosition).LengthSquared < rangeSquared;
         }
         
         public override uint SelectAll(GL_ControlBase control)
@@ -334,6 +323,8 @@ namespace GL_EditorFramework.EditorDrawables
         {
             return GlobalPosition;
         }
+
+        public override int GetPickableSpan() => 1;
 
         public class PropertyProvider : IObjectUIContainer
         {

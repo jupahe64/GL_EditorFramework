@@ -80,8 +80,6 @@ namespace GL_EditorFramework.EditorDrawables
 
         public abstract void GetSelectionBox(ref BoundingBox boundingBox);
 
-        public abstract bool IsInRange(float range, float rangeSquared, Vector3 pos);
-
         public abstract uint SelectAll(GL_ControlBase control);
 
         public abstract uint SelectDefault(GL_ControlBase control);
@@ -259,14 +257,6 @@ namespace GL_EditorFramework.EditorDrawables
         }
 
         public abstract Vector3 GetFocusPoint();
-
-        public override int GetPickableSpan()
-        {
-            if (!ObjectRenderState.ShouldBeDrawn(this))
-                return 0;
-            else
-                return 1;
-        }
     }
 
     public interface IEditableObject : ISelectable
@@ -278,8 +268,6 @@ namespace GL_EditorFramework.EditorDrawables
         bool IsSelected(int partIndex);
 
         void GetSelectionBox(ref BoundingBox boundingBox);
-
-        bool IsInRange(float range, float rangeSquared, Vector3 pos);
 
         void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene);
 

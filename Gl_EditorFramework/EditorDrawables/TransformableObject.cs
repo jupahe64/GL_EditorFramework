@@ -143,15 +143,12 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!ObjectRenderState.ShouldBeDrawn(this))
-                return;
-
             bool hovered = editorScene.Hovered == this;
 
             Matrix3 rotMtx = GlobalRotation;
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.SelectionTransformAction.NewScale(Scale, rotMtx) : Scale) * BoxScale) *
+                Matrix4.CreateScale((Selected ? editorScene.SelectionTransformAction.NewScale(Scale, rotMtx) : Scale) * BoxScale * 2) *
                 new Matrix4(Selected ? editorScene.SelectionTransformAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position));
 
@@ -176,7 +173,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
                 blockColor = Color;
 
-            Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
+            Renderers.ColorCubeRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
 
         }
 
@@ -185,15 +182,12 @@ namespace GL_EditorFramework.EditorDrawables
             if (pass == Pass.TRANSPARENT)
                 return;
 
-            if (!ObjectRenderState.ShouldBeDrawn(this))
-                return;
-
             bool hovered = editorScene.Hovered == this;
 
             Matrix3 rotMtx = GlobalRotation;
 
             control.UpdateModelMatrix(
-                Matrix4.CreateScale((Selected ? editorScene.SelectionTransformAction.NewScale(Scale, rotMtx) : Scale) * BoxScale) *
+                Matrix4.CreateScale((Selected ? editorScene.SelectionTransformAction.NewScale(Scale, rotMtx) : Scale) * BoxScale * 2) *
                 new Matrix4(Selected ? editorScene.SelectionTransformAction.NewRot(rotMtx) : rotMtx) *
                 Matrix4.CreateTranslation(Selected ? editorScene.SelectionTransformAction.NewPos(Position) : Position));
 
@@ -218,7 +212,7 @@ namespace GL_EditorFramework.EditorDrawables
             else
                 blockColor = Color;
 
-            Renderers.ColorBlockRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
+            Renderers.ColorCubeRenderer.Draw(control, pass, blockColor, lineColor, control.NextPickingColor());
         }
 
         public override void StartDragging(DragActionType actionType, int hoveredPart, EditorSceneBase scene)
