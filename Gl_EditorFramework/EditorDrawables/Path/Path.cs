@@ -1152,28 +1152,6 @@ namespace GL_EditorFramework.EditorDrawables
                 point.GetSelectionBox(ref boundingBox);
         }
 
-        public override bool IsInRange(float range, float rangeSquared, Vector3 pos)
-        {
-            if (pathPoints.Count == 1)
-                return (pathPoints[0].Position - pos).LengthSquared < rangeSquared;
-
-            BoundingBox box;
-            for (int i = 1; i<pathPoints.Count; i++)
-            {
-                box = BoundingBox.Default;
-                box.Include(pathPoints[i - 1].GlobalPos);
-                box.Include(pathPoints[i - 1].GlobalPos + pathPoints[i - 1].GlobalCP2);
-                box.Include(pathPoints[i].GlobalPos + pathPoints[i].GlobalCP1);
-                box.Include(pathPoints[i].GlobalPos);
-
-                if (pos.X < box.maxX + range && pos.X > box.minX - range &&
-                    pos.Y < box.maxY + range && pos.Y > box.minY - range &&
-                    pos.Z < box.maxZ + range && pos.Z > box.minZ - range)
-                    return true;
-            }
-            return false;
-        }
-
         public override void DeleteSelected(EditorSceneBase scene, DeletionManager manager, IList list)
         {
             bool allPointsSelected = true;
