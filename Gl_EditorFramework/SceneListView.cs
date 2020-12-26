@@ -31,8 +31,11 @@ namespace GL_EditorFramework
 
         public void UpdateComboBoxItems()
         {
+            var list = RootListComboBox.SelectedItem;
             RootListComboBox.Items.Clear();
             RootListComboBox.Items.AddRange(rootLists.Keys.ToArray());
+
+            RootListComboBox.SelectedItem = list;
         }
 
         private Stack<IList> listStack = new Stack<IList>();
