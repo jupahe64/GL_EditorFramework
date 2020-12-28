@@ -170,13 +170,13 @@ namespace GL_EditorFramework
         {
             if (listStack.Count == 0)
             {
-                foreach (var keyValuePair in rootLists)
+                foreach ((string listname, IList rootlist) in rootLists)
                 {
-                    int index = keyValuePair.Value.IndexOf(item);
+                    int index = rootlist.IndexOf(item);
 
                     if (index != -1)
                     {
-                        SetRootList(keyValuePair.Key);
+                        SetRootList(listname);
 
                         ItemsListView.EnsureVisisble(index);
                     }
