@@ -180,6 +180,12 @@ namespace GL_EditorFramework.EditorDrawables
         {
             if (undoCollection != null)
             {
+                if (undoCollection.Count == 0)
+                {
+                    undoCollection = null;
+                    return;
+                }
+
                 if (undoCollection.Count == 1)
                     undoStack.Push(undoCollection[0]);
                 else if (undoCollection.Count == 2)
