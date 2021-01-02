@@ -317,8 +317,6 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void Dispose(bool disposing)
         {
-            MakeCurrent();
-
             foreach (var program in Framework.shaderPrograms)
             {
                 program.Delete(this);
@@ -328,6 +326,8 @@ namespace GL_EditorFramework.GL_Core
             {
                 vao.Delete(this);
             }
+
+            Framework.modernGlControls.Remove(this);
 
             base.Dispose(disposing);
         }
