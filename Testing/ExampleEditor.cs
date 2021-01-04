@@ -88,7 +88,7 @@ namespace Example
                 scene.objects.Add(obj = new Path(pathPoints) { Closed = true });
             }
             
-            for (int i = 5; i<10000; i++)
+            for (int i = 5; i<2000; i++)
             {
                 scene.objects.Add(obj = new TransformableObject(new Vector3(i,0,0), Vector3.Zero, Vector3.One));
             }
