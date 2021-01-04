@@ -534,17 +534,33 @@ namespace GL_EditorFramework.GL_Core
 
         public ulong RedrawerFrame { get; private set; } = 0;
 
-        public NextPickingColorHijackDel NextPickingColorHijack;
+        int pickingColorsLeft = -1;
+
+        public void LimitPickingColors(int max = 1)
+        {
+            pickingColorsLeft = Math.Max(1, max);
+        }
+
+        public void UnlimitPickingColors()
+        {
+            pickingColorsLeft = -1;
+        }
 
         public Vector4 NextPickingColor()
         {
-            return NextPickingColorHijack?.Invoke() ??
-            new Vector4(
+            var color = new Vector4(
                 ((pickingIndex >> 16) & 0xFF) / 255f,
                 ((pickingIndex >> 8) & 0xFF) / 255f,
                 (pickingIndex & 0xFF) / 255f,
                 ((pickingIndex++ >> 24) & 0xFF) / 255f
                 );
+
+            if (pickingColorsLeft == 0)
+                pickingIndex--;
+            else if (pickingColorsLeft > 0)
+                pickingColorsLeft--;
+
+            return color;
         }
 
         public void SkipPickingColors(uint count)

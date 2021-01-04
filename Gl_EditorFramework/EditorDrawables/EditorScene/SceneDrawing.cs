@@ -14,8 +14,13 @@ namespace GL_EditorFramework.EditorDrawables
             foreach (IEditableObject obj in GetObjects())
             {
                 if (obj.Visible)
+                {
+                    control.LimitPickingColors(obj.GetPickableSpan());
                     obj.Draw(control, pass, this);
+                }
             }
+
+            control.UnlimitPickingColors();
 
             foreach (AbstractGlDrawable obj in StaticObjects)
             {
@@ -34,9 +39,14 @@ namespace GL_EditorFramework.EditorDrawables
         {
             foreach (IEditableObject obj in GetObjects())
             {
-                if(obj.Visible)
+                if (obj.Visible)
+                {
+                    control.LimitPickingColors(obj.GetPickableSpan());
                     obj.Draw(control, pass, this);
+                }
             }
+
+            control.UnlimitPickingColors();
 
             foreach (AbstractGlDrawable obj in StaticObjects)
             {
