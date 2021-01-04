@@ -322,17 +322,17 @@ namespace GL_EditorFramework.EditorDrawables
             ListInvalidated?.Invoke(this, new ListEventArgs(list));
         }
 
-        public void Refresh() => control.Refresh();
-        public void DrawPicking() => control.DrawPicking();
+        public void Refresh() => control?.Refresh();
+        public void DrawPicking() => control?.DrawPicking();
 
         protected void UpdateSelection(uint var)
         {
             SelectionChanged?.Invoke(this, new EventArgs());
 
-            control.Refresh();
+            Refresh();
 
             if ((var & REDRAW_PICKING) > 0)
-                control.DrawPicking();
+                DrawPicking();
         }
 
         /// <summary>
