@@ -8,8 +8,8 @@ namespace GL_EditorFramework.GL_Core
     public class VertexArrayObject
     {
         public Dictionary<GLControl, int> vaos;
-        private readonly int buffer;
-        private readonly int? indexBuffer;
+        public readonly int buffer;
+        public readonly int? indexBuffer;
         private readonly Dictionary<int, VertexAttribute> attributes;
 
         /// <summary>
