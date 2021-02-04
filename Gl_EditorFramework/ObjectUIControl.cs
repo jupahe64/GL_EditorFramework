@@ -393,6 +393,7 @@ namespace GL_EditorFramework
             tooltipFadeTimer.Start();
         }
 
+        [System.Diagnostics.DebuggerStepThrough]
         private void TooltipFadeTimer_Tick(object sender, EventArgs e)
         {
             if(tooltip.Opacity<0.01)
@@ -556,25 +557,29 @@ namespace GL_EditorFramework
             currentTooltipAreaText = null;
 
             #region Check Clipboard
-            var text = Clipboard.GetText();
-
-            if (!string.IsNullOrEmpty(text) && text.Length < 100) //Larger strings will be ignored for performance sake
+            try
             {
-                var values = text.Split(',');
+                var text = Clipboard.GetText();
 
-                clipboardNumbers = new float[values.Length];
-
-                clipboardVectorSize = values.Length;
-
-                for (int i = 0; i < values.Length; i++)
+                if (!string.IsNullOrEmpty(text) && text.Length < 100) //Larger strings will be ignored for performance sake
                 {
-                    if (float.TryParse(values[i].Trim(), out float value))
-                        clipboardNumbers[i] = value;
-                    else
-                        clipboardVectorSize = 0;
+                    var values = text.Split(',');
+
+                    clipboardNumbers = new float[values.Length];
+
+                    clipboardVectorSize = values.Length;
+
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        if (float.TryParse(values[i].Trim(), out float value))
+                            clipboardNumbers[i] = value;
+                        else
+                            clipboardVectorSize = 0;
+                    }
                 }
+                #endregion
             }
-            #endregion
+            catch (Exception) { }
 
             foreach (ContainerInfo containerInfo in containerInfos)
             {
