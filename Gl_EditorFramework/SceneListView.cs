@@ -195,12 +195,10 @@ namespace GL_EditorFramework
             return false;
         }
 
-        /// <summary>
-        /// Recalculate the height of the Autoscroll for the <see cref="FastListView"/>
-        /// </summary>
+        [Obsolete("The drawing code will update it automatically")]
         public void UpdateAutoScrollHeight()
         {
-            ItemsListView.UpdateAutoscrollHeight();
+            
         }
 
         private void BackButton_Click(object sender, EventArgs e)
@@ -220,7 +218,6 @@ namespace GL_EditorFramework
         {
             RootListComboBox.Refresh();
             ItemsListView.Refresh();
-            ItemsListView.UpdateAutoscrollHeight();
             base.Refresh();
         }
     }
