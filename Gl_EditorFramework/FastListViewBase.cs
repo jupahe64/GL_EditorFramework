@@ -46,7 +46,9 @@ namespace GL_EditorFramework
             public bool IsSelected { get; set; }
         }
 
+        public event EventHandler SelectionChanged;
 
+        int mouseX = 0;
         int mouseY = 0;
         bool mouseDown = false;
 
@@ -160,6 +162,7 @@ namespace GL_EditorFramework
         {
             base.OnMouseMove(e);
 
+            mouseX = e.X;
             mouseY = e.Y;
 
             Refresh();
@@ -226,10 +229,11 @@ namespace GL_EditorFramework
                 selectRangeStart = -1;
                 selectRangeEnd = -1;
                 keepTheRest = true;
+
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
             }
 
             selecting = false;
-            Refresh();
         }
 
         protected override bool IsInputKey(Keys keyData)
@@ -327,6 +331,7 @@ namespace GL_EditorFramework
 
             //list view variables
             object lastSelectedItem;
+            private int mouseX;
             private int mouseY;
             private bool subtract;
             private bool keepTheRest;
@@ -339,6 +344,7 @@ namespace GL_EditorFramework
 
                 lastSelectedItem = listView.lastSelectedItem;
                 mouseY = listView.mouseY;
+                mouseX = listView.mouseX;
                 subtract = listView.subtract;
                 keepTheRest = listView.keepTheRest;
             }
@@ -348,7 +354,7 @@ namespace GL_EditorFramework
                 if (item == lastSelectedItem)
                     lastSelectedIndex = currentIndex;
 
-                if (y <= mouseY && mouseY < y + height)
+                if (x <= mouseX && y <= mouseY && mouseY < y + height)
                 {
                     hoveredIndex = currentIndex;
                     hoveredItem = item;
@@ -360,12 +366,12 @@ namespace GL_EditorFramework
                 else if (currentIndex > selectRangeMax)
                     currentIsInRange = false;
 
-                bool selected;
+                bool _isSelected;
 
                 if (subtract)
-                    selected = isSelected && !currentIsInRange;
+                    _isSelected = isSelected && !currentIsInRange;
                 else
-                    selected = currentIsInRange || (keepTheRest && isSelected);
+                    _isSelected = currentIsInRange || (keepTheRest && isSelected);
 
                 bool hovered = hoveredIndex == currentIndex;
 
@@ -376,9 +382,9 @@ namespace GL_EditorFramework
 
                 currentIndex++;
 
-                if (selected && hovered)
+                if (_isSelected && hovered)
                     return ItemHighlight.HOVERED_SELECTED;
-                else if (selected)
+                else if (_isSelected)
                     return ItemHighlight.SELECTED;
                 else if (hovered)
                     return ItemHighlight.HOVERED;
@@ -386,7 +392,7 @@ namespace GL_EditorFramework
                     return ItemHighlight.NONE;
             }
 
-            [EditorBrowsable]
+            [EditorBrowsable(EditorBrowsableState.Never)]
             public void Evaluate(FastListViewBase listView)
             {
                 if (mouseY < topY)
