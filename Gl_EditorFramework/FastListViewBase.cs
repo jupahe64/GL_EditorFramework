@@ -63,8 +63,8 @@ namespace GL_EditorFramework
         private bool keepTheRest = true;
         private bool subtract = false;
 
-        private object lastSelectedItem = null;
-        private int lastSelectedIndex = -1;
+        public object LastSelectedItem { get; private set; } = null;
+        public int LastSelectedIndex { get; private set; } = -1;
 
         private Timer marginScrollTimer = new Timer();
 
@@ -219,11 +219,11 @@ namespace GL_EditorFramework
                 int max = Math.Max(selectRangeStart, selectRangeEnd);
 
                 if (subtract)
-                    lastSelectedItem = Select(min, max, SelectionChangeMode.SUBTRACT);
+                    LastSelectedItem = Select(min, max, SelectionChangeMode.SUBTRACT);
                 else if (keepTheRest)
-                    lastSelectedItem = Select(min, max, SelectionChangeMode.ADD);
+                    LastSelectedItem = Select(min, max, SelectionChangeMode.ADD);
                 else
-                    lastSelectedItem = Select(min, max, SelectionChangeMode.SET);
+                    LastSelectedItem = Select(min, max, SelectionChangeMode.SET);
 
                 prevSelectStartIndex = selectRangeStart;
                 selectRangeStart = -1;
@@ -256,18 +256,18 @@ namespace GL_EditorFramework
             if (itemCount == 0)
                 return;
 
-            int index = lastSelectedIndex;
+            int index = LastSelectedIndex;
 
             if (index == -1)
                 return;
 
             if (e.KeyCode == Keys.Up && index > 0)
             {
-                lastSelectedItem = Select(index - 1, e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
+                LastSelectedItem = Select(index - 1, e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
             }
             else if (e.KeyCode == Keys.Down && index < itemCount - 1)
             {
-                lastSelectedItem = Select(index + 1, e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
+                LastSelectedItem = Select(index + 1, e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
             }
 
             Focus();
@@ -291,12 +291,12 @@ namespace GL_EditorFramework
 
             searchString += e.KeyChar;
 
-            var result = SelectNext(searchString, (lastSelectedIndex+1)%itemCount);
+            var result = SelectNext(searchString, (LastSelectedIndex+1)%itemCount);
 
             if (result == null)
                 searchString.Substring(0, searchString.Length - 1);
             else
-                lastSelectedItem = result;
+                LastSelectedItem = result;
         }
 
         //returns the last selected item or null
@@ -342,7 +342,7 @@ namespace GL_EditorFramework
                 this.selectRangeMin = selectRangeMin;
                 this.selectRangeMax = selectRangeMax;
 
-                lastSelectedItem = listView.lastSelectedItem;
+                lastSelectedItem = listView.LastSelectedItem;
                 mouseY = listView.mouseY;
                 mouseX = listView.mouseX;
                 subtract = listView.subtract;
@@ -417,7 +417,7 @@ namespace GL_EditorFramework
 
                 listView.itemCount = currentIndex;
 
-                listView.lastSelectedIndex = lastSelectedIndex;
+                listView.LastSelectedIndex = lastSelectedIndex;
             }
         }
 
