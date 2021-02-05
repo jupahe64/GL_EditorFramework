@@ -317,14 +317,21 @@ namespace GL_EditorFramework.GL_Core
 
         protected override void Dispose(bool disposing)
         {
-            foreach (var program in Framework.shaderPrograms)
+            try
             {
-                program.Delete(this);
-            }
+                foreach (var program in Framework.shaderPrograms)
+                {
+                    program.Delete(this);
+                }
 
-            foreach (var vao in Framework.vaos)
+                foreach (var vao in Framework.vaos)
+                {
+                    vao.Delete(this);
+                }
+            }
+            catch (AccessViolationException)
             {
-                vao.Delete(this);
+
             }
 
             Framework.modernGlControls.Remove(this);

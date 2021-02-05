@@ -30,7 +30,7 @@ namespace GL_EditorFramework
     {
         List<DocumentTab> tabs = new List<DocumentTab>();
 
-        int selectedIndex = 0;
+        int selectedIndex = -1;
 
         int hoveredIndex = -1;
 
