@@ -114,21 +114,29 @@ namespace GL_EditorFramework
             suggestionsDropDown.UpdateSuggestions(Text);
         }
 
-        protected override void OnParentChanged(EventArgs e)
+        protected override void OnLayout(LayoutEventArgs levent)
         {
-            base.OnParentChanged(e);
+            base.OnLayout(levent);
 
             Form parentForm = this.FindForm();
 
-            if (parentForm != null)
+            if (parentForm != null && !parentForm.Controls.Contains(focusControl))
             {
                 parentForm.Controls.Add(focusControl);
 
-                parentForm.LocationChanged += ParentForm_LocationChanged;
-                parentForm.SizeChanged += ParentForm_SizeChanged;
+                parentForm.Move += MyLocationChanged;
+
+                parentForm.Resize += MyLocationChanged;
 
                 parentForm.FormClosed += ParentForm_FormClosed;
             }
+
+            SuspendLayout();
+            suggestionsDropDown.Width = Width;
+        }
+        protected override void OnClientSizeChanged(EventArgs e)
+        {
+            base.OnClientSizeChanged(e);
         }
 
         private void ParentForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -136,17 +144,20 @@ namespace GL_EditorFramework
             suggestionsDropDown.Close();
         }
 
-        private void ParentForm_SizeChanged(object sender, EventArgs e)
-        {
-            suggestionsDropDown.Width = Width;
-        }
+        //protected override void OnResize(EventArgs e)
+        //{
+        //    base.OnResize(e);
 
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
+            
+        //}
 
-            suggestionsDropDown.Width = Width;
-        }
+        //protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        //{
+        //    base.SetBoundsCore(x, y, width, height, specified);
+
+        //    suggestionsDropDown.Width = Width;
+        //    Console.WriteLine("Resizing");
+        //}
 
         protected override void OnFontChanged(EventArgs e)
         {
@@ -155,7 +166,7 @@ namespace GL_EditorFramework
             suggestionsDropDown.Font = Font;
         }
 
-        private void ParentForm_LocationChanged(object sender, EventArgs e)
+        private void MyLocationChanged(object sender, EventArgs e)
         {
             suggestionsDropDown.Location = PointToScreen(new Point(-2, Height - 2));
         }
@@ -186,17 +197,54 @@ namespace GL_EditorFramework
             displayControl.MouseUp += DisplayControl_MouseUp;
             displayControl.Paint += DisplayControl_Paint;
             
-            displayControl.Bounds = new Rectangle(1, 1, Width - 2, Height - 2);
             Padding = new Padding(1);
             displayControl.Dock = DockStyle.Fill;
             Controls.Add(displayControl);
+
+            animTimer.Tick += AnimTimer_Tick;
+
+            Height = 0;
         }
 
+        float animProgress = 0f;
 
+        private void AnimTimer_Tick(object sender, EventArgs e)
+        {
+            if (animProgress == 1.0)
+            {
+                animTimer.Stop();
+                animProgress = 0f;
+            }
+            else
+            {
+                animProgress += 0.125f;
+
+                int newHeight = (int)(finalHeight * animProgress);
+
+                mouseY -= newHeight - Height;
+
+                Height = newHeight;
+
+                Refresh();
+            }
+        }
+
+        Timer animTimer = new Timer() { Interval = 1 };
+
+        int contentWidth = 100;
         int minWidth = 100;
         public new int Width
         {
-            get => minWidth; set => minWidth = value;
+            get => minWidth;
+            set
+            {
+                minWidth = value;
+
+                if (value > contentWidth)
+                    base.Width = minWidth;
+
+                Refresh();
+            }
         }
 
         private void DisplayControl_MouseMove(object sender, MouseEventArgs e)
@@ -245,6 +293,9 @@ namespace GL_EditorFramework
             int rowHeight = Font.Height + 4;
 
             int y = displayControl.AutoScrollPosition.Y;
+
+            if (animTimer.Enabled)
+                y -= (finalHeight - Height);
 
             if (suggestClear)
             {
@@ -340,7 +391,7 @@ namespace GL_EditorFramework
                 newHeight = desiredHeight;
             }
 
-            float maxWidth = Width;
+            float contentWidth_f = 100;
 
             float paddingRight = AutoScrollMinSize.Height == 0 ? 0 : SystemInformation.VerticalScrollBarWidth;
 
@@ -348,14 +399,18 @@ namespace GL_EditorFramework
             {
                 for (int i = 0; i < suggestions.Length; i++)
                 {
-                    maxWidth = Math.Max(g.MeasureString(suggestions[i], Font).Width + paddingRight, maxWidth);
+                    contentWidth_f = Math.Max(g.MeasureString(suggestions[i], Font).Width + paddingRight, contentWidth_f);
                 }
             }
 
-            SetBounds(0,0,(int)maxWidth, newHeight, BoundsSpecified.Size);
+            contentWidth = (int)contentWidth_f;
+
+            SetBounds(0, 0, Math.Max(contentWidth, minWidth), newHeight, BoundsSpecified.Size);
 
             Refresh();
         }
+
+        int finalHeight = 0;
 
         #region make absolutely sure that this form can't be focused on
         private const int SW_SHOWNOACTIVATE = 4;
@@ -392,10 +447,20 @@ namespace GL_EditorFramework
             this.filterSuggestions = filterSuggestions;
             this.possibleSuggestions = possibleSuggestions;
             this.suggestClear = suggestClear;
-            Bounds = new Rectangle(location, new Size(width, 20));
+            Location = location;
+
+            minWidth = width;
+
             UpdateSuggestions(currentText, false);
 
+            finalHeight = Height;
+
+            Height = 0;
+
             ShowInactiveTopmost(this);
+
+
+            animTimer.Start();
         }
 
         int mouseY = -1;

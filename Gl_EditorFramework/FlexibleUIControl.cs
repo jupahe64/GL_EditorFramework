@@ -104,6 +104,7 @@ namespace GL_EditorFramework
             textBox1.LostFocus += TextBox1_LostFocus;
             textBox1.GotFocus += TextBox1_GotFocus;
             textBox1.TextChanged += TextBox1_TextChanged;
+            textBox1.Layout += Textbox1_Layout;
 
             suggestionsDropDown.ItemSelected += SuggestionsDropDown_ItemSelected;
 
@@ -123,7 +124,7 @@ namespace GL_EditorFramework
             doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
             doubleClickTimer.Tick += DoubleClickTimer_Tick;
 
-            textBoxHeight = textBox1.Height;
+            textBoxHeight = textBox1.Height+2;
         }
 
         private void SuggestionsDropDown_ItemSelected(object sender, EventArgs e)
@@ -171,7 +172,7 @@ namespace GL_EditorFramework
         {
             if (suggestionsForTextBox.Length != 0)
             {
-                suggestionsDropDown.Show(textBox1.PointToScreen(new Point(-1, textBox1.Height - 1)), textBox1.Width, textBox1.Text, suggestionsForTextBox, true, filterSuggestionsForTextBox);
+                suggestionsDropDown.Show(textBox1.PointToScreen(new Point(-3, textBox1.Height+2)), textBox1.Width+4, textBox1.Text, suggestionsForTextBox, true, filterSuggestionsForTextBox);
             }
         }
 
@@ -209,20 +210,6 @@ namespace GL_EditorFramework
         }
 
         #region make sure suggestionDropDown behaves correctly
-        protected override void OnParentChanged(EventArgs e)
-        {
-            base.OnParentChanged(e);
-
-            Form parentForm = this.FindForm();
-
-            if (parentForm != null)
-            {
-                parentForm.LocationChanged += ParentForm_LocationChanged;
-                parentForm.SizeChanged += ParentForm_SizeChanged;
-
-                parentForm.FormClosed += ParentForm_FormClosed;
-            }
-        }
 
         protected override void OnLayout(LayoutEventArgs e)
         {
@@ -232,8 +219,8 @@ namespace GL_EditorFramework
 
             if (parentForm != null)
             {
-                parentForm.LocationChanged += ParentForm_LocationChanged;
-                parentForm.SizeChanged += ParentForm_SizeChanged;
+                parentForm.Move += TextboxLocationShouldChange;
+                parentForm.Resize += TextboxLocationShouldChange;
 
                 parentForm.FormClosed += ParentForm_FormClosed;
             }
@@ -244,14 +231,15 @@ namespace GL_EditorFramework
             suggestionsDropDown.Close();
         }
 
-        private void ParentForm_SizeChanged(object sender, EventArgs e)
+        private void Textbox1_Layout(object sender, EventArgs e)
         {
-            suggestionsDropDown.Width = textBox1.Width;
+            SuspendLayout();
+            suggestionsDropDown.Width = textBox1.Width + 4;
         }
 
-        private void ParentForm_LocationChanged(object sender, EventArgs e)
+        private void TextboxLocationShouldChange(object sender, EventArgs e)
         {
-            suggestionsDropDown.Location = textBox1.PointToScreen(new Point(-1, textBox1.Height - 1));
+            suggestionsDropDown.Location = textBox1.PointToScreen(new Point(-3, textBox1.Height+2));
         }
         #endregion
 
@@ -360,23 +348,29 @@ namespace GL_EditorFramework
                 suggestionsForTextBox = Array.Empty<string>();
 
                 SuspendLayout();
-                textBox1.Visible = true;
+
+                if (focusRequest.HasValue)
+                    focusedIndex = focusRequest.Value;
+
+
+                UpdateTextbox(
+                    textBoxRequest.Value.x,
+                    textBoxRequest.Value.y,
+                    textBoxRequest.Value.width);
 
                 textBox1.Text = textBoxRequest.Value.value;
                 textBox1.TextAlign = textBoxRequest.Value.alignment;
-                textBox1.Location = new Point(textBoxRequest.Value.x, textBoxRequest.Value.y);
-                textBox1.Width = textBoxRequest.Value.width;
-                ResumeLayout();
-
-                textBox1.Focus();
-
-                if(focusRequest.HasValue)
-                    focusedIndex = focusRequest.Value;
 
                 int lParam = mousePos.Y - textBox1.Top << 16 | (mousePos.X - textBox1.Left & 65535);
                 int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
 
                 textBox1.Select(Math.Max(0, num), 0);
+
+                textBox1.Visible = true;
+
+                ResumeLayout();
+
+                textBox1.Focus();
 
                 if (textBoxRequest.Value.useNumericFilter && !textBoxHasNumericFilter)
                 {
@@ -403,8 +397,12 @@ namespace GL_EditorFramework
 
                 textBox1.Text = comboBoxRequest.Value.value;
                 textBox1.TextAlign = HorizontalAlignment.Left;
-                textBox1.Location = new Point(comboBoxRequest.Value.x, comboBoxRequest.Value.y);
-                textBox1.Width = comboBoxRequest.Value.width;
+
+                UpdateTextbox(
+                    comboBoxRequest.Value.x, 
+                    comboBoxRequest.Value.y, 
+                    comboBoxRequest.Value.width);
+
                 ResumeLayout();
 
                 textBox1.Focus();
@@ -458,10 +456,10 @@ namespace GL_EditorFramework
 
             if (isCentered)
                 g.DrawString(value, Font, textColor ?? SystemBrushes.ControlText,
-                x + 1 + (width - (int)Math.Ceiling(g.MeasureString(value, Font).Width)) / 2, y);
+                x + 1 + (width - (int)Math.Ceiling(g.MeasureString(value, Font).Width)) / 2, y + 1);
             else
                 g.DrawString(value, Font, textColor ?? SystemBrushes.ControlText,
-                x + 1, y);
+                x + 1, y + 1);
 
             g.ResetClip();
         }
@@ -537,7 +535,7 @@ namespace GL_EditorFramework
 
         private void PrepareFieldForInput(int x, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
         {
-            textBoxRequest = new TextBoxSetup(x + 1, y + 1, width - 2, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput);
+            textBoxRequest = new TextBoxSetup(x, y, width, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput);
 
             focusRequest = index;
 
@@ -593,7 +591,7 @@ namespace GL_EditorFramework
                 case EventType.CLICK:
                     if (new Rectangle(x + 1, y + 1, width - 1, textBoxHeight - 2).Contains(mousePos))
                     {
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, number.ToString(), isCentered);
                         valueChangeEvents |= VALUE_CHANGE_START;
 
@@ -606,7 +604,7 @@ namespace GL_EditorFramework
 
                 case EventType.DRAG_START:
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                     {
                         DrawField(x, y, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
@@ -629,7 +627,7 @@ namespace GL_EditorFramework
                             info.min, info.max, info.wrapAround);
                     }
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
@@ -643,7 +641,7 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
@@ -657,7 +655,7 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
@@ -671,7 +669,7 @@ namespace GL_EditorFramework
                         dragIndex = -1;
                     }
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
@@ -679,7 +677,7 @@ namespace GL_EditorFramework
 
                 default: //EventType.DRAW
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, number.ToString(), SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
@@ -700,7 +698,7 @@ namespace GL_EditorFramework
                 case EventType.CLICK:
                     if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
                     {
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                         PrepareFieldForInput(x, y, width, text, false, isCentered);
                         valueChangeEvents |= VALUE_CHANGE_START;
 
@@ -719,7 +717,7 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
@@ -727,7 +725,7 @@ namespace GL_EditorFramework
 
                 default:
                     if (focusedIndex == index)
-                        DrawField(x, y, width, "", SystemBrushes.ActiveCaption, SystemBrushes.ControlLightLight, isCentered);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
                     else
                         DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, isCentered);
 
@@ -740,11 +738,11 @@ namespace GL_EditorFramework
 
         private void UpdateTextbox(int x, int y, int width)
         {
-            textBox1.SetBounds(x + 1, y + 1, width - 2, -1, BoundsSpecified.Location | BoundsSpecified.Width);
+            textBox1.SetBounds(x + 3, y + 2, width - 4, -1, BoundsSpecified.Location | BoundsSpecified.Width);
             if (suggestionsDropDown.Visible)
             {
-                suggestionsDropDown.Location = textBox1.PointToScreen(new Point(-1, textBox1.Height - 1));
-                suggestionsDropDown.Width = width;
+                Point loc = textBox1.PointToScreen(new Point(-3, textBox1.Height+2));
+                suggestionsDropDown.SetBounds(loc.X, loc.Y, width, -1, BoundsSpecified.Location | BoundsSpecified.Width);
             }
         }
 
@@ -758,13 +756,14 @@ namespace GL_EditorFramework
                 case EventType.CLICK:
                     if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
                     {
+                        DrawField(x, y, width, text, SystemBrushes.Highlight, SystemBrushes.ControlLightLight, false);
                         PrepareComboBox(x, y, width, text, dropDownItems, true, filterSuggestions);
                         valueChangeEvents |= VALUE_CHANGE_START;
 
                         eventType = EventType.DRAW; //Click Handled
                     }
                     else
-                        DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
 
@@ -776,17 +775,17 @@ namespace GL_EditorFramework
                     }
 
                     if (focusedIndex == index)
-                        DrawComboBoxField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, false);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, false);
                     else
-                        DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
 
                 default:
                     if (focusedIndex == index)
-                        DrawComboBoxField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, false);
+                        DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, false);
                     else
-                        DrawComboBoxField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
+                        DrawField(x, y, width, text, SystemBrushes.InactiveCaption, SystemBrushes.ControlLightLight, false);
 
                     break;
             }
