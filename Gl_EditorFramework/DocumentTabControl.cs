@@ -344,6 +344,11 @@ namespace GL_EditorFramework
         {
             base.OnMouseWheel(e);
 
+            Rectangle tabArea = new Rectangle(arrowWidth + 5, 10, Width - 10 - arrowWidth * 2, 21);
+
+            if (!tabArea.Contains(e.Location))
+                return;
+
             if (e.Delta > 0)
             {
                 if (scrollIndexOffset>0)

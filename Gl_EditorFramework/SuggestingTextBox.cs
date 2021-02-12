@@ -79,6 +79,8 @@ namespace GL_EditorFramework
                 return;
 
             ignoreFocusChange = true;
+
+            suggestionsDropDown.Font = Font;
             suggestionsDropDown.Show(PointToScreen(new Point(-2, Height-2)), Width, Text, PossibleSuggestions, SuggestClear, FilterSuggestions);
             ignoreFocusChange = false;
         }
@@ -139,6 +141,20 @@ namespace GL_EditorFramework
             suggestionsDropDown.Width = Width;
         }
 
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+
+            suggestionsDropDown.Width = Width;
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            suggestionsDropDown.Font = Font;
+        }
+
         private void ParentForm_LocationChanged(object sender, EventArgs e)
         {
             suggestionsDropDown.Location = PointToScreen(new Point(-2, Height - 2));
@@ -176,6 +192,13 @@ namespace GL_EditorFramework
             Controls.Add(displayControl);
         }
 
+
+        int minWidth = 100;
+        public new int Width
+        {
+            get => minWidth; set => minWidth = value;
+        }
+
         private void DisplayControl_MouseMove(object sender, MouseEventArgs e)
         {
             mouseY = e.Y;
@@ -197,9 +220,18 @@ namespace GL_EditorFramework
             if (mouseDown)
             {
                 if (hoveredIndex == -1)
+                {
                     SelectedSuggestion = string.Empty;
+                }
+                else if (hoveredIndex == -2)
+                {
+                    UpdateSuggestions(string.Empty);
+                    return;
+                }
                 else
+                {
                     SelectedSuggestion = suggestions[hoveredIndex];
+                }
 
                 mouseDown = false;
 
@@ -210,36 +242,48 @@ namespace GL_EditorFramework
 
         private void DisplayControl_Paint(object sender, PaintEventArgs e)
         {
-            int fontHeight = Font.Height;
+            int rowHeight = Font.Height + 4;
 
             int y = displayControl.AutoScrollPosition.Y;
 
             if (suggestClear)
             {
-                if (mouseY >= y && mouseY < y + fontHeight)
+                if (mouseY >= y && mouseY < y + rowHeight)
                 {
-                    e.Graphics.FillRectangle(SystemBrushes.Highlight, new Rectangle(0, y, Width, fontHeight));
-                    e.Graphics.DrawString(CLEAR_STRING, Font, SystemBrushes.HighlightText, new Point(0, y));
+                    e.Graphics.FillRectangle(SystemBrushes.Highlight, new Rectangle(0, y, Bounds.Width, rowHeight));
+                    e.Graphics.DrawString(CLEAR_STRING, Font, SystemBrushes.HighlightText, new Point(0, y + 2));
                     hoveredIndex = -1;
                 }
                 else
-                    e.Graphics.DrawString(CLEAR_STRING, Font, SystemBrushes.ControlText, new Point(0, y));
+                    e.Graphics.DrawString(CLEAR_STRING, Font, SystemBrushes.ControlText, new Point(0, y+2));
 
-                y += fontHeight;
+                y += rowHeight;
             }
 
             for (int i = 0; i < suggestions.Length; i++)
             {
-                if (mouseY >= y && mouseY < y + fontHeight)
+                if (mouseY >= y && mouseY < y + rowHeight)
                 {
-                    e.Graphics.FillRectangle(SystemBrushes.Highlight, new Rectangle(0, y, Width, fontHeight));
-                    e.Graphics.DrawString(suggestions[i], Font, SystemBrushes.HighlightText, new Point(0, y));
+                    e.Graphics.FillRectangle(SystemBrushes.Highlight, new Rectangle(0, y, Bounds.Width, rowHeight));
+                    e.Graphics.DrawString(suggestions[i], Font, SystemBrushes.HighlightText, new Point(0, y+2));
                     hoveredIndex = i;
                 }
                 else
-                    e.Graphics.DrawString(suggestions[i], Font, SystemBrushes.ControlText, new Point(0, y));
+                    e.Graphics.DrawString(suggestions[i], Font, SystemBrushes.ControlText, new Point(0, y+2));
 
-                y += fontHeight;
+                y += rowHeight;
+            }
+
+            if (displayShowAll)
+            {
+                if (mouseY >= y)
+                {
+                    e.Graphics.FillRectangle(SystemBrushes.Highlight, new Rectangle(0, y, Bounds.Width, rowHeight));
+                    e.Graphics.DrawString(SHOW_ALL_STRING, Font, SystemBrushes.HighlightText, new Point(0, y + 2));
+                    hoveredIndex = -2;
+                }
+                else
+                    e.Graphics.DrawString(SHOW_ALL_STRING, Font, SystemBrushes.ControlText, new Point(0, y + 2));
             }
         }
 
@@ -252,6 +296,8 @@ namespace GL_EditorFramework
         private bool suggestClear = false;
 
         private bool filterSuggestions = false;
+
+        private bool displayShowAll = false;
 
         public void UpdateSuggestions(string filterString, bool allowKeepCurrentSuggestions = true)
         {
@@ -274,22 +320,39 @@ namespace GL_EditorFramework
                 suggestions = possibleSuggestions;
             }
 
-            int maxHeight = 10 * Font.Height;
+            int maxHeight = 10 * (Font.Height+4);
 
-            int desiredHeight = (suggestions.Length + (suggestClear ? 1 : 0))
-                * Font.Height;
+            displayShowAll = possibleSuggestions.Length > suggestions.Length;
 
+            int desiredHeight = (suggestions.Length + (suggestClear ? 1 : 0) + (displayShowAll ? 1 : 0))
+                * (Font.Height+4);
+
+            int newHeight;
 
             if (desiredHeight > maxHeight)
             {
                 displayControl.AutoScrollMinSize = new Size(0, desiredHeight);
-                Height = maxHeight;
+                newHeight = maxHeight;
             }
             else
             {
                 displayControl.AutoScrollMinSize = new Size(0, 0);
-                Height = desiredHeight;
+                newHeight = desiredHeight;
             }
+
+            float maxWidth = Width;
+
+            float paddingRight = AutoScrollMinSize.Height == 0 ? 0 : SystemInformation.VerticalScrollBarWidth;
+
+            using (var g = CreateGraphics())
+            {
+                for (int i = 0; i < suggestions.Length; i++)
+                {
+                    maxWidth = Math.Max(g.MeasureString(suggestions[i], Font).Width + paddingRight, maxWidth);
+                }
+            }
+
+            SetBounds(0,0,(int)maxWidth, newHeight, BoundsSpecified.Size);
 
             Refresh();
         }
@@ -344,12 +407,13 @@ namespace GL_EditorFramework
 
         bool mouseDown = false;
         public static string CLEAR_STRING = "<Clear>";
+        public static string SHOW_ALL_STRING = "Show All";
 
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
 
-            e.Graphics.DrawRectangle(SystemPens.Highlight, new Rectangle(0, 0, Width - 1, Height - 1));
+            e.Graphics.DrawRectangle(SystemPens.Highlight, new Rectangle(0, 0, Bounds.Width - 1, Height - 1));
         }
 
         protected override bool ShowWithoutActivation => true;
@@ -362,10 +426,16 @@ namespace GL_EditorFramework
 
                 const int WS_EX_NOACTIVATE = 0x08000000;
                 const int WS_EX_TOOLWINDOW = 0x00000080;
+                const int WS_EX_COMPOSITED = 0x02000000;
+
+                const int CS_DROPSHADOW = 0x20000;
+                
                 baseParams.ExStyle |= (int)(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW);
 
                 if (Environment.OSVersion.Version.Major >= 6)
-                    baseParams.ExStyle |= 0x02000000; //WS_EX_COMPOSITED
+                    baseParams.ExStyle |= WS_EX_COMPOSITED;
+
+                baseParams.ClassStyle |= CS_DROPSHADOW;
 
                 return baseParams;
             }

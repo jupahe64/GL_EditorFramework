@@ -271,6 +271,8 @@ namespace GL_EditorFramework
             FormBorderStyle = FormBorderStyle.None;
             TopMost = true;
             BackColor = SystemColors.ControlLightLight;
+
+            ShowInTaskbar = false;
         }
 
         #region make absolutely sure that this form can't be focused on
@@ -662,6 +664,18 @@ namespace GL_EditorFramework
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
+            tooltip.Hide();
+        }
+
+        protected override void OnLostFocus(EventArgs e)
+        {
+            base.OnLostFocus(e);
+            tooltip.Hide();
+        }
+
+        protected override void OnLeave(EventArgs e)
+        {
+            base.OnLeave(e);
             tooltip.Hide();
         }
 
