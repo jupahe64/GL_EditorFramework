@@ -144,21 +144,6 @@ namespace GL_EditorFramework
             suggestionsDropDown.Close();
         }
 
-        //protected override void OnResize(EventArgs e)
-        //{
-        //    base.OnResize(e);
-
-            
-        //}
-
-        //protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
-        //{
-        //    base.SetBoundsCore(x, y, width, height, specified);
-
-        //    suggestionsDropDown.Width = Width;
-        //    Console.WriteLine("Resizing");
-        //}
-
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);

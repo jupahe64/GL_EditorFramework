@@ -233,13 +233,12 @@ namespace GL_EditorFramework
 
         private void Textbox1_Layout(object sender, EventArgs e)
         {
-            SuspendLayout();
-            suggestionsDropDown.Width = textBox1.Width + 4;
+            suggestionsDropDown.Hide();
         }
 
         private void TextboxLocationShouldChange(object sender, EventArgs e)
         {
-            suggestionsDropDown.Location = textBox1.PointToScreen(new Point(-3, textBox1.Height+2));
+            suggestionsDropDown.Location = textBox1.PointToScreen(new Point(-3, textBox1.Height + 2));
         }
         #endregion
 
