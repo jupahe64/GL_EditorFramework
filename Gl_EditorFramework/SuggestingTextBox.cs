@@ -134,10 +134,6 @@ namespace GL_EditorFramework
             SuspendLayout();
             suggestionsDropDown.Width = Width;
         }
-        protected override void OnClientSizeChanged(EventArgs e)
-        {
-            base.OnClientSizeChanged(e);
-        }
 
         private void ParentForm_FormClosed(object sender, FormClosedEventArgs e)
         {

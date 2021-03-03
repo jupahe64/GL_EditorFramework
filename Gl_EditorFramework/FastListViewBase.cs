@@ -115,7 +115,7 @@ namespace GL_EditorFramework
             if (selecting && hovered.Index != -1)
                 selectRangeEnd = hovered.Index;
 
-            Refresh();
+            Invalidate();
         }
 
         private void DoubleClickTimer_Tick(object sender, EventArgs e)
@@ -153,7 +153,7 @@ namespace GL_EditorFramework
             keepTheRest = ModifierKeys.HasFlag(Keys.Control);
             subtract = hoveredIsSelected && keepTheRest;
             selecting = true;
-            Refresh();
+            Invalidate();
         }
 
         int smoothScrollY = 0;
@@ -165,7 +165,14 @@ namespace GL_EditorFramework
             mouseX = e.X;
             mouseY = e.Y;
 
-            Refresh();
+            using(var g = CreateGraphics())
+            {
+                var handler = new DrawItemHandler(g, -1, -1, this);
+
+                DrawItems(handler);
+
+                handler.Evaluate(this);
+            }
 
             if (e.Button != MouseButtons.Left)
                 return;
@@ -197,7 +204,7 @@ namespace GL_EditorFramework
             else
                 marginScrollTimer.Stop();
 
-            Refresh();
+            Invalidate();
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -269,6 +276,8 @@ namespace GL_EditorFramework
             {
                 LastSelectedItem = Select(index + 1, e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
             }
+
+            Invalidate();
 
             Focus();
         }
@@ -442,7 +451,7 @@ namespace GL_EditorFramework
             base.OnScroll(se);
 
             if (itemCount != 0)
-                Refresh();
+                Invalidate();
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -457,7 +466,7 @@ namespace GL_EditorFramework
                 if (selecting && hovered.Index != -1)
                     selectRangeEnd = hovered.Index;
 
-                Refresh();
+                Invalidate();
             }
         }
 

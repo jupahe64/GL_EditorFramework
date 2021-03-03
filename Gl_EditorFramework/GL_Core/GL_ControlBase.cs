@@ -26,8 +26,11 @@ namespace GL_EditorFramework.GL_Core
         {
             redrawer.Interval = redrawerInterval;
             redrawer.Tick += Redrawer_Tick;
+            camUpdater.Tick += CamUpdater_Tick;
             marginScrollTimer.Tick += MarginScrollTimer_Tick;
             marginScrollTimer.Interval = 10;
+
+            camUpdater.Start();
         }
 
         protected override void Dispose(bool disposing)
@@ -125,6 +128,59 @@ namespace GL_EditorFramework.GL_Core
             RedrawerFrame++;
         }
 
+        long lastMillis = 0;
+
+        private void CamUpdater_Tick(object sender, EventArgs e)
+        {
+            long millis = DateTime.Now.Ticks;
+
+            ActiveCamera.Update(this, (millis-lastMillis) * 0.001f);
+
+
+
+            {
+                float blendFactor = 0.25f;
+
+                Matrix3 desired = Matrix3.CreateRotationY(camRotX) * Matrix3.CreateRotationX(camRotY);
+
+                if (!drawAnim)
+                    AnimOrientationMatrix =  new Matrix4(desired);
+
+                AnimOrientationMatrix = new Matrix4(animOrientationMatrix = new Matrix3(
+                    desired.Row0 * blendFactor + animOrientationMatrix.Row0 * (1 - blendFactor),
+                    desired.Row1 * blendFactor + animOrientationMatrix.Row1 * (1 - blendFactor),
+                    desired.Row2 * blendFactor + animOrientationMatrix.Row2 * (1 - blendFactor)
+                    ));
+            }
+
+            {
+                float blendFactor = 0.5f;
+
+                Vector3 desired = CameraTarget;
+
+                if (!drawAnim)
+                    AnimCameraTarget = desired;
+
+                AnimCameraTarget = desired * blendFactor + AnimCameraTarget * (1 - blendFactor);
+            }
+
+            {
+                float blendFactor = 0.125f;
+
+                float desired = CameraDistance;
+
+                if (!drawAnim)
+                    AnimCameraDistance = desired;
+
+                AnimCameraDistance = desired * blendFactor + AnimCameraDistance * (1 - blendFactor);
+            }
+
+            CameraPosition = AnimCameraTarget + mtxRotInv.Row2 * AnimCameraDistance;
+
+
+            lastMillis = millis;
+        }
+
         public GL_ControlBase() : base(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(), 24), 1, 1, OpenTK.Graphics.GraphicsContextFlags.Default)
         {
 
@@ -176,6 +232,8 @@ namespace GL_EditorFramework.GL_Core
         protected bool showFakeCursor;
 
         private Timer redrawer = new Timer();
+
+        private Timer camUpdater = new Timer() { Interval = 10 };
 
         private Timer marginScrollTimer = new Timer();
 
@@ -265,49 +323,11 @@ namespace GL_EditorFramework.GL_Core
 
         Matrix3 animOrientationMatrix = Matrix3.Identity;
 
-        protected Matrix4 GetAnimOrientationMatrix()
-        {
-            float blendFactor = 0.25f;
+        protected Matrix4 AnimOrientationMatrix { get; private set; }
 
-            Matrix3 desired = Matrix3.CreateRotationY(camRotX) * Matrix3.CreateRotationX(camRotY);
+        protected Vector3 AnimCameraTarget { get; private set; }
 
-            if (!drawAnim)
-                return new Matrix4(desired);
-
-            return new Matrix4(animOrientationMatrix = new Matrix3(
-                desired.Row0 * blendFactor + animOrientationMatrix.Row0 * (1 - blendFactor),
-                desired.Row1 * blendFactor + animOrientationMatrix.Row1 * (1 - blendFactor),
-                desired.Row2 * blendFactor + animOrientationMatrix.Row2 * (1 - blendFactor)
-                ));
-        }
-
-        Vector3 animCameraTarget = Vector3.Zero;
-
-        protected Vector3 GetAnimCameraTarget()
-        {
-            float blendFactor = 0.5f;
-
-            Vector3 desired = CameraTarget;
-
-            if (!drawAnim)
-                return desired;
-
-            return animCameraTarget = desired * blendFactor + animCameraTarget * (1 - blendFactor);
-        }
-
-        float animCameraDistance = 0;
-
-        protected float GetAnimCameraDistance()
-        {
-            float blendFactor = 0.125f;
-
-            float desired = CameraDistance;
-
-            if (!drawAnim)
-                return desired;
-
-            return animCameraDistance = desired * blendFactor + animCameraDistance * (1 - blendFactor);
-        }
+        protected float AnimCameraDistance { get; private set; }
 
         public Vector3 CoordFor(int x, int y, float depth)
         {
@@ -348,7 +368,7 @@ namespace GL_EditorFramework.GL_Core
             ray.Z = zfar;
             return IntersectPoint(
                 Vector3.Transform(mtxRotInv, ray),
-                -CameraTarget - Vector3.Transform(mtxRotInv, new Vector3(0, 0, CameraDistance)),
+                -AnimCameraTarget - Vector3.Transform(mtxRotInv, new Vector3(0, 0, AnimCameraDistance)),
                 planeNormal, planeOrigin);
         }
 
@@ -458,8 +478,6 @@ namespace GL_EditorFramework.GL_Core
             {
                 cameraTarget = value;
                 RedrawFor(60, true);
-
-                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
             }
         }
 
@@ -471,8 +489,6 @@ namespace GL_EditorFramework.GL_Core
             {
                 cameraDistance = value;
                 RedrawFor(60, true);
-
-                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
             }
         }
 
@@ -488,8 +504,6 @@ namespace GL_EditorFramework.GL_Core
                 mtxRotInv =
                     Matrix3.CreateRotationX(-camRotY) *
                     Matrix3.CreateRotationY(-camRotX);
-
-                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
             }
         }
 
@@ -516,8 +530,6 @@ namespace GL_EditorFramework.GL_Core
                 mtxRotInv =
                     Matrix3.CreateRotationX(-camRotY) *
                     Matrix3.CreateRotationY(-camRotX);
-                
-                CameraPosition = cameraTarget + mtxRotInv.Row2 * cameraDistance;
             }
         }
 

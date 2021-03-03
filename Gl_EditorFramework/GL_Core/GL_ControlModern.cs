@@ -156,11 +156,11 @@ namespace GL_EditorFramework.GL_Core
 
             GL.MatrixMode(MatrixMode.Modelview);
 
-            Matrix4 mtxOrientation = GetAnimOrientationMatrix();
+            Matrix4 mtxOrientation = AnimOrientationMatrix;
 
-            Vector3 camTarget = GetAnimCameraTarget();
+            Vector3 camTarget = AnimCameraTarget;
 
-            float camDistance = GetAnimCameraDistance();
+            float camDistance = AnimCameraDistance;
 
             if (crossEye)
             {
@@ -298,9 +298,9 @@ namespace GL_EditorFramework.GL_Core
                 SkipPickingColors(orientationCubePickingColors); //the orientation cube faces
 
             mtxCam =
-                Matrix4.CreateTranslation(-GetAnimCameraTarget()) *
-                GetAnimOrientationMatrix() *
-                Matrix4.CreateTranslation(0, 0, -GetAnimCameraDistance()) *
+                Matrix4.CreateTranslation(-AnimCameraTarget) *
+                AnimOrientationMatrix *
+                Matrix4.CreateTranslation(0, 0, -AnimCameraDistance) *
                 Matrix4.CreateScale(0.03125f);
 
             mainDrawable.Draw(this, Pass.PICKING);

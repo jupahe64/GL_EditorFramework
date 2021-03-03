@@ -41,6 +41,42 @@ namespace GL_EditorFramework.StandardCameras
             return UPDATE_CAMERA;
         }
 
+        public override uint Update(GL_ControlBase control, float deltaTime)
+        {
+            if (control.MainDrawable == null)
+                return 0;
+
+            float speed = deltaTime * 0.01f;
+
+            Vector3 vec = Vector3.Zero;
+
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.W)) vec.Z -= speed;
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.A)) vec.X -= speed;
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.S)) vec.Z += speed;
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.D)) vec.X += speed;
+
+
+            Point mousePos = control.GetMousePos();
+
+            Vector2 normCoords = control.NormMouseCoords(mousePos.X, mousePos.Y);
+
+            vec.X += (-normCoords.X * vec.Z) * control.FactorX;
+            vec.Y += (normCoords.Y * vec.Z) * control.FactorY;
+
+
+            float up = 0;
+
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.Q)) up -= speed;
+            if (WinInput.Keyboard.IsKeyDown(WinInput.Key.E)) up += speed;
+
+            control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec) + Vector3.UnitY * up;
+
+            (control.MainDrawable as EditorDrawables.EditorSceneBase)?.CurrentAction?.UpdateMousePos(mousePos);
+            (control.MainDrawable as EditorDrawables.EditorSceneBase)?.SelectionTransformAction.UpdateMousePos(mousePos);
+
+            return UPDATE_CAMERA;
+        }
+
         public override uint MouseMove(MouseEventArgs e, Point lastMouseLoc, GL_ControlBase control)
         {
             float deltaX = e.Location.X - lastMouseLoc.X;

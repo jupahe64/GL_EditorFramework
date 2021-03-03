@@ -36,6 +36,6 @@ namespace GL_EditorFramework.Interfaces
             return 0;
             }
 
-        public virtual void Update() { }
+        public virtual uint Update(GL_ControlBase control, float deltaTime) => 0;
     }
 }

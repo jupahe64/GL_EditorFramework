@@ -88,11 +88,11 @@ namespace GL_EditorFramework.GL_Core
 
             MakeCurrent();
 
-            Matrix4 mtxOrientation = GetAnimOrientationMatrix();
+            Matrix4 mtxOrientation = AnimOrientationMatrix;
 
-            Vector3 camTarget = GetAnimCameraTarget();
+            Vector3 camTarget = AnimCameraTarget;
 
-            float camDistance = GetAnimCameraDistance();
+            float camDistance = AnimCameraDistance;
 
             GL.ClearColor(BackgroundColor1);
 
@@ -257,8 +257,8 @@ namespace GL_EditorFramework.GL_Core
             ResetModelMatrix();
             mtxCam =
                 Matrix4.CreateTranslation(-CameraTarget) *
-                GetAnimOrientationMatrix() *
-                Matrix4.CreateTranslation(0, 0, -GetAnimCameraDistance()) *
+                AnimOrientationMatrix *
+                Matrix4.CreateTranslation(0, 0, -AnimCameraDistance) *
                 Matrix4.CreateScale(0.03125f);
 
             GL.MatrixMode(MatrixMode.Projection);
