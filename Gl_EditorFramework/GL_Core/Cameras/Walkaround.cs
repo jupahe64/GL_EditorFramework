@@ -43,7 +43,7 @@ namespace GL_EditorFramework.StandardCameras
 
         public override uint Update(GL_ControlBase control, float deltaTime)
         {
-            if (control.MainDrawable == null)
+            if (control.MainDrawable == null || !control.Focused)
                 return 0;
 
             float speed = deltaTime * 0.01f;
