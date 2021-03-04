@@ -43,7 +43,7 @@ namespace GL_EditorFramework.StandardCameras
 
         public override uint Update(GL_ControlBase control, float deltaTime)
         {
-            if (control.MainDrawable == null || !control.Focused)
+            if (control.MainDrawable == null || !control.Focused || WinInput.Keyboard.Modifiers!=WinInput.ModifierKeys.None)
                 return 0;
 
             float speed = deltaTime * 0.01f;
