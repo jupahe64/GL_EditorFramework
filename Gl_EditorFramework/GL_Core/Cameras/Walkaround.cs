@@ -69,6 +69,9 @@ namespace GL_EditorFramework.StandardCameras
             if (WinInput.Keyboard.IsKeyDown(WinInput.Key.Q)) up -= speed;
             if (WinInput.Keyboard.IsKeyDown(WinInput.Key.E)) up += speed;
 
+            if (vec == Vector3.Zero && up == 0)
+                return 0;
+
             control.CameraTarget += Vector3.Transform(control.InvertedRotationMatrix, vec) + Vector3.UnitY * up;
 
             (control.MainDrawable as EditorDrawables.EditorSceneBase)?.CurrentAction?.UpdateMousePos(mousePos);
