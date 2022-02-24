@@ -136,7 +136,7 @@ namespace GL_EditorFramework
 
             LinkFont = new Font(Font, FontStyle.Underline);
 
-            textBox1.Font = new Font(Font.FontFamily, Font.Size * DeviceDpi/96);
+            textBox1.Font = Font;
 
             suggestionsDropDown.Font = Font;
 

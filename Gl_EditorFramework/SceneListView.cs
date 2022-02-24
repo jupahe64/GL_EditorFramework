@@ -60,7 +60,7 @@ namespace GL_EditorFramework
         {
             base.OnFontChanged(e);
 
-            RootListComboBox.Font = new Font(Font.FontFamily, Font.Size * DeviceDpi / 96);
+            RootListComboBox.Font = Font;
             ItemsListView.Font = Font;
         }
 

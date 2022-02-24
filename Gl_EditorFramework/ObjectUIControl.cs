@@ -408,7 +408,7 @@ namespace GL_EditorFramework
         {
             base.OnFontChanged(e);
 
-            rowHeight = (int)Math.Ceiling(Font.GetHeight(DeviceDpi)) + 5;
+            rowHeight = (int)Math.Ceiling(textBoxHeight + 5 * DeviceDpi / 96f);
         }
 
         [System.Diagnostics.DebuggerStepThrough]
