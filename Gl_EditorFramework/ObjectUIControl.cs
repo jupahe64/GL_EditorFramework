@@ -937,6 +937,11 @@ namespace GL_EditorFramework
             return clicked;
         }
 
+        private bool LastButton(int x, int y, string text)
+        {
+            return Button(x, y, usableWidth - x - margin, text);
+        }
+
         public int DoubleButton(string name, string name2)
         {
             EndHorizontalSeperator(); //this control doesn't get aligned to it
@@ -947,7 +952,7 @@ namespace GL_EditorFramework
 
             if (Button(margin, currentY, width, name))
                 clickedIndex = 1;
-            if (Button(margin + width + fullWidthSpace, currentY, width, name2))
+            if (LastButton(margin + width + fullWidthSpace, currentY, name2))
                 clickedIndex = 2;
 
             currentY += rowHeight + 4;
@@ -969,7 +974,7 @@ namespace GL_EditorFramework
                 clickedIndex = 1;
             if (Button(margin + width + fullWidthSpace, currentY, width, name2))
                 clickedIndex = 2;
-            if (Button(margin + width * 2 + fullWidthSpace * 2, currentY, usableWidth - margin * 2 - width * 2 - fullWidthSpace * 2, name3))
+            if (LastButton(margin + width * 2 + fullWidthSpace * 2, currentY, name3))
                 clickedIndex = 3;
 
             currentY += rowHeight + 4;
@@ -993,7 +998,7 @@ namespace GL_EditorFramework
                 clickedIndex = 2;
             if (Button(margin + width * 2 + fullWidthSpace * 2, currentY, width, name3))
                 clickedIndex = 3;
-            if (Button(margin + width * 3 + fullWidthSpace * 3, currentY, width, name4))
+            if (LastButton(margin + width * 3 + fullWidthSpace * 3, currentY, name4))
                 clickedIndex = 4;
 
             currentY += rowHeight + 4;
@@ -1217,8 +1222,10 @@ namespace GL_EditorFramework
         {
             EndHorizontalSeperator(); //this control doesn't get aligned to it
 
-            g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY - 2, usableWidth - margin * 2, 2);
-            g.FillRectangle(SystemBrushes.ControlDark, margin, currentY - 2, usableWidth - margin * 2 - 1, 1);
+            float space = rowHeight - textBoxHeight;
+
+            g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY - space/2+1, usableWidth - margin * 2, 2);
+            g.FillRectangle(SystemBrushes.ControlDark, margin, currentY - space / 2+1, usableWidth - margin * 2 - 1, 1);
             currentY += 2;
 
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
