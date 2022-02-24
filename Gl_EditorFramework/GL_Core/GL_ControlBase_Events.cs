@@ -294,6 +294,11 @@ namespace GL_EditorFramework.GL_Core
             }
             IsHovered = true;
             base.OnMouseEnter(e);
+            if(mainDrawable!=null)
+                Repick();
+
+            mainDrawable?.MouseEnter(pickingIndex, this);
+            Refresh();
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -310,6 +315,7 @@ namespace GL_EditorFramework.GL_Core
             }
             IsHovered = false;
             base.OnMouseLeave(e);
+            mainDrawable?.MouseLeaveEntirely(this);
             Refresh();
         }
 
