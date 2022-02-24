@@ -124,7 +124,6 @@ namespace Example
 
             //add event handlers to sceneListView
             sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
-            sceneListView1.ItemsMoved += SceneListView1_ItemsMoved;
             sceneListView1.ListExited += SceneListView1_ListExited;
         }
 
@@ -148,13 +147,6 @@ namespace Example
                 btnAdd.Text = "Add Point";
             else
                 btnAdd.Text = "Add Object";
-        }
-
-        private void SceneListView1_ItemsMoved(object sender, ItemsMovedEventArgs e)
-        {
-            scene.ReorderObjects(sceneListView1.CurrentList, e.OriginalIndex, e.Count, e.Offset);
-            e.Handled = true;
-            gL_Control.Refresh();
         }
 
         private void Scene_ListChanged(object sender, ListChangedEventArgs e)

@@ -19,27 +19,11 @@ namespace GL_EditorFramework
         }
     }
 
-    public class ItemsMovedEventArgs : HandledEventArgs
-    {
-        public int OriginalIndex { get; private set; }
-        public int Count { get; private set; }
-        public int Offset { get; private set; }
-        public ItemsMovedEventArgs(int originalIndex, int count, int offset)
-        {
-            OriginalIndex = originalIndex;
-            Count = count;
-            Offset = offset;
-        }
-    }
-
     public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs e);
-
-    public delegate void ItemsMovedEventHandler(object sender, ItemsMovedEventArgs e);
 
     public class FastListView : FastListViewBase
     {
-        public event SelectionChangedEventHandler SelectionChanged;
-        public event ItemsMovedEventHandler ItemsMoved;
+        public new event SelectionChangedEventHandler SelectionChanged;
 
         private IList list;
         private ISet<object> selectedItems;
@@ -57,8 +41,6 @@ namespace GL_EditorFramework
                 Refresh();
             }
         }
-
-        private static readonly List<object> emptyList = new List<object>();
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList CurrentList

@@ -41,7 +41,6 @@ namespace GL_EditorFramework
         private Stack<IList> listStack = new Stack<IList>();
 
         public event SelectionChangedEventHandler SelectionChanged;
-        public event ItemsMovedEventHandler ItemsMoved;
         public event ListEventHandler ListExited;
         public event ItemClickedEventHandler ItemClicked;
 
@@ -52,7 +51,6 @@ namespace GL_EditorFramework
             InitializeComponent();
 
             ItemsListView.SelectionChanged += (x, y) => SelectionChanged?.Invoke(x, y);
-            ItemsListView.ItemsMoved += (x, y) => ItemsMoved?.Invoke(x, y);
             ItemsListView.ItemClicked += (x, y) => ItemClicked?.Invoke(x, y);
 
             Graphics g = CreateGraphics();
