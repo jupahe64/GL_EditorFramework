@@ -65,6 +65,32 @@ namespace GL_EditorFramework
             BorderStyle = BorderStyle.None;
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            OnFontChanged(e);
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            using (Graphics g = CreateGraphics())
+            {
+                FontHeight = (int)Math.Ceiling(Font.GetHeight(DeviceDpi));
+            }
+
+            var p = Padding;
+
+            Padding = new Padding(
+                Math.Max(p.Left, 2),
+                Math.Max(p.Top, FontHeight + 3 + 2),
+                Math.Max(p.Right, 2),
+                Math.Max(p.Bottom, 2)
+                );
+        }
+
         public DocumentTab SelectedTab
         {
             get
@@ -205,29 +231,31 @@ namespace GL_EditorFramework
 
             hoveringOverClose = false;
 
-            g.FillRectangle(SystemBrushes.ControlLightLight, 1, 30, Width - 2, Height - 31);
-            g.DrawRectangle(SystemPens.ControlDark, 1, 30, Width - 2, Height - 31);
+            var tabPageArea = Rectangle.FromLTRB(0, FontHeight + 3, Width-1, Height-1);
+
+            g.FillRectangle(SystemBrushes.ControlLightLight, tabPageArea);
+            g.DrawRectangle(SystemPens.ControlDark, tabPageArea);
 
             int x = arrowWidth + 5;
 
-            Rectangle tabArea = new Rectangle(arrowWidth + 5, 10, Width - 10 - arrowWidth * 2, 21);
+            Rectangle tabsArea = Rectangle.FromLTRB(arrowWidth + 5, 0, Width - 5 - arrowWidth, FontHeight+4);
 
-            g.SetClip(tabArea);
+            g.SetClip(tabsArea);
 
             for (int i = scrollIndexOffset; i < tabs.Count; i++)
             {
                 int width = (int)Math.Ceiling(g.MeasureString(tabs[i].Name, Font).Width);
 
-                g.FillRectangle(SystemBrushes.ControlDark, x, 10, width + 20, 21);
+                g.FillRectangle(SystemBrushes.ControlDark, x, 0, width + 20, FontHeight+4);
 
                 if (i == selectedIndex)
-                    g.FillRectangle(SystemBrushes.ControlLightLight, x+1, 11, width + 18, 21);
+                    g.FillRectangle(SystemBrushes.ControlLightLight, x+1, 1, width + 18, FontHeight+4);
                 else
-                    g.FillRectangle(SystemBrushes.Control, x + 1, 11, width + 18, 19);
+                    g.FillRectangle(SystemBrushes.Control, x + 1, 1, width + 18, FontHeight+4-2);
 
-                g.DrawString(tabs[i].Name, Font, SystemBrushes.ControlText, x + 5, 13);
+                g.DrawString(tabs[i].Name, Font, SystemBrushes.ControlText, x + 5, 2);
 
-                if (tabArea.Contains(mousePos))
+                if (tabsArea.Contains(mousePos))
                 {
                     if (mousePos.X > x && mousePos.X < x + width + 20)
                     {
@@ -237,13 +265,13 @@ namespace GL_EditorFramework
                         {
                             hoveringOverClose = true;
 
-                            g.DrawImage(Resources.CloseTabIconHover, x + width + 6, 16);
+                            g.DrawImage(Resources.CloseTabIconHover, x + width + 6, 6);
                             goto ICON_HOVERED;
                         }
                     }
                 }
 
-                g.DrawImage(Resources.CloseTabIcon, x + width + 6, 16);
+                g.DrawImage(Resources.CloseTabIcon, x + width + 6, 6);
 
                 ICON_HOVERED:
                 x += width + 22;

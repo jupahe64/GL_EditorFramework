@@ -95,10 +95,7 @@ namespace GL_EditorFramework
 
             DoubleBuffered = true;
 
-            using (Graphics g = CreateGraphics())
-            {
-                FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
-            }
+            
 
             marginScrollTimer.Interval = 1;
             marginScrollTimer.Tick += MarginScrollTimer_Tick;
@@ -107,6 +104,23 @@ namespace GL_EditorFramework
             searchTypeTimer.Interval = 1000;
             doubleClickTimer.Tick += DoubleClickTimer_Tick;
             searchTypeTimer.Tick += SearchTypeTimer_Tick;
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            OnFontChanged(e);
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            using (Graphics g = CreateGraphics())
+            {
+                FontHeight = (int)Math.Ceiling(Font.GetHeight(DeviceDpi));
+            }
         }
 
         private void SearchTypeTimer_Tick(object sender, EventArgs e)

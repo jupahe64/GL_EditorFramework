@@ -168,7 +168,7 @@ namespace GL_EditorFramework
 
             for (int i = 0; i < list.Count; i++)
             {
-                y = i * (FontHeight) + AutoScrollPosition.Y;
+                y = i * FontHeight + AutoScrollPosition.Y;
 
                 var (font, back) = highlightBrushes[(int)handler.HandleItem(list[i], selectedItems.Contains(list[i]), y, FontHeight)];
                 

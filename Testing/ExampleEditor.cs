@@ -125,6 +125,8 @@ namespace Example
             //add event handlers to sceneListView
             sceneListView1.SelectionChanged += SceneListView1_SelectionChanged;
             sceneListView1.ListExited += SceneListView1_ListExited;
+
+            documentTabControl1.AddTab(new DocumentTabControl.DocumentTab("Test", null), true);
         }
 
         private void Scene_ListInvalidated(object sender, ListEventArgs e)

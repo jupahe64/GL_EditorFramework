@@ -304,7 +304,8 @@ namespace GL_EditorFramework
 
         public void Show(Point location, int width, string text)
         {
-            Bounds = new Rectangle(location, new Size(width, 20));
+            Bounds = new Rectangle(location, new Size(width, 
+                (int)Math.Ceiling(Font.GetHeight(DeviceDpi)) + 5));
 
             this.text = text;
 
@@ -363,7 +364,8 @@ namespace GL_EditorFramework
         const int beforeTwoLineSpacing = 5;
         const int fullWidthSpace = 5;
         const int margin = 10;
-        const int rowHeight = 20;
+
+        int rowHeight;
 
         private int currentY;
 
@@ -393,6 +395,20 @@ namespace GL_EditorFramework
         {
             tooltipFadeTimer.Tick += TooltipFadeTimer_Tick;
             tooltipFadeTimer.Start();
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            OnFontChanged(e);
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            rowHeight = (int)Math.Ceiling(Font.GetHeight(DeviceDpi)) + 5;
         }
 
         [System.Diagnostics.DebuggerStepThrough]
@@ -914,7 +930,7 @@ namespace GL_EditorFramework
             EndHorizontalSeperator(); //this control doesn't get aligned to it
 
             bool clicked = Button(margin, currentY, usableWidth - margin * 2, name);
-            currentY += 24;
+            currentY += rowHeight + 4;
 
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
 
@@ -934,7 +950,7 @@ namespace GL_EditorFramework
             if (Button(margin + width + fullWidthSpace, currentY, width, name2))
                 clickedIndex = 2;
 
-            currentY += 24;
+            currentY += rowHeight + 4;
 
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
 
@@ -956,7 +972,7 @@ namespace GL_EditorFramework
             if (Button(margin + width * 2 + fullWidthSpace * 2, currentY, usableWidth - margin * 2 - width * 2 - fullWidthSpace * 2, name3))
                 clickedIndex = 3;
 
-            currentY += 24;
+            currentY += rowHeight + 4;
 
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
 
@@ -980,7 +996,9 @@ namespace GL_EditorFramework
             if (Button(margin + width * 3 + fullWidthSpace * 3, currentY, width, name4))
                 clickedIndex = 4;
 
-            currentY += 24;
+            currentY += rowHeight + 4;
+
+            BeginHorizontalSeperator(); //this control doesn't get aligned to it
 
             return clickedIndex;
         }

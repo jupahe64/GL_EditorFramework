@@ -56,6 +56,14 @@ namespace GL_EditorFramework
             Graphics g = CreateGraphics();
         }
 
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            RootListComboBox.Font = new Font(Font.FontFamily, Font.Size * DeviceDpi / 96);
+            ItemsListView.Font = Font;
+        }
+
         /// <summary>
         /// The set used to determine which objects are selected
         /// </summary>

@@ -271,7 +271,7 @@ namespace GL_EditorFramework
 
         private void DisplayControl_Paint(object sender, PaintEventArgs e)
         {
-            int rowHeight = Font.Height + 4;
+            int rowHeight = (int)Math.Ceiling(Font.GetHeight(DeviceDpi)) + 4;
 
             int y = displayControl.AutoScrollPosition.Y;
 

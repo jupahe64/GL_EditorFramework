@@ -26,12 +26,6 @@ namespace GL_EditorFramework
         public Font HeadingFont;
         public Font LinkFont;
 
-        public new Font Font
-        {
-            get => textBox1.Font;
-            set => textBox1.Font = value;
-        }
-
         protected enum EventType
         {
             DRAW,
@@ -71,7 +65,7 @@ namespace GL_EditorFramework
         protected int dragIndex = -1;
 
         bool mouseWasDragged = false;
-        protected readonly int textBoxHeight;
+        protected int textBoxHeight;
 
         bool textBoxHasNumericFilter = false;
 
@@ -117,14 +111,36 @@ namespace GL_EditorFramework
             PerformLayout();
 
 
-            HeadingFont = new Font(Font.FontFamily, 10);
-
-            LinkFont = new Font(Font, FontStyle.Underline);
+            
 
             doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
             doubleClickTimer.Tick += DoubleClickTimer_Tick;
 
-            textBoxHeight = textBox1.Height+2;
+            
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            OnFontChanged(e);
+
+            textBoxHeight = textBox1.Height + 2;
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            HeadingFont = new Font(Font.FontFamily, Font.Size*1.2f);
+
+            LinkFont = new Font(Font, FontStyle.Underline);
+
+            textBox1.Font = new Font(Font.FontFamily, Font.Size * DeviceDpi/96);
+
+            suggestionsDropDown.Font = Font;
+
+            textBoxHeight = textBox1.Height + 2;
         }
 
         private void SuggestionsDropDown_ItemSelected(object sender, EventArgs e)
