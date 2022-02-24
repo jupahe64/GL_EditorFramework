@@ -408,7 +408,7 @@ namespace GL_EditorFramework
         {
             base.OnFontChanged(e);
 
-            rowHeight = (int)Math.Ceiling(textBoxHeight + 5 * DeviceDpi / 96f);
+            rowHeight = (int)Math.Ceiling(textBoxHeight + 2 + 3 * DeviceDpi / 96f);
         }
 
         [System.Diagnostics.DebuggerStepThrough]
@@ -1222,10 +1222,10 @@ namespace GL_EditorFramework
         {
             EndHorizontalSeperator(); //this control doesn't get aligned to it
 
-            float space = rowHeight - textBoxHeight;
+            float space = rowHeight - (textBoxHeight+2);
 
-            g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY - space/2+1, usableWidth - margin * 2, 2);
-            g.FillRectangle(SystemBrushes.ControlDark, margin, currentY - space / 2+1, usableWidth - margin * 2 - 1, 1);
+            g.FillRectangle(SystemBrushes.ControlLightLight, margin, currentY - space/2 + 1, usableWidth - margin * 2, 2);
+            g.FillRectangle(SystemBrushes.ControlDark, margin, currentY - space / 2 + 1, usableWidth - margin * 2 - 1, 1);
             currentY += 2;
 
             BeginHorizontalSeperator(); //this control doesn't get aligned to it
