@@ -78,13 +78,23 @@ namespace GL_EditorFramework
         public event ItemClickedEventHandler ItemClicked;
 
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams baseParams = base.CreateParams;
+                const int WS_EX_COMPOSITED = 0x02000000;
+                baseParams.ExStyle |= WS_EX_COMPOSITED;
+
+                return baseParams;
+            }
+        }
+
         public FastListViewBase()
         {
-            SetStyle(
-            ControlStyles.AllPaintingInWmPaint |
-            ControlStyles.UserPaint |
-            ControlStyles.OptimizedDoubleBuffer,
-            true);
+
+            DoubleBuffered = true;
+
             using (Graphics g = CreateGraphics())
             {
                 FontHeight = (int)Math.Ceiling(Font.GetHeight(g.DpiY));
@@ -153,7 +163,7 @@ namespace GL_EditorFramework
             keepTheRest = ModifierKeys.HasFlag(Keys.Control);
             subtract = hoveredIsSelected && keepTheRest;
             selecting = true;
-            Invalidate();
+            Invalidate(Bounds);
         }
 
         int smoothScrollY = 0;
@@ -268,18 +278,25 @@ namespace GL_EditorFramework
             if (index == -1)
                 return;
 
+            bool selectionChanged = false;
+
             if (e.KeyCode == Keys.Up && index > 0)
             {
                 LastSelectedItem = Select(index - 1, e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
+                selectionChanged = true;
             }
             else if (e.KeyCode == Keys.Down && index < itemCount - 1)
             {
                 LastSelectedItem = Select(index + 1, e.Shift ? SelectionChangeMode.ADD : SelectionChangeMode.SET);
+                selectionChanged = true;
             }
 
             Invalidate();
 
             Focus();
+
+            if (selectionChanged)
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         //returns the last selected item or null
