@@ -83,7 +83,6 @@ namespace GL_EditorFramework.GL_Core
 
         public void Delete(GLControl control)
         {
-            GL.DeleteProgram(programs[control]);
             programs.Remove(control);
         }
 

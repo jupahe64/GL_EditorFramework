@@ -43,7 +43,6 @@ namespace GL_EditorFramework.GL_Core
 
         public void Delete(GLControl control)
         {
-            GL.DeleteVertexArray(vaos[control]);
             vaos.Remove(control);
         }
 
@@ -82,7 +81,7 @@ namespace GL_EditorFramework.GL_Core
         public void Use(GLControl control)
         {
             GL.BindVertexArray(vaos[control]);
-            if (GL.GetError() == ErrorCode.InvalidOperation) Debugger.Break();
+            //if (GL.GetError() == ErrorCode.InvalidOperation) Debugger.Break();
 
             if (indexBuffer.HasValue)
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer.Value);
