@@ -12,6 +12,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Collections;
 using System.Collections.Specialized;
+using Fasterflect;
 
 namespace GL_EditorFramework
 {
@@ -81,6 +82,8 @@ namespace GL_EditorFramework
             ControlStyles.OptimizedDoubleBuffer,
             true);
 
+
+
             SuspendLayout();
 
             textBox1 = new TextBox
@@ -99,6 +102,7 @@ namespace GL_EditorFramework
             textBox1.GotFocus += TextBox1_GotFocus;
             textBox1.TextChanged += TextBox1_TextChanged;
             textBox1.Layout += Textbox1_Layout;
+
 
             suggestionsDropDown.ItemSelected += SuggestionsDropDown_ItemSelected;
 
@@ -379,6 +383,8 @@ namespace GL_EditorFramework
                 int lParam = mousePos.Y - textBox1.Top << 16 | (mousePos.X - textBox1.Left & 65535);
                 int num = (int)SendMessage(new HandleRef(this, textBox1.Handle), 215, 0, lParam);
 
+                textBox1.BackColor = textBoxRequest.Value.backgroudColor;
+
                 textBox1.Select(Math.Max(0, num), 0);
 
                 textBox1.Visible = true;
@@ -508,8 +514,9 @@ namespace GL_EditorFramework
             public string value;
             public HorizontalAlignment alignment;
             public bool useNumericFilter;
+            public Color backgroudColor;
 
-            public TextBoxSetup(int x, int y, int width, string value, HorizontalAlignment alignment, bool useNumericFilter)
+            public TextBoxSetup(int x, int y, int width, string value, HorizontalAlignment alignment, bool useNumericFilter, Color backgroudColor)
             {
                 this.x = x;
                 this.y = y;
@@ -517,6 +524,7 @@ namespace GL_EditorFramework
                 this.value = value;
                 this.alignment = alignment;
                 this.useNumericFilter = useNumericFilter;
+                this.backgroudColor = backgroudColor;
             }
         }
 
@@ -548,9 +556,9 @@ namespace GL_EditorFramework
 
         ComboBoxSetup? comboBoxRequest;
 
-        private void PrepareFieldForInput(int x, int y, int width, string value, bool isNumericInput = true, bool isCentered = true)
+        private void PrepareFieldForInput(int x, int y, int width, Color backgroundColor, string value, bool isNumericInput = true, bool isCentered = true)
         {
-            textBoxRequest = new TextBoxSetup(x, y, width, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput);
+            textBoxRequest = new TextBoxSetup(x, y, width, value, isCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left, isNumericInput, backgroundColor);
 
             focusRequest = index;
 
@@ -607,7 +615,7 @@ namespace GL_EditorFramework
                     if (new Rectangle(x + 1, y + 1, width - 1, textBoxHeight - 2).Contains(mousePos))
                     {
                         DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
-                        PrepareFieldForInput(x, y, width, number.ToString(), isCentered);
+                        PrepareFieldForInput(x, y, width, SystemColors.ControlLightLight, number.ToString(), isCentered);
                         valueChangeEvents |= VALUE_CHANGE_START;
 
                         eventType = EventType.DRAW; //Click Handled
@@ -703,6 +711,70 @@ namespace GL_EditorFramework
             return number;
         }
 
+        protected string EditableText(int x, int y, int width, string text, bool isCentered, SolidBrush background)
+        {
+            void DrawField()
+            {
+                g.FillRectangle(background, x, y, width, textBoxHeight);
+
+                g.SetClip(new Rectangle(
+                    x,
+                    y,
+                    width,
+                    textBoxHeight));
+
+                if (isCentered)
+                    g.DrawString(text, Font, SystemBrushes.ControlText,
+                    x + (width - (int)Math.Ceiling(g.MeasureString(text, Font).Width)) / 2, y);
+                else
+                    g.DrawString(text, Font, SystemBrushes.ControlText,
+                    x + 1, y + 1);
+
+                g.ResetClip();
+            }
+
+
+
+            if (focusedIndex == index)
+                UpdateTextbox(x, y, width);
+
+            switch (eventType)
+            {
+                case EventType.CLICK:
+                    if (new Rectangle(x, y, width, textBoxHeight).Contains(mousePos))
+                    {
+                        DrawField();
+                        PrepareFieldForInput(x, y, width, background.Color, text, false, isCentered);
+                        valueChangeEvents |= VALUE_CHANGE_START;
+
+                        eventType = EventType.DRAW; //Click Handled
+                    }
+                    else
+                        DrawField();
+
+                    break;
+
+                case EventType.LOST_FOCUS:
+                    if (focusedIndex == index)
+                    {
+                        valueChangeEvents |= VALUE_SET;
+                        text = textBox1.Text;
+                    }
+
+                    DrawField();
+
+                    break;
+
+                default:
+                    DrawField();
+
+                    break;
+            }
+
+            index++;
+            return text;
+        }
+
         protected string TextInputField(int x, int y, int width, string text, bool isCentered)
         {
             if (focusedIndex == index)
@@ -714,7 +786,7 @@ namespace GL_EditorFramework
                     if (new Rectangle(x + 1, y + 1, width - 2, textBoxHeight - 2).Contains(mousePos))
                     {
                         DrawField(x, y, width, "", SystemBrushes.Highlight, SystemBrushes.ControlLightLight, isCentered);
-                        PrepareFieldForInput(x, y, width, text, false, isCentered);
+                        PrepareFieldForInput(x, y, width, SystemColors.ControlLightLight, text, false, isCentered);
                         valueChangeEvents |= VALUE_CHANGE_START;
 
                         eventType = EventType.DRAW; //Click Handled
