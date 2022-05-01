@@ -212,120 +212,34 @@ namespace GL_EditorFramework
         public static Vector3 ExtractDegreeEulerAngles(this Matrix3 mtx)
         {
 
-            //#region generated code
-            //if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
-            //    return new Vector3(-90, -90, -90);
-            //if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
-            //    return new Vector3(-90, -90, 0);
-            //if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
-            //    return new Vector3(-90, -90, 180);
-            //if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
-            //    return new Vector3(-90, 90, 0);
-            //if (mtx.M13 == -1 && mtx.M22 == -1 && mtx.M31 == -1)
-            //    return new Vector3(-90, 90, 90);
-            //if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
-            //    return new Vector3(-90, 90, 180);
-            //if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
-            //    return new Vector3(0, -90, -90);
-            //if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
-            //    return new Vector3(0, -90, 90);
-            //if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
-            //    return new Vector3(0, -90, 180);
-            //if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
-            //    return new Vector3(0, 90, -90);
-            //if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
-            //    return new Vector3(0, 90, 90);
-            //if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
-            //    return new Vector3(90, -90, 0);
-            //if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
-            //    return new Vector3(90, -90, 90);
-            //if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
-            //    return new Vector3(90, -90, 180);
-            //if (mtx.M13 == -1 && mtx.M22 == -1 && mtx.M31 == -1)
-            //    return new Vector3(90, 90, -90);
-            //if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
-            //    return new Vector3(90, 90, 0);
-            //if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
-            //    return new Vector3(90, 90, 180);
-            //if (mtx.M13 == 1 && mtx.M21 == -1 && mtx.M32 == -1)
-            //    return new Vector3(180, -90, -90);
-            //if (mtx.M13 == 1 && mtx.M22 == -1 && mtx.M31 == 1)
-            //    return new Vector3(180, -90, 0);
-            //if (mtx.M13 == 1 && mtx.M21 == 1 && mtx.M32 == 1)
-            //    return new Vector3(180, -90, 90);
-            //if (mtx.M13 == -1 && mtx.M21 == -1 && mtx.M32 == 1)
-            //    return new Vector3(180, 90, -90);
-            //if (mtx.M13 == -1 && mtx.M22 == -1 && mtx.M31 == -1)
-            //    return new Vector3(180, 90, 0);
-            //if (mtx.M13 == -1 && mtx.M21 == 1 && mtx.M32 == -1)
-            //    return new Vector3(180, 90, 90);
-            //if (mtx.M13 == -1 && mtx.M22 == 1 && mtx.M31 == 1)
-            //    return new Vector3(180, 90, 180);
-            //#endregion
-
-            //return new Vector3(
-            //            (float)(180 * Math.Atan2(mtx.M23, mtx.M33) / Math.PI),
-            //            (float)(-180 * Math.Asin(mtx.M13) / Math.PI),
-            //            (float)(180 * Math.Atan2(mtx.M12, mtx.M11) / Math.PI));
-
-            bool CompareEpsilon(float a, float b) => Math.Abs(a - b) <= float.Epsilon;
+            Vector3 aimVec = mtx.Row0.Normalized();
+            Vector3 aimUpVector = mtx.Row2.Normalized();
 
             double x, y, z;
 
-            //0,1, 2
-            //4,5, 6
-            //8,9,10
-
-            if (CompareEpsilon(mtx.M13, 1f))
+            if (aimVec == Vector3.UnitZ || aimVec == -Vector3.UnitZ)
             {
-                x = Math.Atan2(-mtx.M21, -mtx.M31);
-                y = -Math.PI / 2;
-                z = 0.0;
-            }
-            else if (CompareEpsilon(mtx.M13, -1f))
-            {
-                x = Math.Atan2(mtx.M21, mtx.M31);
-                y = Math.PI / 2;
-                z = 0.0;
+                z = Math.Atan2(aimUpVector.X, aimUpVector.Y);
+                y = aimVec.Z * Math.PI / 2.0;
+                x = 0.0;
             }
             else
             {
-                x = Math.Atan2(mtx.M23, mtx.M33);
-                y = -Math.Asin(mtx.M13);
-                z = Math.Atan2(mtx.M12, mtx.M11);
+                z = Math.Atan2(aimVec.Y, aimVec.X);
+                y = -Math.Asin(aimVec.Z);
+
+                Vector3 axisA = Vector3.Cross(aimVec, Vector3.UnitZ);
+                Vector3 axisB = Vector3.Cross(axisA, aimVec);
+
+                
+
+                x = Math.Atan2(Vector3.Dot(axisA, aimUpVector), Vector3.Dot(axisB, aimUpVector));
             }
 
-            //float z = GetRotationX(mtx); mtx *= CreateRotationZ(-z);
-            //float y = GetRotationX(mtx); mtx *= CreateRotationY(-y);
-            //float x = GetRotationX(mtx); mtx *= CreateRotationX(-x);
-
-            //return new Vector3(x, y, z);
-
-            //Vector3 aimVec = mtx.Column0.Normalized();
-
-            //double x, y, z;
-
-            //if (aimVec == Vector3.UnitZ)
-            //{
-            //    z = Math.Atan2(mtx.Column1.X, mtx.Column1.Y);
-            //    y = Math.PI / 2.0;
-            //    x = 0.0;
-            //}
-            //else
-            //{
-            //    z = Math.Atan2(-mtx.Column0.Y, mtx.Column0.X);
-            //    y = Math.Asin(aimVec.Z);
-
-            //    Vector3 axisA = Vector3.Cross(aimVec, Vector3.UnitZ);
-            //    Vector3 axisB = Vector3.Cross(axisA, aimVec);
-
-            //    x = 0;//Math.Atan2(Vector3.Dot(axisA, aimVec), Vector3.Dot(axisB, aimVec));
-            //}
-
             return new Vector3(
-                (float)(180 * x / Math.PI),
-                (float)(180 * y / Math.PI),
-                (float)(180 * z / Math.PI)
+                (float)(Math.Round(180 * x / Math.PI * 1e5) / 1e5),
+                (float)(Math.Round(180 * y / Math.PI * 1e5) / 1e5),
+                (float)(Math.Round(180 * z / Math.PI * 1e5) / 1e5)
                 );
         }
 
